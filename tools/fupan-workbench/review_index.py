@@ -50,6 +50,10 @@ class ReviewIndex:
         if self._cache is None:
             self.list_reviews()
         if review_id not in self._cache:
+            # 服务是常驻进程，缓存建立后新写入的复盘文档不在其中；
+            # miss 时重扫一次目录再判定，避免"不重启服务就永远 review_not_found"。
+            self.list_reviews()
+        if review_id not in self._cache:
             raise KeyError(review_id)
         review = self._cache[review_id]
         path = Path(review["path"]).expanduser()
@@ -70,6 +74,9 @@ class ReviewIndex:
 
     def resolve_asset_path(self, review_id, asset_path):
         if self._cache is None:
+            self.list_reviews()
+        if review_id not in self._cache:
+            # 同 read_review：常驻进程下新复盘的配图也要能找到。
             self.list_reviews()
         if review_id not in self._cache:
             raise KeyError(review_id)
