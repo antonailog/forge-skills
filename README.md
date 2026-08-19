@@ -1,3 +1,5 @@
+
+
 <div align="center">
 
 # Forge
@@ -281,6 +283,7 @@ cd forge-skills
 ./install.sh --uninstall      # 卸载（移除 symlink）
 ./install.sh --target claude  # 仅 ~/.claude/skills
 ./install.sh --target codex   # 仅 ~/.agents/skills
+./install.sh --target both    # 同时安装到 ~/.claude/skills 和 ~/.agents/skills（默认）
 ./install.sh --status         # 检查当前 symlink 是否完整（含坏链检测）
 ./install.sh --dry-run        # 只打印动作，不改文件
 ```
