@@ -1,7 +1,7 @@
 ---
 name: forge-design
 description: |
-  全栈设计规划：分级门控管理 DESIGN.md 与 DESIGN-CHANGELOG，内置可检索设计规则库（UX 规则/配色/字体），三层 Token、Image 2 视觉稿门禁、反 AI 模板检测。
+  全栈设计规划：分级门控管理 DESIGN.md 与 DESIGN-CHANGELOG，内置可检索设计规则库（UX 规则/配色/字体），三层 Token、forge-design-lab 工作台门禁（布局/比例/密度在真 token 骨架上定，Image 2 退为气质稿）、反 AI 模板检测。
   触发方式：用户说"设计"、"forge-design"、"先看效果图"，或 forge-dev 调度、需要创建/更新设计文档时。
 ---
 
@@ -18,13 +18,13 @@ description: |
 ```
 门控判定（L1/L2/L3）
   │
-  ├── L1 完整设计 ──→ 竞品调研 → 美学方向(3+) → 配色/字体 → Token体系 → Image 2视觉稿 → 完整审计 → 0-10审查 → DESIGN.md
-  ├── L2 轻量审查 ──→ 读DESIGN.md → 对照检查 → 重点审计(10项) → 必要时Image 2 before/after → 一致性验证 → 更新文档
+  ├── L1 完整设计 ──→ 竞品调研 → 美学方向(3+) → 配色/字体 → Token体系 → forge-design-lab 工作台（布局/比例/密度）→ 完整审计 → 0-10审查 → DESIGN.md
+  ├── L2 轻量审查 ──→ 读DESIGN.md → 对照检查 → 重点审计(10项) → 涉及布局/组件时调 forge-design-lab → 一致性验证 → 更新文档
   └── L3 跳过设计 ──→ 纯后端/无UI → 直接进 forge-eng
 ```
 
 全程中文。关键设计决策需用户确认后才能定稿。
-涉及前端页面、组件、状态或布局时，读取 `~/.claude/skills/_shared/visual-decision-layer.md`，使用 Image 2 作为实现前的视觉预判门禁。
+涉及前端页面、组件、状态或布局时，读取 `~/.claude/skills/_shared/visual-decision-layer.md`：布局、比例、密度、栏宽、一屏几张这类决策走 `forge-design-lab` 工作台门禁（真 token、真像素的骨架，用户在上面改值、判断、保存）；Image 2 只用于气质与风格方向的预判，不用它判断比例。
 
 ---
 
@@ -155,7 +155,9 @@ description: |
 
 4. **交互方案**：关键交互的状态流转
 
-5. **Image 2 视觉稿**：对 UI/布局/状态变化，生成或引用视觉稿，让用户确认观感是否符合预期。视觉稿只用于确认方向，最终实现仍以 DESIGN.md token、组件规范和真实截图为准。
+5. **工作台门禁（forge-design-lab，必调）**：凡是页面、组件、布局、状态的决策，调用 `forge-design-lab`：它先用线框确认区域与模块清单，再在真 token、真像素的骨架上让用户逐层审查、改值、保存；本步的 ASCII 线框图只是开场，最终比例以工作台为准。DESIGN.md 里的页面级 token 表由它导出的 tokens.json 生成，不手写。
+
+6. **Image 2 视觉稿（辅助）**：只在气质、风格方向不明时生成 1-3 张让用户判断观感；不用它判断比例、密度和一屏几张。
 
 ### 3.2 0-10 交互审查（L1 必选，L2 可选）
 
@@ -217,8 +219,8 @@ description: |
 1. 更新版本号、日期
 2. 更新迭代摘要区（保留所有版本）
 3. 新增/修改组件规范，标记 `[vX.Y 新增/修改]`
-4. 更新设计体系 token（如有变更，遵循三层架构）
-5. 更新页面布局说明
+4. 更新设计体系 token（如有变更，遵循三层架构；页面级/组件级 token 表以 forge-design-lab 生成的区块为准，不手改）
+5. 更新页面布局说明（比例与尺寸引用工作台 token，不写死数字）
 6. 自洽性检查：文档内部引用是否一致
 
 ### C. 可选：生成预览页
@@ -251,6 +253,7 @@ description: |
 | 设计变更：X 项（新增 A / 修改 B）                      |
 | 子模块一致性：[通过 / 不适用]                           |
 | 文件：                                                |
+|   工作台页面包       — [docs/assets/visuals/<page>/ 或 不适用] |
 |   DESIGN.md          — [已更新/已创建]                 |
 |   DESIGN-CHANGELOG   — [已追加/已创建]                 |
 | 下一步：forge-design-impl 或 forge-eng 实现                  |
@@ -300,7 +303,7 @@ python3 {skill_dir}/scripts/search.py "dashboard data" --domain style
 
 ## 重要规则
 
-1. **纯设计，不写代码。** 产出是 DESIGN.md 和设计方案，不是 CSS/HTML。实现交给 forge-design-impl 或 forge-eng。
+1. **纯设计，不写产品代码。** 产出是 DESIGN.md、设计方案，以及 forge-design-lab 的骨架页面包（设计产物，不是产品代码）。实现交给 forge-design-impl 或 forge-eng。
 2. **像设计师思考，不是 QA 工程师。** 关心感觉对不对、有没有意识、尊不尊重用户。
 3. **具体且可操作。** "把 X 改成 Y 因为 Z"——不是"建议优化间距"。
 4. **AI 模板痕迹检测是超能力。** 10 个反面模式要直接说出来。

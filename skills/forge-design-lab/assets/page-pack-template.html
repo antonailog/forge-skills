@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{TITLE}}</title>
+<!--
+  forge-design-lab 页面包 · 引擎在 {{ENGINE_REL}}/workbench.{js,css}（母本：forge-design-lab/assets/workbench）
+  同源三件：{{JSON_REL}}（决策树）→ {{JS_NAME}}（本页加载）+ {{CSS_REPO}}（前端 import，本页 <link> 的正是它）
+  本文件只含：站点基础 token 复刻（只读）、骨架片段、组件 CSS（只写 var({{PREFIX}}-*) 与站点 token）、样例数据、WB.init 的页面钩子。
+-->
+{{FONT_LINKS}}
+<link rel="stylesheet" href="{{ENGINE_REL}}/workbench.css">
+<link id="tokcss" rel="stylesheet" href="{{CSS_REL}}">
+<script src="{{JS_NAME}}"></script>
+<style>
+/* @lab:site-tokens 站点基础 token 复刻（只读；前端里由站点全局样式提供） */
+{{FOUNDATION_CSS}}
+
+/* @lab:component 组件 CSS：只写 var({{PREFIX}}-*) 与站点 token。字面像素值要么改成 token，要么行尾加 fixed 注释说明为什么固定；
+   站点组件的整段复刻用 @lab:fixed-start / @lab:fixed-end 注释包起来。 */
+#frame{background:var(--background);color:var(--foreground);line-height:1.5}
+:where(#frame *){margin:0;padding:0;box-sizing:border-box}
+#frame button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.lvl{display:none}
+{{LEVEL_RULES}}
+{{STATE_RULES}}
+
+/* TODO 按模块写组件 CSS。顶层区域相对 #frame 绝对定位时写成 #frame .left{position:absolute…}（引擎给 [data-id] 的 position:relative 特异度更高，见 pitfalls #3） */
+</style>
+</head>
+<body>
+
+<div id="frame">
+{{LEVEL_DIVS}}
+</div>
+
+<script type="application/json" id="sampleData">
+{{SAMPLE_JSON}}
+</script>
+<script src="{{ENGINE_REL}}/workbench.js"></script>
+<script>
+(function(){
+const $=s=>document.querySelector(s);
+const SAMPLE=JSON.parse($('#sampleData').textContent);
+/* TODO 用 SAMPLE 渲染骨架里的列表/正文；按状态渲染的放进 afterApply，并用 lastState 去重（apply 很频繁） */
+let lastState=null;
+function render(state){if(state===lastState)return;lastState=state;}
+
+WB.init({hooks:{
+  fonts:{{FONT_CHECKS}},
+  afterApply(S,{frame,byId}){render(S.state)},
+  sizes(S,{frame,byId,W,H,mob}){
+    /* 实测尺寸进指南 tab 的尺寸表；判断题里的数字从这里来。也可在此写 .dim 标注文字 */
+    return [['视口',W+'×'+H],['单栏',mob?'是':'否']];
+  },
+  specs({byId,fmt}){ /* 模块放大层的规格文字，例：$('#specCard').textContent=`p ${fmt(byId['sp.card-pad'])}` */ },
+  decisions:[ /* ['D1','一句话决策',['L','R']] —— 非 token 决策，点了对应 data-id 元素闪 */ ]
+}});
+})();
+</script>
+</body>
+</html>

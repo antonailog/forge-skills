@@ -8,6 +8,13 @@
 
 ## [Unreleased]
 
+### Added
+- **forge-design-lab**（新 skill，完整档，经 /skill-build S0–S3）：真 token、真像素骨架上的设计工作台与闭环——适配 → 线框确认 → 骨架 → 七层审查 → 保存直写 → token 同源导出 → DESIGN.md token 表。引擎母本 `assets/workbench/`（自 forge-design/assets 迁入并通用化：去掉 ai-search 专名、生成器统一为 build_tokens.py、layout.el 映射）；5 个脚本；5 份 references。设计文档见 `docs/forge-design-lab-设计文档.md`，评测报告见 `docs/forge-design-lab-评测报告.md`（触发评测 24 条 × 3 次 0 误判；范例页面包 verify 12 PASS / 1 WARN）。
+
+### Changed
+- **forge-design 第三步**：Image 2 视觉稿门禁改为 forge-design-lab 工作台门禁（必调），Image 2 退为气质判断的辅助；规则 1 改为「不写产品代码」（骨架页面包是设计产物）；交付模板加「工作台页面包」一行。快照 `_archive/snapshots/forge-design-2026-09-20-pre-design-lab/`。
+- **_shared/visual-decision-layer.md**：三类视觉产物增「工作台骨架」一行；design / design-impl 生命周期改为工作台真相源；产物保存约定加页面包路径。快照 `_archive/snapshots/visual-decision-layer-2026-09-20.md`。
+
 ## [v2026.07.17.2] — 2026-07-17（第二轮瘦身：复测遗留项清零）
 
 ### Changed

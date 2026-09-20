@@ -61,6 +61,15 @@ last_updated: 2026-07-04
 **产出**：`docs/DESIGN.md` + `DESIGN-CHANGELOG.md` + 视觉稿决策记录。
 **附属**：search.py + design_system.py（设计系统生成引擎，来自 ui-ux-pro-max）+ 8 个 CSV 数据库。
 
+## 4.1 forge-design-lab — 设计工作台
+
+**一句话**：在真 token、真像素的 HTML 骨架上让你看、改、存设计决策，实现时看到的和骨架上看到的是同一份值。
+**什么时候用**：讨论某个页面/组件的设计稿、争论比例/密度/一屏几张/栏宽时；forge-design 第三步遇到布局决策必调；用户说「开工作台」「保存好了，按调整后的来」。
+**怎么工作**：适配（读项目 :root 变量 / tailwind / 实际用量出阶梯）→ 线框确认（json 的 layout 自动画）→ 骨架（组件 CSS 只写 var()）→ 七层审查（结构/层级/排版/色彩/间距与形状/状态与动效/一致性，每层一个问题，判断题挂在元素上）→ 橙色「保存」直写仓库三文件 → Agent 读 json、校验重建、逐条回反馈、拿不准的出 A/B/C → 生成 DESIGN.md token 表交实现。
+**规矩**：用户保存的值不替他改；生成文件不手改；备选只取站点阶梯值；站点级 token 只读可提议；Image 2 退为气质判断。
+**产出**：`docs/assets/visuals/<page>/`（tokens.json / tokens.js / skeleton.html / meta）+ 前端 `<page>.tokens.css` + DESIGN.md 模块内 token 区块。
+**附属**：scripts/ adapt_tokens · build_tokens · scaffold_pack · verify_pack（Playwright）· render_design_table；assets/ 引擎母本 workbench.js/css + 页面包模板；references/ 字段全表、七层方法论、引擎接口、坑清单、范例。
+
 ## 5. forge-design-impl — 设计实现
 
 **一句话**：把 DESIGN.md 变成代码，只动样式不动逻辑。

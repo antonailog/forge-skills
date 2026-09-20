@@ -1,0 +1,850 @@
+{
+ "skill": "forge-design-lab",
+ "runs": 3,
+ "cwd": "/Users/dbwu/claudecode_workspace/项目/info2action/.worktrees/ai-search-mvp",
+ "when": "2026-09-20 07:09",
+ "agg": {
+  "train": {
+   "tp": 6,
+   "tn": 6,
+   "fp": 0,
+   "fn": 0
+  },
+  "test": {
+   "tp": 4,
+   "tn": 4,
+   "fp": 0,
+   "fn": 0
+  }
+ },
+ "cases": [
+  {
+   "id": "t1",
+   "split": "train",
+   "why": "标准场景：点名模块 + 看比例密度 + 明确不写代码",
+   "query": "模块 28 AI 搜索页的设计定了，先别写代码，开工作台把两栏比例和紧凑卡密度给我看一下，样例用 docs/assets/visuals/ai-search 里那条 seedance 的真实总结",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.0,
+     "bytes": 17519
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.2,
+     "bytes": 17510
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 13.0,
+     "bytes": 17541
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t2",
+   "split": "train",
+   "why": "口语 + 没说工作台，但要在骨架上现场调间距",
+   "query": "右边那列卡片看着太挤了 像广告一样，你先别改代码，出个骨架我在上面调调间距再说",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.9,
+     "bytes": 17720
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 14.0,
+     "bytes": 18014
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.0,
+     "bytes": 18377
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t3",
+   "split": "train",
+   "why": "隐含需求：读文字规格想象不出比例，要按真实尺寸看",
+   "query": "DESIGN.md 里写的 7fr:3fr 我完全想象不出来一屏能放几张卡，有没有办法让我按真实尺寸看一眼再定",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.8,
+     "bytes": 18430
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.7,
+     "bytes": 18462
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.8,
+     "bytes": 18498
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t4",
+   "split": "train",
+   "why": "交接口令：保存好了 / 在 download 里 / 按调整后的来",
+   "query": "我在工作台里把引用列改成 316、顶部留白改 48 然后保存了，文件在 download 里，按调整后的来",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.8,
+     "bytes": 17934
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.4,
+     "bytes": 18352
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.5,
+     "bytes": 18134
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t5",
+   "split": "train",
+   "why": "forge-design 第三步转交，新页面先线框",
+   "query": "forge-design 走到第三步了，这次是新页面「订阅设置」的布局，按新流程先线框我确认",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.8,
+     "bytes": 18923
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 15.3,
+     "bytes": 19695
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 17.2,
+     "bytes": 19373
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t6",
+   "split": "train",
+   "why": "表格密度也是布局/排版决策，要按层过",
+   "query": "admin 日志 tab 的表格密度感觉不对，行高、字号、padding 一起看，开个工作台按层过一遍",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 9.5,
+     "bytes": 17729
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.5,
+     "bytes": 18040
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 9.9,
+     "bytes": 17911
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t7",
+   "split": "test",
+   "why": "边缘正例：跨项目 + tailwind-only，先出适配报告",
+   "query": "换个项目：~/dev/shop-admin 这仓库用 tailwind theme 没有 :root 变量，帮我把商品列表页建个页面包，先出适配报告",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.2,
+     "bytes": 17940
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.5,
+     "bytes": 18460
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 13.4,
+     "bytes": 18422
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t8",
+   "split": "test",
+   "why": "与 forge-design 抢活但本 skill 该赢：要在真实尺寸上切着看并导成 css 变量",
+   "query": "精选页头版那块留白到底 32 还是 48 我俩争了半天，能不能在真实页面尺寸上切着看、然后把定下来的值直接导成 css 变量给前端",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.0,
+     "bytes": 18773
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 14.5,
+     "bytes": 18858
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 13.1,
+     "bytes": 18726
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t9",
+   "split": "test",
+   "why": "审查回合：拿不准出 A/B/C 写进备选",
+   "query": "工作台里我标了三个拿不准，逐个给我 ABC 选项，别在对话里描述，写进备选让我切着看",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.4,
+     "bytes": 18356
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.3,
+     "bytes": 17972
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.5,
+     "bytes": 18282
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t10",
+   "split": "test",
+   "why": "口语 + 改排版 token + 回写 DESIGN token 表",
+   "query": "看下模块 21 信息卡的骨架 我想改改卡标题字号和行高 顺便把结论写进 DESIGN 的 token 表",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.2,
+     "bytes": 18069
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.6,
+     "bytes": 18340
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.4,
+     "bytes": 17791
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "n1",
+   "split": "train",
+   "why": "共享『设计/DESIGN.md/层级』，但是设计评分与 AI 模板痕迹审计，归 forge-design",
+   "query": "把 DESIGN.md 模块 28 的设计评分再审一遍，重点看有没有 AI 模板痕迹和层级是否可答",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 14.4,
+     "bytes": 14254
+    },
+    {
+     "hit": false,
+     "skills": [
+      "forge-design"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 15.0,
+     "bytes": 24832
+    },
+    {
+     "hit": false,
+     "skills": [
+      "forge-design"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 17.4,
+     "bytes": 23031
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n2",
+   "split": "train",
+   "why": "共享『紧凑卡/DESIGN.md』，但是写产品代码，归 forge-eng / forge-design-impl",
+   "query": "按 DESIGN.md 28.7 把紧凑卡组件实现出来，Tailwind 写，vitest 补上",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 18.9,
+     "bytes": 14286
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 16.9,
+     "bytes": 20663
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 18.4,
+     "bytes": 17539
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n3",
+   "split": "train",
+   "why": "共享『AI 搜索页/效果图』，但要的是气质预判，归 Image 2",
+   "query": "给 AI 搜索页出一张手机端效果图，想看看整体气质是不是报纸感，发给同事看",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [
+      "forge-design"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 23.2,
+     "bytes": 31160
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 23.7,
+     "bytes": 27424
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 24.2,
+     "bytes": 26963
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n4",
+   "split": "train",
+   "why": "共享『设计稿/对比』，但是实现后的截图验收，归 forge-qa",
+   "query": "本地起前端，帮我截图对比一下实现和设计稿差多少，差异列表给我",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 17.8,
+     "bytes": 17495
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 16.3,
+     "bytes": 15962
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 19.9,
+     "bytes": 42388
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n5",
+   "split": "train",
+   "why": "共享『token/色』，但是站点级 brand 色全站更换，归 forge-design L1",
+   "query": "brand 色 #C65A1E 全站偏暗，想整体换一个暖一点的，连带 hover 一起",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 19.1,
+     "bytes": 44279
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 24.3,
+     "bytes": 56360
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 20.7,
+     "bytes": 38969
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n6",
+   "split": "train",
+   "why": "共享『DESIGN.md/模块 28/正文最大宽』，但是改散文规格，归 forge-design",
+   "query": "把 DESIGN.md 模块 28 里 28.5 SummaryPane 那段散文改一下，说清楚正文最大宽 960 的原因",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 14.1,
+     "bytes": 43432
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.6,
+     "bytes": 17977
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.1,
+     "bytes": 14159
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n7",
+   "split": "test",
+   "why": "共享『布局/页面』，但是 PRD 层面要不要拆页面，归 forge-prd / brainstorm",
+   "query": "帮我看看这个 PRD 里对搜索结果页布局的描述合不合理，要不要拆成两个页面",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 13.9,
+     "bytes": 31387
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 14.5,
+     "bytes": 30948
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 27.6,
+     "bytes": 17369
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n8",
+   "split": "test",
+   "why": "共享『骨架 html』，但是想把骨架当产品页面上线，归 forge-eng（且应被劝阻）",
+   "query": "把 docs/assets/visuals/ai-search 那个骨架 html 稍微改改直接当页面上线，反正长得差不多",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 20.9,
+     "bytes": 16552
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 18.9,
+     "bytes": 16211
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 19.0,
+     "bytes": 14954
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n9",
+   "split": "test",
+   "why": "共享『token 表/--ai-col-w』，但只是讲解，不开工作台",
+   "query": "DESIGN.md 的 token 表怎么读，--ai-col-w 是干嘛的，给我解释下",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.1,
+     "bytes": 12060
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 11.3,
+     "bytes": 26817
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 11.3,
+     "bytes": 11778
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n10",
+   "split": "test",
+   "why": "共享『ai-search/Playwright』，但是 QA 用例回归，归 forge-qa",
+   "query": "Playwright 跑一下 ai-search 的 QA 用例，看 API-003 现在过不过",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 15.3,
+     "bytes": 13970
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 14.8,
+     "bytes": 14087
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 16.0,
+     "bytes": 14607
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  }
+ ]
+}

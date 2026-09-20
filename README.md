@@ -171,6 +171,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | 需求 | forge-prd | `/forge-prd` | 产品诊断 + Feature Spec 生成 | PRD.md + .features/feature-spec.md |
 | 调度 | forge-dev | `/forge-dev` | 开发调度器，编排子技能；`--full` 一路到发布 | CONTEXT.md + RESEARCH.md + .forge/ 检查点 |
 | 设计 | forge-design | `/forge-design` | 全栈设计（竞品 + 美学 + Token + UX 规则 + 评分） | DESIGN.md |
+| 设计工作台 | forge-design-lab | `/forge-design-lab` | 真 token 真像素骨架上定布局/密度（七层审查 + 保存直写 + token 同源导出） | 页面包 + tokens.css + DESIGN.md token 表 |
 | 设计实现 | forge-design-impl | `/forge-design-impl` | 设计转代码（反 AI 模板 + Token 驱动 + 原子提交） | 样式代码 |
 | 工程 | forge-eng | `/forge-eng` | 工程实现（Worktree + TDD + 逐场景自验） | ENGINEERING.md + 代码 |
 | QA | forge-qa | `/forge-qa` | 验收计划 → 测试 → 报告 → 举一反三（只测不修） | QA 验收报告 |
@@ -346,6 +347,7 @@ forge-skills/
 │   ├── forge-prd/                  ←   PRD 当前事实 + .features Feature Spec
 │   ├── forge-dev/                  ←   开发调度器（--full 端到端）
 │   ├── forge-design/               ←   设计规划（含 UX 规则/配色/字体数据库）
+│   ├── forge-design-lab/           ←   设计工作台（真比例骨架 + 七层审查 + token 同源）
 │   ├── forge-design-impl/          ←   设计实现
 │   ├── forge-eng/                  ←   工程实现（Worktree + TDD）
 │   ├── forge-qa/                   ←   QA 验收（只测不修）

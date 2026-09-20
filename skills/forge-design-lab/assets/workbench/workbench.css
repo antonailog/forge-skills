@@ -1,0 +1,136 @@
+/* Forge 设计工作台 · 引擎样式（非产品 UI，中性灰）
+ * 母本：~/.claude/skills/forge-design/assets/workbench/workbench.css
+ * 页面只提供 #frame 内的骨架与组件 CSS；本文件负责舞台、右侧抽屉（含视图块）、节点面板。 */
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#E6E4DE;font:13px/1.5 Inter,-apple-system,'PingFang SC','Noto Sans SC',sans-serif;color:#2B2A27;overflow:hidden}
+
+/* ---------- 舞台：占满窗口 ---------- */
+#wb-stage{position:fixed;top:0;left:0;bottom:0;right:0;overflow:auto;background:#E6E4DE}
+#wb-stage.follow{overflow:hidden}
+#wb-wrap{position:relative;margin:0 auto}
+#wb-stage:not(.follow) #wb-wrap{margin:32px auto 40px}
+#wb-scaler{transform-origin:0 0}
+#frame{position:relative;overflow:hidden}
+#wb-stage:not(.follow) #frame{box-shadow:0 10px 34px rgba(0,0,0,.16);border:1px solid #CFCBC1}
+
+/* ---------- 视图块（面板头部，替代原顶部工具条） ---------- */
+#wb-view{border-top:1px solid #EEECE6;background:#F5F4F0}
+#wb-viewsum{display:flex;align-items:center;gap:8px;padding:7px 12px;font:11px 'JetBrains Mono',monospace;color:#5A5852}
+#wb-viewsum .sp{flex:1}
+#wb-viewsum .font{font:10.5px 'JetBrains Mono',monospace;color:#7A776F}
+#wb-viewsum .font.ok{color:#2F7A3F}#wb-viewsum .font.bad{color:#B4351F}
+#wb-viewsum button{font:11px inherit;padding:3px 8px;border:1px solid #D9D6CE;background:#fff;border-radius:99px;cursor:pointer;color:#2B2A27}
+#wb-viewrows{padding:2px 10px 8px}
+#wb-view.collapsed #wb-viewrows{display:none}
+.vr{display:flex;flex-wrap:wrap;align-items:center;gap:3px;padding:3px 0}
+.vr .lab{font:10px/1 'JetBrains Mono',monospace;color:#7A776F;letter-spacing:.06em;text-transform:uppercase;width:30px;flex:none}
+.vr button,.vr input{font:11.5px/1 inherit;padding:5px 8px;border:1px solid transparent;background:transparent;border-radius:999px;cursor:pointer;color:#2B2A27}
+.vr button:hover{background:#ECEAE4}
+.vr button.on{background:#2B2A27;color:#fff}
+.vr button.warn.on{background:#2563EB}
+.vr button:disabled{opacity:.3;cursor:default}
+.vr input{width:50px;border-color:#D9D6CE;background:#fff;cursor:text;border-radius:4px;padding:4px 6px}
+#wb-zoomg{display:inline-flex;gap:2px;margin-left:4px;padding-left:6px;border-left:1px solid #E1DED6}
+
+/* ---------- 右侧抽屉面板 ---------- */
+#wb-panel{position:fixed;top:0;right:0;width:404px;height:100%;background:#FBFAF7;border-left:1px solid #D9D6CE;display:flex;flex-direction:column;z-index:90;box-shadow:none}
+#wb-panel.closed{transform:translateX(100%)}
+#wb-panel-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:89;writing-mode:vertical-rl;font:12px inherit;padding:10px 6px;background:#C65A1E;color:#fff;border-radius:6px 0 0 6px;cursor:pointer;letter-spacing:.1em;box-shadow:-2px 0 10px rgba(0,0,0,.15)}
+#wb-panel:not(.closed)~#wb-panel-tab{display:none}
+#wb-phead{flex:none;border-bottom:1px solid #D9D6CE;background:#FBFAF7}
+#wb-tabs{display:flex;align-items:stretch}
+#wb-tabs button{flex:1;padding:12px 2px;border:0;background:transparent;font:12.5px/1 inherit;color:#7A776F;cursor:pointer;border-bottom:2px solid transparent}
+#wb-tabs button.on{color:#2B2A27;border-bottom-color:#2B2A27;font-weight:600}
+#wb-tabs .close{flex:none;width:34px;font-size:16px;color:#9A978F}
+#wb-saverow{display:flex;align-items:center;gap:8px;padding:8px 12px;border-top:1px solid #EEECE6}
+#wb-save{font:600 13px inherit;padding:8px 18px;border:0;background:#C65A1E;color:#fff;border-radius:4px;cursor:pointer;flex:none}
+#wb-save:hover{filter:brightness(.95)}
+#wb-save:disabled{opacity:.5;cursor:wait}
+#wb-savestat{font:11px/1.35 'JetBrains Mono',monospace;color:#7A776F;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#wb-savestat.ok{color:#2F7A3F}#wb-savestat.bad{color:#B4351F}
+.wb-tab{display:none;overflow:auto;padding:12px 14px 80px;flex:1}
+.wb-tab.on{display:block}
+.wb-tab h3{font:600 11.5px/1 inherit;letter-spacing:.06em;text-transform:uppercase;color:#7A776F;margin:16px 0 8px}
+.wb-tab p{margin:0 0 8px}
+.wb-tab small,.wb-muted{color:#7A776F}
+.wb-gh{margin:18px 0 8px;padding:10px 12px;background:#F1EFE9;border-radius:4px}
+.wb-gh b{display:block;font-size:13px}
+.wb-gh .ask{font-size:12px;margin-top:2px}
+.wb-gh .how{font-size:11.5px;color:#7A776F;margin-top:3px;line-height:1.5}
+.wb-gh .prog{font:10.5px 'JetBrains Mono',monospace;color:#7A776F;float:right}
+.wb-mods{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 10px}
+.wb-mods button{font:12px inherit;padding:5px 9px;border:1px solid #D9D6CE;background:#fff;border-radius:99px;cursor:pointer}
+.wb-mods button.on{background:#2B2A27;color:#fff;border-color:#2B2A27}
+/* 节点 */
+.nd{border:1px solid #E1DED6;border-radius:4px;padding:9px 10px;margin:0 0 6px;background:#fff;transition:border-color .15s}
+.nd:hover{border-color:#2563EB}
+.nd.sel{border-color:#2563EB;box-shadow:0 0 0 2px rgba(37,99,235,.18)}
+.nd.changed{border-left:3px solid #2563EB}
+.nd.ro{background:#FAF9F6}
+.nh{display:flex;align-items:baseline;gap:8px;cursor:pointer}
+.nh .nid{font:10px 'JetBrains Mono',monospace;color:#9A978F}
+.nh .nl{font-size:12.5px;font-weight:600;flex:1}
+.nh .nv{font:11.5px 'JetBrains Mono',monospace}
+.nh .go{font-size:10px;color:#2563EB;opacity:0}
+.nd:hover .nh .go{opacity:1}
+.nd .q{font-size:11.5px;line-height:1.5;background:#FFF7D6;color:#5A4A12;border:1px solid #E8D48A;padding:5px 8px;border-radius:3px;margin:7px 0 0}
+.nd .note{font-size:11px;color:#7A776F;margin-top:5px;line-height:1.45}
+.ctl{display:flex;flex-wrap:wrap;gap:4px;align-items:center;margin-top:7px}
+.ctl select,.ctl input[type=number],.ctl input[type=text]{font:12px 'JetBrains Mono',monospace;padding:4px 6px;border:1px solid #D9D6CE;border-radius:3px;background:#fff}
+.ctl input[type=number]{width:70px}.ctl input[type=text]{width:90px}
+.ctl .off{font:10.5px 'JetBrains Mono',monospace;color:#B4351F;background:#FDECEA;padding:2px 6px;border-radius:3px}
+.ctl .lock{font-size:10px;color:#9A978F}
+.sw{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #C9C6BE;cursor:pointer;position:relative;display:inline-block;vertical-align:middle}
+.sw.on{box-shadow:0 0 0 2px #2563EB}
+.sw[title]:hover::after{content:attr(title);position:absolute;top:26px;left:50%;transform:translateX(-50%);font:10px 'JetBrains Mono',monospace;background:#2B2A27;color:#fff;padding:2px 5px;border-radius:2px;white-space:nowrap;z-index:5}
+.pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:7px}
+.pills button{font:11px/1 inherit;padding:4px 8px;border:1px solid #D9D6CE;background:#fff;border-radius:99px;cursor:pointer;color:#2B2A27}
+.pills button.on{background:#2B2A27;color:#fff;border-color:#2B2A27}
+.pills button.on.pass{background:#2F7A3F;border-color:#2F7A3F}
+.pills button.on.change{background:#2563EB;border-color:#2563EB}
+.pills button.on.unsure{background:#B26A00;border-color:#B26A00}
+.pills button.on.propose{background:#7C3AED;border-color:#7C3AED}
+.nd textarea{width:100%;font:11.5px/1.4 inherit;border:1px solid #E1DED6;border-radius:3px;padding:5px 7px;resize:vertical;min-height:26px;display:block;margin-top:6px}
+.nd textarea::placeholder{color:#B5B2AA}
+table.sz{width:100%;border-collapse:collapse;font-size:12px}
+table.sz td{padding:5px 4px;border-bottom:1px solid #EEECE6;vertical-align:top}
+table.sz td:last-child{text-align:right;font-family:'JetBrains Mono',monospace}
+.dims8{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:6px 0 12px}
+.dims8 span{font-size:12px;text-align:center;padding:6px 2px;border:1px solid #E1DED6;border-radius:3px;background:#fff}
+code{font:11.5px 'JetBrains Mono',monospace;background:#EFEDE7;padding:1px 4px;border-radius:2px}
+.wb-status{font:11.5px 'JetBrains Mono',monospace;padding:8px 10px;border-radius:3px;background:#F1EFE9;margin:0 0 10px;line-height:1.5;white-space:pre-wrap}
+.wb-status.ok{background:#E8F3EA;color:#1F5A2B}.wb-status.bad{background:#FDECEA;color:#8A2A1C}
+.d{display:flex;gap:8px;padding:7px 9px;border-radius:4px;cursor:pointer;margin:0 0 4px;background:#fff;border:1px solid #E1DED6;font-size:12px;line-height:1.5}
+.d:hover{border-color:#2563EB}
+.d b{font:500 10.5px 'JetBrains Mono',monospace;color:#2563EB;flex:none;padding-top:2px}
+kbd{font:10.5px 'JetBrains Mono',monospace;border:1px solid #C9C6BE;border-bottom-width:2px;border-radius:3px;padding:1px 5px;background:#fff}
+/* 反馈 */
+#wb-fbin{width:100%;min-height:120px;font:12.5px/1.6 inherit;border:1px solid #D9D6CE;border-radius:4px;padding:8px 10px;resize:vertical}
+.fb{display:flex;gap:8px;padding:7px 9px;border:1px solid #E1DED6;border-radius:4px;background:#fff;margin:0 0 4px;font-size:12px;line-height:1.5;cursor:pointer}
+.fb:hover{border-color:#2563EB}
+.fb .ref{font:10.5px 'JetBrains Mono',monospace;color:#fff;background:#2563EB;padding:2px 5px;border-radius:3px;flex:none;align-self:flex-start}
+.fb .ref.none{background:#B9B5AB}
+.fb .t{flex:1}
+.fb .x{color:#9A978F;cursor:pointer;flex:none}
+.btn{font:12px inherit;padding:7px 12px;border:1px solid #2B2A27;background:#2B2A27;color:#fff;border-radius:3px;cursor:pointer;margin:0 4px 6px 0}
+.btn.ghost{background:#fff;color:#2B2A27}
+
+/* ---------- 审阅层（作用于 #frame） ---------- */
+#frame [data-id]{position:relative}
+#frame.ids [data-id]::before{content:attr(data-id);position:absolute;top:0;left:0;transform:translateY(-100%);font:9px/1 ui-monospace,Menlo,monospace;background:#2563EB;color:#fff;padding:2px 4px;border-radius:3px 3px 0 0;z-index:7;pointer-events:none}
+#frame.ids [data-id-inline]::before{transform:none;border-radius:0 0 3px 0}
+#frame .dim{position:absolute;font:10px/1 ui-monospace,Menlo,monospace;background:#1A1917;color:#fff;padding:3px 5px;border-radius:2px;z-index:6;pointer-events:none;display:none;white-space:nowrap}
+#frame.dims .dim{display:block}
+#frame .hl{outline:2px solid #2563EB !important;outline-offset:1px}
+#frame .flash{animation:wbflash 1.6s ease-out}
+@keyframes wbflash{0%{outline:3px solid #2563EB;outline-offset:2px}100%{outline:3px solid transparent;outline-offset:2px}}
+#frame.inspect,#frame.inspect *{cursor:crosshair !important}
+#frame.inspect .ins-hover{outline:1px dashed #2563EB;outline-offset:1px}
+
+/* ---------- 线框层（引擎从 spec.layout 生成） ---------- */
+#frame .lvl.wire{position:absolute;inset:0;font-family:ui-monospace,Menlo,monospace}
+.wire-r{position:absolute;border:1px dashed #6B6A65;background:rgba(255,255,255,.55);color:#2B2A27;padding:6px 8px;font-size:11px;line-height:1.4;overflow:hidden}
+.wire-r.scroll{border-style:solid;background:repeating-linear-gradient(135deg,rgba(255,255,255,.6) 0 10px,rgba(230,228,222,.6) 10px 20px)}
+.wire-r>b{font-size:12px;display:block}
+.wire-r>i{display:block;font-style:normal;color:#6B6A65;font-size:10.5px}
+.wire-r .wire-r{position:relative}

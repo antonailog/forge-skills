@@ -19,7 +19,8 @@
 | 类型 | 用途 | 适用场景 | 不适用场景 |
 |---|---|---|---|
 | Mermaid / show-widget | 结构化、可复现的图 | 流程、因果链、对比矩阵、状态机、学习地图 | 需要判断真实视觉气质 |
-| Image 2 视觉稿 / 学习图 | 高保真想象图、观感预判、知识记忆辅助 | UI 首屏、复杂组件、空态/错态、品牌气质、复盘知识模块 | 精确数据图、测试证据、可由 Mermaid 表达的结构 |
+| forge-design-lab 工作台骨架 | 真 token、真像素、可改可存的 HTML 骨架 | 页面/组件的布局、比例、密度、栏宽、行长、状态清单——凡是要看尺寸才能判断的 | 气质与风格方向（用 Image 2）、最终验收（用真实截图） |
+| Image 2 视觉稿 / 学习图 | 高保真想象图、观感预判、知识记忆辅助 | 品牌气质、风格方向、复盘知识模块 | 比例、密度、栏宽（生图画出来的比例不可信，走工作台）、精确数据图、测试证据 |
 | 真实截图 / Figma 导出 | 最终事实证据 | 实现后验收、设计还原对比、复盘存档 | 前期概念探索 |
 
 ## 触发规则
@@ -27,7 +28,7 @@
 满足任一条件时，考虑生成视觉产物：
 
 - 用户需要在多个方向之间做判断，且文字难以传达差异。
-- 设计会进入前端实现，且页面/组件/状态会影响实际观感。
+- 设计会进入前端实现，且页面/组件/状态会影响实际观感——布局、比例、密度走 forge-design-lab 工作台；气质方向才用 Image 2。
 - 流程超过 5 个节点、方案超过 3 个、或因果链超过 3 层。
 - 复盘中有展开的知识模块，需要生成一张可回看的学习图。
 
@@ -43,14 +44,15 @@
 |---|---|---|
 | brainstorm | Mermaid / show-widget；必要时 Image 2 概念图 | 先画结构，只有 UI/气质判断需要时才出 Image 2 |
 | PRD | Feature Spec 中记录视觉决策需求和已有图链接 | PRD 不追求高保真，但要把下游需要看的图说清 |
-| design | Image 2 视觉稿门禁 | 新页面/新模块必须先出 1-3 张图给用户确认，确认后再定 DESIGN.md |
-| design-impl / eng | 以 DESIGN.md 为真相源，Image 2 作为观感参考 | 实现后用真实截图替换或并列对比 Image 2 |
+| design | forge-design-lab 工作台门禁；Image 2 气质稿（可选） | 页面/组件/布局决策先在工作台线框确认、骨架逐层审查并保存；DESIGN.md 的 token 表由工作台导出生成。气质方向不明时另出 1-3 张 Image 2 |
+| design-impl / eng | 以 DESIGN.md + 工作台生成的 `<page>.tokens.css` 为真相源，Image 2 作为观感参考 | 组件 import tokens.css、只写 var()；实现后用真实截图对比工作台骨架 |
 | QA | 真实截图 + CSS/行为断言 | Image 2 只帮助解释偏差，不作为 pass/fail |
 | fupan | 默认不配图；用户点名需要时才生成学习图，不生成仪表盘 | 生成时插入对应知识模块标题下方；若图片工具不可用，保存 prompt pack 并标注待生成 |
 
 ## 产物保存约定
 
 - 当前项目的可复用视觉资产：`docs/assets/visuals/{模块名}/`
+- forge-design-lab 页面包：`docs/assets/visuals/{page}/`（`{page}.tokens.json` / `.tokens.js` / `{日期}-skeleton-{版本}.html` / `.meta.json`）；引擎项目副本 `docs/assets/visuals/_workbench/`；前端 `…/{page}.tokens.css`
 - brainstorm 原始讨论配图：`docs/archive/raw/discussions/{模块名}/assets/`
 - legacy 项目才沿用：`docs/讨论/{模块名}/assets/`
 - 复盘阶段：`~/claudecode_workspace/记录/复盘/{项目名}/assets/`

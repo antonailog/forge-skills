@@ -1,0 +1,180 @@
+{
+ "skill": "forge-design-lab",
+ "runs": 3,
+ "cwd": "/Users/dbwu/claudecode_workspace/项目/info2action/.worktrees/ai-search-mvp",
+ "when": "2026-09-20 07:11",
+ "agg": {
+  "train": {
+   "tp": 0,
+   "tn": 0,
+   "fp": 0,
+   "fn": 0
+  },
+  "test": {
+   "tp": 1,
+   "tn": 3,
+   "fp": 0,
+   "fn": 0
+  }
+ },
+ "cases": [
+  {
+   "id": "t11",
+   "split": "test",
+   "why": "追加（首轮全对后的加难）：读完 DESIGN.md 仍判断不了栏宽，没提工作台",
+   "query": "看完你写的 DESIGN.md 模块 28 我还是不知道右栏到底该多宽、一屏能放几张卡，你有什么办法让我自己定",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 16.6,
+     "bytes": 18792
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 16.9,
+     "bytes": 19000
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 17.1,
+     "bytes": 18891
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "n11",
+   "split": "test",
+   "why": "追加：共享『工作台』一词，但是复盘工作台工具的代码改动，归 forge-eng",
+   "query": "复盘工作台（tools/fupan-workbench）的前端 main.jsx 改一下，把任务列表默认按时间倒序",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 30.1,
+     "bytes": 13476
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 28.7,
+     "bytes": 12795
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 28.4,
+     "bytes": 12465
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n12",
+   "split": "test",
+   "why": "追加：排版数值改动但用户明确要直接改代码不讨论，归 forge-eng / design-impl",
+   "query": "把 admin 日志 tab 的字号从 12 改成 13，直接改 Tailwind 类就行，不用讨论",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 14.0,
+     "bytes": 11705
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 16.2,
+     "bytes": 13174
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 17.1,
+     "bytes": 13169
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n13",
+   "split": "test",
+   "why": "追加：只是读一个 token 的当前值，一步查完，不开工作台",
+   "query": "看一下 docs/assets/visuals/ai-search 的 tokens.json 里 s.col-w 现在是多少",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 13.0,
+     "bytes": 9292
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 13.1,
+     "bytes": 11464
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.8,
+     "bytes": 11420
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  }
+ ]
+}
