@@ -6,9 +6,9 @@
 
 | 产物 | 位置 | 体检 |
 |---|---|---|
-| SKILL.md | `skills/forge-design-lab/SKILL.md` | `validate_skill.py`：0 error / 0 warning；description 338 字符；正文 124 行；红线 3 条；强调词 1 处 |
+| SKILL.md | `skills/forge-design-lab/SKILL.md` | `validate_skill.py`：0 error / 0 warning；description 338 字符；正文 125 行；红线 3 条；强调词 1 处 |
 | references（5） | spec-schema · seven-layers · engine-hooks · pitfalls · example-ai-search | 每份在 SKILL.md「按需读取」点名读取时机 |
-| scripts（5） | adapt_tokens.py · build_tokens.py · scaffold_pack.py · verify_pack.mjs · render_design_table.py | 全部在两个仓库上实跑（见 §2） |
+| scripts（6） | adapt_tokens.py · build_tokens.py · scaffold_pack.py · verify_pack.mjs · render_design_table.py · merge_saved.py（§5 补） | 全部在两个仓库上实跑（见 §2、§5） |
 | assets | `workbench/workbench.{js,css}` 引擎母本 · `page-pack-template.html` | 引擎自 forge-design/assets 迁入并通用化（去 ai-search 专名与 `AI_TOKENS` 别名、生成器统一为 build_tokens.py、`layout.el` 映射、保存目录提示按 spec 生成） |
 | 上游改动 | `forge-design/SKILL.md` 第三步与总览、description；`_shared/visual-decision-layer.md` | 快照 `_archive/snapshots/forge-design-2026-09-20-pre-design-lab/`、`visual-decision-layer-2026-09-20.md` |
 | 登记 | README 表格与目录树、docs/skills-reference.md §4.1、CHANGELOG Unreleased | — |
@@ -60,18 +60,40 @@
 
 **判读与保留意见**：24 条全对说明 description 的排除项和「哪怕没提工作台」两段起了作用，但也说明这套 query 还不够刁钻；下一轮该加的是「用户在 forge-design 讨论中途顺口提到比例」这类潜在意图（SKILL.md 里定为反问不自动开），以及跨 skill 长对话里的第二轮路由——本跑器只看首轮。
 
-## 4. 没有跑的（明说）
+## 4. 首次真实使用（2026-09-20 14:23，用户独立操作）
 
-- **基线对照（with / without skill 跑 K1–K9 打分）**：没跑。K3/K4/K6 没有 skill 时必然为 0（没有引擎和生成器），跑了也只能证明「基建存在」；有区分度的是 K1/K7/K8，它们要一个真实的新页面包和一轮用户保存才能测，本轮没有第二个真实页面。
-- **人可判 H1/H2**（一次走完七层并保存、判断题可答）：等用户在 ai-search 工作台走下一轮时记录。
+用户在 ai-search 工作台改值、标结局、保存（下载兜底），全程没回到对话要我改值。K7/K8 与 H1/H2 的第一份真实数据：
+
+| 项 | 数据 | 判读 |
+|---|---|---|
+| K7 用户改值全部进 css | 3 处（`s.col-margin` 16→48、`sp.col-pt` 32→48、`sp.col-pb` 64→48），合并重建后 `--check` 通过 | ✓ |
+| K8 反馈条数 = 回复条数 | 新增 0 条（导出里那 9 条是上一轮的，已答） | ✓（本轮无新反馈） |
+| H1 一次坐下来走完七层 | 中途回到对话改值 **0 次** ✓；但七层结局覆盖只有 **7/93**（结构 2、排版 2、间距 3；层级/色彩/状态与动效/一致性 **全 0**） | ✗ 不能算走完 |
+| H2 判断题可答 | 2 个节点标「拿不准」并附带值，没有「不知道你在问什么」 | ✓ |
+
+H1 不达标暴露的是工具问题，不是用户问题：**看过一层但不逐个点结局，文件里就留不下痕迹**。24 个色彩节点要用户点 24 次「通过」才算走过，没人会这么干。
+
+## 5. S5 迭代（本轮真实使用直接催生，均已实现并验证）
+
+| # | 发现 | 动作 |
+|---|---|---|
+| 1 | 用户导出的 json **结构过期**：89 节点（缺我当天新增的 3 个）、无 `schemaVersion`/`prefix`、`layout` 无 `el`。SKILL.md 原来写「以用户文件为准覆盖」，照做会抹掉当天的结构改动 | 新增 `scripts/merge_saved.py`：按 id 合并（值/结局/反馈取用户的，结构取仓库的），报出「用户没见过的节点」，`--apply` 时自动写 baseline 记账；SKILL.md S4 改写、失败表改正、`pitfalls.md` 加第 12 条 |
+| 2 | 记账事后手改 json 会漏掉重建，`--check` 当场报不同源 | 记账并进 `merge_saved.py --apply`，不再手改 |
+| 3 | 走查痕迹留不下（H1 不达标） | 引擎每层头部加「整层通过」按钮：把本层未表态且未改值的节点一次标 `pass`；实测点一次给色彩层 24 个 `pass`、持久化正确、再点提示「本层已全部表过态」、零 JS 错误 |
+| 4 | 「对齐」无法表达：左区上留白是写死的 `32px`，用户没法把「卡顶对齐搜索框顶」当成决策 | 新增节点 `sp.left-pt`（左区上留白），骨架里的字面值换成 `var(--ai-left-pt)`；字面像素值 31 → 30 |
+| 5 | 删减动作（每轮必须有） | 删 forge-design 内的旧引擎副本（双母本）、删 ai-search 的本地 `tokens_build.py`、引擎去 `AI_TOKENS` 别名与 ai-search 专名 |
+
+改完复跑：`validate_skill.py` 0 error / 0 warning；页面包 verify **12 PASS / 1 WARN / 0 FAIL**（WARN 为剩余 30 行字面像素值）。
+
+## 6. 仍然没跑的（明说）
+
+- **基线对照（with / without 跑 K1–K9 打分）**：没跑。K3/K4/K6 没有 skill 时必然为 0（没有引擎和生成器），跑了只能证明「基建存在」；有区分度的 K1/K7/K8 需要第二个真实页面包才能测。
+- **H1 复测**：等用户用上「整层通过」再走一轮，看覆盖度能不能从 7/93 起来。
 - **D1 实现还原 ≤ 2px**：留空，实现轮 forge-qa 跑。
 
-## 5. S5 迭代记录
+## 7. 给用户的待办
 
-本轮评测没有失分项，不改 description、不改正文。建包过程中的删减动作（每轮必须有）：删掉 forge-design 内的旧引擎副本（避免双母本）、删掉 ai-search 目录里的本地 `tokens_build.py`（被 skill 脚本取代）、引擎去掉 `AI_TOKENS` 别名与 ai-search 专名。停止条件：评测无实质发现，等用户实机走一轮再进下一次 S5。
-
-## 6. 给用户的待办
-
-1. 审阅 `docs/forge-design-lab-设计文档.md` 与 `skills/forge-design-lab/SKILL.md`；有异议直接改文档，我按文档改 skill。
-2. 在 ai-search 工作台走一轮七层并保存（H1/H2 的第一份数据）；顺便看 31 处字面像素值哪些该进 token。
-3. forge-skills 仓库本次改动未提交（与你未提交的 fupan 改动并存）；确认后我按路径提交，不碰 fupan 那几处。
+1. 审阅设计文档与 SKILL.md；有异议直接改文档，我按文档改 skill。
+2. **刷新工作台页面**再走下一轮——你这次的导出是旧页面，缺 3 个节点（`sp.card-thumb-auto`、`sp.card-thumb-fit`、`sp.hint-reserve`），刷新后才能看到它们和新的「整层通过」。
+3. 定 `sp.col-pt` / `sp.col-pb`（你标的两个拿不准），备选与实测已写进判断题 J11 / J12。
+4. 剩余 30 行字面像素值哪些该进 token。

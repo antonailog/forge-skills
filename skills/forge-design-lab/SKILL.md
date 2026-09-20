@@ -43,7 +43,8 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | 脚本 | 什么时候 | 用法 | 失败降级 |
 |---|---|---|---|
 | `adapt_tokens.py` | S1，每个新页面包一次 | `python3 {lab}/scripts/adapt_tokens.py <repo> --page <slug> [--prefix xx] [--init-spec]` | 没有 `:root` 变量就读 tailwind theme；两者都没有则列候选让用户指认 |
-| `build_tokens.py` | S2/S3 写完 json 后；S4 用户保存后校验重建 | `python3 {lab}/scripts/build_tokens.py <repo> <tokens.json> [--check]` | 校验不过就修 json，不手改生成的 js/css |
+| `merge_saved.py` | S4 拿到用户保存/下载的 json 后，先于 build | `python3 {lab}/scripts/merge_saved.py <repo> <保存的 json> [--apply]` | 默认只报告；页面过期时退出码 2，报告里列出用户没见过的节点 |
+| `build_tokens.py` | S2/S3 写完 json 后；S4 合并后校验重建 | `python3 {lab}/scripts/build_tokens.py <repo> <tokens.json> [--check]` | 校验不过就修 json，不手改生成的 js/css |
 | `scaffold_pack.py` | S2，线框确认后建骨架壳 | `python3 {lab}/scripts/scaffold_pack.py <repo> <tokens.json> [--adapt <adapt.json>] [--sample <json>]` | 同时把引擎母本同步到 `docs/assets/visuals/_workbench/` |
 | `verify_pack.mjs` | S3 交付前；S4 每次重建后 | `node {lab}/scripts/verify_pack.mjs <html> --repo <repo> [--shots <dir>] [--strict-literals] [--json <out>]` | 没有 Playwright 就只跑 `build_tokens.py --check`，让用户人工开页面报控制台 |
 | `render_design_table.py` | S5 | `python3 {lab}/scripts/render_design_table.py <repo> <tokens.json> --design docs/DESIGN.md --heading "## 模块 28"` | DESIGN.md 里找不到模块标题就只打印区块，提示先走 forge-design |
@@ -72,9 +73,9 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 
 用户在工作台改值、给结局、写反馈，点保存，回来说「保存好了」。此时：
 
-1. 找文件：仓库里的 tokens.json 是否更新（`git status`）；没有就取 `~/Downloads` 里最新的同名 json，复制覆盖，说明来源。
-2. `build_tokens.py <repo> <json>` 重建 js/css，再跑 `verify_pack.mjs`。
-3. 出差异表：token、原值、新值、用户结局；反馈 tab 里一行一条，逐条回复，能直接改的改进 json（加 options、改判断题），改不了的说为什么。
+1. 找文件：仓库里的 tokens.json 是否被直写（`git status`）；没有就取 `~/Downloads` 里最新的同名 json。
+2. `merge_saved.py` 按 id 合并，别直接覆盖——工作台页面一加载 spec 就固定在内存里，用户在你改过 json 之后没刷新页面就保存的话，导出的是旧结构，缺你新增的节点、effects 与顶层字段。脚本只取用户那份里真正属于他的三样（值、结局、反馈），结构以仓库为准，并报出「用户没见过的节点」。确认报告无误后 `--apply`，再 `build_tokens.py` 重建、`verify_pack.mjs` 验收。
+3. 出差异表：token、原值、新值、用户结局；同时报七层覆盖（每层有结局的节点数），某层为 0 就在回复里点名，别默认他走过。反馈 tab 里一行一条，逐条回复，能直接改的改进 json（加 options、改判断题），改不了的说为什么。
 4. 「拿不准」的节点出 A/B/C：三档都取阶梯值，每档一句可见后果，直接写进该节点 `options`，用户下轮在工作台上切着看。
 5. 用户保存的值是决策，不替他改；要反对就出选项。json 损坏就请他重新保存，不手修。
 
@@ -121,7 +122,7 @@ forge-design 第三步遇到页面/组件/布局决策时转到本 skill：输�
 | Playwright 不可用 | 只做 `build_tokens.py --check` 静态校验，请用户打开页面并报告控制台是否有红字 |
 | 浏览器不支持 File System Access | 引擎自动下载 tokens.json；从 `~/Downloads` 取最新一份，按修改时间 |
 | 用户授权目录选错（选到 docs 而非仓库根） | 引擎报错并清除授权，下次保存重选；不用 Agent 侧处理 |
-| 用户保存的 json 与仓库基线冲突（多轮并行） | 以用户文件为准覆盖，提交信息里列差异 |
+| 用户保存的 json 结构比仓库旧（页面没刷新就保存） | `merge_saved.py` 按 id 合并，值与结局以用户为准、结构以仓库为准；报告里把「他没见过的节点」念给他听，下一轮让他刷新页面再看 |
 | Google Fonts 不通 | 面板徽标显示「字体 ✗ 回退」，比例判断照常，气质判断延后 |
 | DESIGN.md 里没有该模块 | 只输出实现清单，提示先走 forge-design 建模块章节 |
 | 用户在对话里描述问题但说不出维度 | 先用八个维度词（位置、尺寸、间距、字、色、密度、顺序、状态）替他翻译，再对应到元素编号或 token，最后才出选项 |
