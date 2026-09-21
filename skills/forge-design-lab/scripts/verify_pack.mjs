@@ -3,6 +3,7 @@
 // 用法: node verify_pack.mjs <html> [--repo <root>] [--shots <dir>] [--strict-literals] [--json <out>] [--vw 1440 --vh 900]
 // 查什么: K3 零 JS 错误 · K4 同源（tokens.css 计算值 = json 基线；--repo 时再跑 build_tokens.py --check）
 //        K5 组件 CSS 字面像素值（@lab:component 段，排除 fixed 标记与 0px/1px；默认 warn，--strict-literals 变 fail）
+//        K7 带 token 的组件声明是否真的生效（防 ID 优先级静默吃掉类规则）
 //        K6 每个可改 token 有 maps 且能命中元素 · K2 layout.el ↔ data-id · elementIds/effects/mobileBelow 引用存在
 //        交互烟测：切层/切状态/线框区域数/点节点/检查模式点击/反馈解析/手机视口/跟随窗口尺寸/字体徽标/引擎同源检查
 // 退出码: 0 全过 · 1 有 FAIL · 3 没有 Playwright（只做静态检查）· 64 用法错误
@@ -160,6 +161,77 @@ const map = await page.evaluate(() => {
 if (map.missing.length || map.badsel.length) fail('K6', `有 maps 但命中不到元素 ${map.missing.length}，选择器非法 ${map.badsel.length}`, map.missing.concat(map.badsel).join('\n'));
 else pass('K6', '所有带 maps 的节点都能命中骨架元素');
 if (map.nomaps.length) warn('K6', `${map.nomaps.length} 个可改/带判断题的节点没有 maps（用户点不到）`, map.nomaps.join(', '));
+
+// K7 声明了 token 却没生效：组件规则被更高优先级的规则吃掉
+// 存在的理由：K4 只比对变量的「文件值」，K5/K6 只看写没写、映射得到映射不到。
+// 三者全绿时，一条 `#frame button{border:0}` 仍可以把所有类规则的边框静默吃光——
+// 变量是对的、规则是写了的、元素是找得到的，就是没画出来。这一条补的是最后一公里。
+// 注意不能用 Array.from(rule.style) 取属性名：带 var() 的简写会被 CSSOM 拆成长名
+// 且 getPropertyValue 返回空串，按长名过滤会一个都取不到（这条检查第一版就栽在这里）。
+const cascade = await page.evaluate(() => {
+  const frame = document.getElementById('frame');
+  const GROUP = { border: 'border', 'border-width': 'border', 'border-style': 'border', 'border-color': 'border',
+    'border-top': 'border', 'border-top-width': 'border', 'border-top-style': 'border', 'border-top-color': 'border',
+    'border-radius': 'radius', 'border-top-left-radius': 'radius',
+    background: 'background', 'background-color': 'background', color: 'color',
+    padding: 'padding', 'padding-top': 'padding', 'padding-left': 'padding',
+    'font-size': 'font-size', 'font-family': 'font-family', height: 'height', width: 'width', gap: 'gap' };
+  // 按作者写法解析声明：括号内的分号不算分隔
+  const authored = r => { const t = (r.style && r.style.cssText) || ''; const out = []; let d = 0, buf = '';
+    for (const ch of t) { if (ch === '(') d++; else if (ch === ')') d--;
+      if (ch === ';' && d === 0) { out.push(buf); buf = ''; } else buf += ch; }
+    if (buf.trim()) out.push(buf);
+    return out.map(x => { const i = x.indexOf(':'); return i < 0 ? null : [x.slice(0, i).trim(), x.slice(i + 1).trim()]; }).filter(Boolean); };
+  // 只把「ID + 裸元素名」这种重置当嫌疑：#frame button、#frame * 之类。
+  // #frame.xxx / #frame[data-state=…] 是引擎按开关加的类与状态，本来就该赢，不是坏味道。
+  const isReset = sel => sel.split(',').some(one => {
+    const parts = one.trim().split(/\s+/);
+    return /^#[\w-]+$/.test(parts[0]) && parts.length > 1
+        && parts.slice(1).every(x => /^([a-zA-Z][\w-]*|\*)$/.test(x)); });
+  const spec = sel => { const t = sel.replace(/\([^)]*\)/g, '');
+    return ((t.match(/#/g) || []).length) * 10000
+         + ((t.match(/\.|\[|:(?!:)/g) || []).length) * 100
+         + ((t.match(/(^|[\s>+~])[a-zA-Z][\w-]*/g) || []).length); };
+  const rules = [];
+  for (const sh of document.styleSheets) {
+    let rs; try { rs = sh.cssRules; } catch (e) { continue; }   // 跨域表读不到，跳过
+    // 注意：CSS 嵌套落地后，普通 CSSStyleRule 也带 cssRules（空列表），空列表是真值。
+    // 写成 if (r.cssRules) { walk(...); continue; } 会把所有样式规则递归吞掉、一条都收不到。
+    (function walk(list) { for (const r of list) {
+      if (r.selectorText && r.style) rules.push({ r, sel: r.selectorText, decls: authored(r) });
+      if (r.cssRules && r.cssRules.length) walk(r.cssRules); } })(rs);
+  }
+  const dead = [], shadowed = [];
+  for (const R of rules) {
+    const withVar = R.decls.filter(([, v]) => /var\(--/.test(v));
+    if (!withVar.length) continue;
+    let els = []; try { els = [...frame.querySelectorAll(R.sel)]; } catch (e) { continue; }
+    if (!els.length) continue;
+    const mine = spec(R.sel), hasId = /#/.test(R.sel);
+    for (const el of els) {
+      const cs = getComputedStyle(el);
+      // ① 声明了边框宽度，算出来却是 0：整条声明被吃掉了
+      const bw = withVar.find(([p]) => p === 'border' || p === 'border-width' || p === 'border-top-width');
+      if (bw) { const m = /var\((--[\w-]+)/.exec(bw[1]); const tv = m ? cs.getPropertyValue(m[1]).trim() : '';
+        if (cs.borderTopWidth === '0px' && !/^0(px)?$/.test(tv))
+          dead.push(`${R.sel} { ${bw[0]}: ${bw[1]} }` + (m ? `，${m[1]} = ${tv || '未定义'}` : '') + ' → 实际算出 border-width: 0'); }
+      // ② 优先级倒挂：不带 ID 的组件规则，在同一属性组上被带 ID 的规则压过
+      if (hasId) continue;
+      for (const [p] of withVar) { const g = GROUP[p]; if (!g) continue;
+        for (const O of rules) {
+          if (O === R || !isReset(O.sel) || spec(O.sel) <= mine) continue;
+          if (!O.decls.some(([q]) => GROUP[q] === g)) continue;
+          let hit = false; try { hit = el.matches(O.sel); } catch (e) { continue; }
+          if (hit) shadowed.push(`${p}：${R.sel} 被 ${O.sel} 压过`);
+        } }
+    }
+  }
+  const uniq = a => [...new Set(a)];
+  return { dead: uniq(dead).slice(0, 15), shadowed: uniq(shadowed).slice(0, 15) };
+});
+if (cascade.dead.length) fail('K7', `${cascade.dead.length} 处声明了边框 token 却没画出来`, cascade.dead.join('\n'));
+else if (cascade.shadowed.length) warn('K7', `${cascade.shadowed.length} 处组件规则被「ID + 裸元素名」的重置压过（ID 优先级高于类，重置要用 :where() 包裹）`, cascade.shadowed.join('\n'));
+else pass('K7', '带 token 的组件声明都真的生效了（无被更高优先级规则吃掉的）');
 if (map.layoutMissing.length) warn('K2', `线框区域找不到对应 data-id（layout.el）：${map.layoutMissing.join(', ')}`);
 else if ((spec.layout || []).length) pass('K2', '线框区域与骨架 data-id 一一对应');
 if (map.elMissing.length) warn('ids', `elementIds 登记了但骨架里没有的编号：${map.elMissing.join(', ')}`);

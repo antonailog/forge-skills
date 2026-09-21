@@ -19,6 +19,9 @@
 | 13 | 页面包里某个元素莫名多出边框、内距或白底，行高被撑大 | 页面包的类名与引擎 CSS 撞车。引擎用了不少两三个字母的短类名（`.d` `.q` `.nd` `.nh` `.fb` `.ctl` `.sw` `.btn`），页面写 `.hist .d` 照样被命中 | 页面包里凡是短类名都加模块前缀（`.hd` `.hq` `.hrow`）；写之前先 `grep -oE "^\.[a-z]{1,4}[ ,{]" workbench.css` 看一眼引擎占了哪些 |
 | 14 | 按了快捷键没反应，字母还被打进了骨架的输入框 | 快捷键守卫写成「任何 input/textarea 都跳过」。骨架里的输入框是设计稿的装饰件，用户点一下焦点就停在那儿，之后所有快捷键全失效 | 守卫只挡 `#wb-panel` 内的输入；开检查时顺手 `blur()` 掉骨架里的焦点，并给一条常驻提示条，别让人以为没生效 |
 | 15 | 用户看到的是一套值、实现的是另一套 | 值散落在 DESIGN.md 文字、骨架 CSS 字面值、前端 Tailwind 类里 | 只写 `var()`；字面值要么 token 化、要么 `/* fixed */` 说明；前端组件 import 生成的 `.tokens.css`；`verify_pack.mjs` 的字面值扫描与同源检查把这条守住 |
+| 16 | 按钮看着是「纯文字」，边框像没画。验收脚本 13 项全绿也查不出来 | 重置写成 `#frame button{…border:0}`，ID 特异度 (1,0,1) 压过 `.st .retry{border:var(…)}` 的 (0,2,0)。边框简写整条作废，`border-style` 退回 `none`，于是 `border-width` 算出 0、`border-color` 退回 `currentColor` | 重置一律 `:where(#frame button){…}`（同坑 #2）。`verify_pack.mjs` 的 K7 专抓这一类：声明了边框 token 却算出 0，以及类规则被「ID + 裸元素名」压过 |
+| 17 | 自己写的 CSSOM 遍历一条规则都收不到，检查脚本静默常绿 | CSS 嵌套落地后普通 `CSSStyleRule` 也带 `cssRules`（空列表），而空列表是真值。写成 `if (r.cssRules) { walk(r.cssRules); continue; }` 会把所有样式规则当容器递归吞掉 | 先收 `r.selectorText`，再 `if (r.cssRules && r.cssRules.length) walk(...)`。另：带 `var()` 的简写在 CSSOM 里被拆成长名且 `getPropertyValue` 返回空串，取作者写法要解析 `rule.style.cssText`，不能枚举 `Array.from(rule.style)` |
+| 18 | 新写的检查脚本在「已知坏」的输入上也报通过 | 没拿坏样本验证过就信它。静默常绿的检查比没有检查更糟，它带着「我查过了」的可信度 | 每条新检查都要先造一份「只坏这一处」的对照文件跑一遍，必须报错；再在健康文件上跑一遍，必须干净。K7 就是这样抓出上面两个自身 bug 的 |
 
 ## 写组件 CSS 的硬约束（verify 会查）
 
