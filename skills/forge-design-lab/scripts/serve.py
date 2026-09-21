@@ -10,7 +10,9 @@
   · 静态根 = 仓库根。页面 URL 形如 /docs/assets/visuals/<page>/<file>.html，
     页面里那些 ../../../../frontend-react/... 的相对路径原样可用，页面包一行都不用改。
   · GET  /api/lab/status          → 绑定的仓库路径、端口、已发现的页面包
-  · POST /api/lab/save            → 按 id 合并后直写三文件，回执写 .forge/design-lab/last-save.json
+  · POST /api/lab/save            → 按 id 合并后直写三文件；回执写 last-save.json，并追加一行到 saves.jsonl
+                                    （last-save.json 会被下一次覆盖；连点两次保存时第二次报「无值改动」，
+                                     只看它会漏掉第一次的改动。差异表一律以 git diff 为准，回执只作辅助。）
   · GET  /api/lab/packs           → 页面包索引
 
 保存为什么要合并而不是覆盖:
@@ -161,6 +163,8 @@ def merge_and_write(repo, incoming):
     errs, warns = BT.validate(disk)
     if errs:
         raise ValueError("合并后 json 校验失败：" + "；".join(errs[:5]))
+    # 回执会被下一次保存覆盖。连点两次保存时，第二次看到磁盘已是新值、报「无值改动」，
+    # 第一次的改动记录就没了，Agent 照回执读会漏掉用户的决定。所以另存一份追加流水。
     for k, text in (("json", json.dumps(disk, ensure_ascii=False, indent=1)),
                     ("js", BT.build_js(disk)), ("css", BT.build_css(disk))):
         p = os.path.join(repo, disk["files"][k])
@@ -172,10 +176,12 @@ def merge_and_write(repo, incoming):
 
     report = {"at": disk["exported"], "repo": repo, "page": disk.get("page"), "version": disk.get("version"),
               "stale": stale, "nodes_user_not_seen": only_disk, "nodes_removed": only_page,
-              "changes": changes, "decisions": counts, "new_feedback": new_fb,
+              "rev": pack_rev(repo, page), "changes": changes, "decisions": counts, "new_feedback": new_fb,
               "files": [disk["files"][k] for k in ("json", "js", "css")], "warnings": warns}
     with open(os.path.join(state_dir(repo), "last-save.json"), "w", encoding="utf-8") as fh:
         json.dump(report, fh, ensure_ascii=False, indent=1)
+    with open(os.path.join(state_dir(repo), "saves.jsonl"), "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(report, ensure_ascii=False) + "\n")
     return report
 
 

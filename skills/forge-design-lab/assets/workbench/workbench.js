@@ -341,6 +341,9 @@ async function doSave(){const btn=$('#wb-save');btn.disabled=true;stat('保存�
     try{const d=await saveViaServer(json);
       const msg=`已保存 ${new Date().toTimeString().slice(0,5)} → 服务直写 · 改动 ${d.changes.length} · 反馈 +${d.new_feedback.length}`;
       stat(msg,'ok');localStorage.setItem(LS+':saved',msg);
+      // 自己的保存也会改文件时间戳。不把 REV 跟上，监视器下一轮就把页面重载了。
+      if(d.rev)REV=d.rev;else fetch('/api/lab/status',{cache:'no-store'}).then(r=>r.json())
+        .then(x=>{const r2=(x.revs||{})[T.page];if(r2)REV=r2}).catch(()=>{});
       const el=$('#wb-root');
       if(el) el.innerHTML=`已直写 ${d.files.map(esc).join('、')}`
         +(d.stale&&d.nodes_user_not_seen.length?`\n⚠ 你这个页面是旧的，以下节点你还没见过（已按 id 合并，没覆盖掉）：\n${d.nodes_user_not_seen.join(', ')}\n刷新页面就能看到。`:'')
