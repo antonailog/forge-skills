@@ -84,7 +84,8 @@ function apply(){
   $$('#wb-view [data-state]').forEach(b=>{b.classList.toggle('on',b.dataset.state===S.state);b.disabled=!curLevel().states});
   $$('#wb-view [data-vp]').forEach(b=>b.classList.toggle('on',b.dataset.vp===S.vp));
   $('#wb-zoomg').style.display=follow?'none':'';$('#wb-fit').classList.toggle('on',S.fit);$('#wb-one').classList.toggle('on',!S.fit);
-  $('#wb-inspect').classList.toggle('on',S.inspect);if(!S.inspect&&ov)ov.style.display='none';$('#wb-dims').classList.toggle('on',S.dims);$('#wb-ids').classList.toggle('on',S.ids);$('#wb-dark').classList.toggle('on',S.dark);
+  $('#wb-inspect').classList.toggle('on',S.inspect);if(!S.inspect&&ov)ov.style.display='none';
+  document.body.classList.toggle('wb-inspecting',S.inspect);$('#wb-dims').classList.toggle('on',S.dims);$('#wb-ids').classList.toggle('on',S.ids);$('#wb-dark').classList.toggle('on',S.dark);
   $$('#wb-view [data-toggle]').forEach(b=>b.classList.toggle('on',!!S.toggles[b.dataset.toggle]));
   $('#wb-view').classList.toggle('collapsed',!S.viewOpen);$('#wb-viewtoggle').textContent=S.viewOpen?'折叠':'展开';
   panel.classList.toggle('closed',!S.panel);
@@ -197,6 +198,7 @@ function meaningful(prop,v){
   if(/^(padding|margin|border|gap)/.test(prop)&&/^0(px)?$/.test(v))return false;
   if(prop==='border-radius'&&/^0(px)?$/.test(v))return false;
   return true;}
+function blurFrame(){const a=document.activeElement;if(a&&a!==document.body&&frame.contains(a))a.blur();}
 const ov=document.createElement('div');ov.id='wb-ov';ov.innerHTML='<i></i><b></b>';document.body.appendChild(ov);
 function elName(el){
   const d=el.closest('[data-id]');const tag=el.tagName.toLowerCase();
@@ -261,19 +263,22 @@ function renderPick(){const box=$('#wb-el');if(!box)return;
    ${tk.length?`<div class="et">token ${tk.map(([p,v])=>`<code data-jump="${v.token}">${esc(p)}=${esc(v.token)}</code>`).join('')}</div>`:''}
    ${hd.length||a.missing.length?`<div class="ew">⚠ 没 token ${hd.map(([p,v])=>`<code>${esc(p)}:${esc(v.declared)}</code>`).join('')}${a.missing.map(m=>`<code>${esc(m)}</code>`).join('')}</div>`:''}
    <div class="eb"><button class="btn" id="wb-elins">插入反馈</button><button class="btn ghost" id="wb-elcopy">复制详情</button></div>`;}
-function pickEl(el){const a=analyze(el);PICK={el,a,h:null};renderPick();
+function pickEl(el){const a=analyze(el);PICK={el,a,h:null};renderPick();stat('已选中 '+a.name+'，面板顶部可「插入反馈」','');
   if(a.mod){S.mod=a.mod;renderMod();}
   $$('#frame .pick').forEach(x=>x.classList.remove('pick'));el.classList.add('pick');}
 /* ---------- 工具条 / 快捷键 / 检查 ---------- */
 $('#wb-view').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();
   if(b.dataset.level)S.level=b.dataset.level;else if(b.dataset.state)S.state=b.dataset.state;else if(b.dataset.vp){S.vp=b.dataset.vp;const v=T.viewports.find(x=>x.key===S.vp);if(v&&v.w){$('#wb-vw').value=v.w;$('#wb-vh').value=v.h}}
-  else if(b.id==='wb-fit')S.fit=true;else if(b.id==='wb-one')S.fit=false;else if(b.id==='wb-inspect')S.inspect=!S.inspect;else if(b.id==='wb-dims')S.dims=!S.dims;else if(b.id==='wb-ids')S.ids=!S.ids;else if(b.id==='wb-dark'){S.dark=!S.dark;rerender()}
+  else if(b.id==='wb-fit')S.fit=true;else if(b.id==='wb-one')S.fit=false;else if(b.id==='wb-inspect'){S.inspect=!S.inspect;if(S.inspect)blurFrame();}else if(b.id==='wb-dims')S.dims=!S.dims;else if(b.id==='wb-ids')S.ids=!S.ids;else if(b.id==='wb-dark'){S.dark=!S.dark;rerender()}
   else if(b.dataset.toggle)S.toggles[b.dataset.toggle]=!S.toggles[b.dataset.toggle];else if(b.id==='wb-viewtoggle')S.viewOpen=!S.viewOpen;
   save();apply()});
 ['#wb-vw','#wb-vh'].forEach(s=>$(s).addEventListener('change',()=>{S.vp='custom';apply()}));
 ptab.onclick=()=>{S.panel=true;save();apply()};
-document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable))return;if(e.metaKey||e.ctrlKey||e.altKey)return;
-  const k=e.key.toLowerCase();if(k==='p'){S.panel=!S.panel}else if(k==='t'){S.viewOpen=!S.viewOpen;S.panel=true}else if(k==='i'){S.inspect=!S.inspect}else if(k==='d'){S.dims=!S.dims}else if(k==='n'){S.ids=!S.ids}else if(k==='escape'){if(S.inspect){S.inspect=false;ov.style.display='none'}else S.panel=false}else return;e.preventDefault();save();apply()});
+document.addEventListener('keydown',e=>{const t=e.target;
+  // 只挡面板里的真输入（反馈框、数值框）；骨架里的 input 是设计稿的装饰件，不能让它吃掉快捷键
+  if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable)&&t.closest('#wb-panel'))return;
+  if(e.metaKey||e.ctrlKey||e.altKey)return;
+  const k=e.key.toLowerCase();if(k==='p'){S.panel=!S.panel}else if(k==='t'){S.viewOpen=!S.viewOpen;S.panel=true}else if(k==='i'){S.inspect=!S.inspect;if(S.inspect)blurFrame()}else if(k==='d'){S.dims=!S.dims}else if(k==='n'){S.ids=!S.ids}else if(k==='escape'){if(S.inspect){S.inspect=false;ov.style.display='none'}else S.panel=false}else return;e.preventDefault();save();apply()});
 frame.addEventListener('mousemove',e=>{if(!S.inspect){ov.style.display='none';return}
   const el=e.target;if(!el||el===frame){ov.style.display='none';return}
   const r=el.getBoundingClientRect();ov.style.display='block';

@@ -165,3 +165,8 @@ kbd{font:10.5px 'JetBrains Mono',monospace;border:1px solid #C9C6BE;border-botto
 #wb-el .et code:hover{border-color:#C65A1E;color:#C65A1E}
 #wb-el .ew code{cursor:default;border-color:#E2B49F}
 #wb-el .eb{margin-top:8px;display:flex;gap:6px}
+
+body.wb-inspecting #wb-stage{cursor:crosshair}
+body.wb-inspecting::after{content:'检查模式 · 点任意元素查看它的 token 归属与缺口 · Esc 退出';
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10000;pointer-events:none;
+  background:#1A1917;color:#fff;font:11.5px/1 ui-monospace,Menlo,monospace;padding:7px 12px;border-radius:5px;opacity:.88}
