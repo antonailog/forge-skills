@@ -130,7 +130,7 @@ const lit = await page.evaluate(() => {
   css = css.replace(/\/\*\s*@lab:fixed-start[\s\S]*?@lab:fixed-end\s*\*\//g, '');
   const hits = [];
   css.split('\n').forEach((ln, i) => {
-    if (/fixed\s*\*\//.test(ln)) return;
+    if (/\/\*[^*]*\bfixed\b/.test(ln)) return;  // 行内注释含 fixed 即视为「有意写死」
     const clean = ln.replace(/\/\*[\s\S]*?\*\//g, '');
     const m = [...clean.matchAll(/(?<![\w.-])(\d+(?:\.\d+)?)px\b/g)].map(x => x[1]).filter(v => v !== '0' && v !== '1');
     if (m.length) hits.push({ line: i + 1, px: m, text: clean.trim().slice(0, 120) });

@@ -35,10 +35,11 @@ const VIEW_HTML=`
 <div class="vr"><span class="lab">审阅</span><button id="wb-inspect" class="warn" title="I">检查</button><button id="wb-dims" title="D">标注</button><button id="wb-ids" title="N">编号</button><button id="wb-dark">暗色</button>${(T.toggles||[]).map(t=>`<button data-toggle="${t.key}">${esc(t.label)}</button>`).join('')}</div>
 </div></div>`;
 panel.innerHTML=`
-<div id="wb-phead"><div id="wb-tabs"><button data-t="layer">按层</button><button data-t="mod">按模块</button><button data-t="fb">反馈</button><button data-t="how">指南</button><button class="close" id="wb-pclose" title="收起（P）">×</button></div>
+<div id="wb-phead"><div id="wb-tabs"><button data-t="layer">按层</button><button data-t="mod">按模块</button><button data-t="q">判断题</button><button data-t="fb">反馈</button><button data-t="how">指南</button><button class="close" id="wb-pclose" title="收起（P）">×</button></div>
 <div id="wb-saverow"><button id="wb-save">保存</button><span id="wb-savestat">未保存</span></div>${VIEW_HTML}</div>
 <div class="wb-tab" data-t="layer"><p><small>从上往下走七层，每层先读问题再看节点。黄框是我替你标出的风险点。改值即时生效；点节点名跳到它所在的层级/状态并闪一下。</small></p><div id="wb-layer"></div></div>
 <div class="wb-tab" data-t="mod"><p><small>选一个模块看它全部 token 并现场改。或开工具条「检查」后直接点骨架上的元素。</small></p><div class="wb-mods" id="wb-mods"></div><div id="wb-modlist"></div></div>
+<div class="wb-tab" data-t="q"><p><small>本页所有需要你判断的问题，按七层排。点一条就跳到它所在的层级与状态，并把对应元素闪一下——不用自己翻。给了结局的会打勾。</small></p><div id="wb-qlist"></div></div>
 <div class="wb-tab" data-t="fb"><p><small>一行一条。行首写元素编号或 token id 就能定位，例如 <code>C12 太挤</code>、<code>s.col-w 再宽点</code>；不写编号也行。点「记入」后保存时随文件带给我。</small></p><textarea id="wb-fbin" placeholder="C12 太挤&#10;s.doc-max 960 还是宽了&#10;搜索框像广告"></textarea><div style="margin:8px 0 14px"><button class="btn" id="wb-fbadd">记入</button><button class="btn ghost" id="wb-fbclr">清空输入</button></div><div id="wb-fblist"></div></div>
 <div class="wb-tab" data-t="how">
 <h3>怎么用</h3><p><b>1 走七层。</b>「按层」每层一个问题，每个节点给结局：通过 / 改 / 拿不准。</p><p><b>2 直接改。</b>改值骨架当场变，改过的节点左边出蓝条，自动记为「改」。不在站点阶梯的值标红。</p><p><b>3 说感受。</b>「反馈」tab 一行一条；或开「检查」点元素，面板跳到它的 token。</p><p><b>4 保存。</b>橙色按钮直接写进仓库（首次选一次仓库根目录），然后告诉 Agent「保存好了，按调整后的来」。</p>
@@ -113,9 +114,20 @@ function renderLayer(){$('#wb-layer').innerHTML=T.groups.map(g=>{const ns=NODES.
   if(g.key==='consistency'){const refs=new Set();NODES.forEach(n=>{if(n.type==='colorref')refs.add('--'+n.value)});const off=NODES.filter(offScale);extra=`<div class="wb-status">引用站点 token：${[...refs].join(' ')}\n页面 token：${NODES.filter(n=>n.css).length} 个\n不在阶梯的值：${off.length?off.map(n=>n.id+'='+n.value).join('，'):'无'}\n相对基线改动：${NODES.filter(isChanged).length}</div>`}
   return `<div class="wb-gh"><span class="prog">${done}/${ns.length}</span><b>${esc(g.label)}</b><button class="gpass" data-gpass="${g.key}" title="把本层还没表态的节点一次标为「通过」——看过就点，别让走查在文件里留不下痕迹">整层通过</button><div class="ask">${esc(g.ask||'')}</div><div class="how">${esc(g.how||'')}</div></div>${extra}${ns.map(nodeHtml).join('')}`}).join('')}
 function renderMod(){$('#wb-mods').innerHTML=T.modules.map(m=>`<button data-mod="${m.key}" class="${m.key===S.mod?'on':''}">${esc(m.label)}</button>`).join('');const ns=NODES.filter(n=>n.mod===S.mod);$('#wb-modlist').innerHTML=T.groups.map(g=>{const gs=ns.filter(n=>n.g===g.key);return gs.length?`<h3>${esc(g.label)}</h3>${gs.map(nodeHtml).join('')}`:''}).join('')||'<p class="wb-muted">该模块没有 token。</p>'}
+function renderQ(){const el=$('#wb-qlist');if(!el)return;
+  const qs=NODES.filter(n=>n.q);
+  const R={pass:'通过',change:'改',unsure:'拿不准',propose:'提议改动'};
+  el.innerHTML=T.groups.map(g=>{const ns=qs.filter(n=>n.g===g.key);if(!ns.length)return '';
+    return `<h3>${esc(g.label)}</h3>`+ns.map(n=>{const d=D[n.id]||{};const done=d.r||isChanged(n)?'done':'';
+      const m=/^(J\d+)\s*/.exec(n.q||'');const tag=m?m[1]:'';const body=m?n.q.slice(m[0].length):n.q;
+      return `<div class="qi ${done}" data-qnid="${n.id}"><span class="qtag">${tag||'·'}</span><b>${esc(n.label)}</b>`
+        +`<span class="qst">${d.r?R[d.r]:(isChanged(n)?'已改值':'未表态')}</span><p>${esc(body)}</p></div>`}).join('')}).join('')
+    ||'<p class="wb-muted">本页没有判断题。</p>';
+  const done=qs.filter(n=>(D[n.id]&&D[n.id].r)||isChanged(n)).length;
+  const h=$('#wb-tabs button[data-t="q"]');if(h)h.textContent=`判断题 ${done}/${qs.length}`;}
 function renderFb(){$('#wb-fblist').innerHTML=FB.map((f,i)=>`<div class="fb" data-i="${i}"><span class="ref ${f.ref?'':'none'}">${f.ref?esc(f.ref):'—'}</span><span class="t">${esc(f.t)}</span><span class="x" data-del="${i}" title="删除">×</span></div>`).join('')||'<p class="wb-muted">还没有反馈。</p>'}
 function renderDec(){const el=$('#wb-dec');if(!el)return;el.innerHTML=(H.decisions||[]).map(d=>`<div class="d" data-ids="${d[2].join(',')}"><b>${d[0]}</b><span>${esc(d[1])}</span></div>`).join('')||'<p class="wb-muted">无</p>'}
-function rerender(){renderLayer();renderMod();renderFb();renderDec()}
+function rerender(){renderLayer();renderMod();renderQ();renderFb();renderDec()}
 function refreshNode(id){$$(`.nd[data-nid="${id}"]`).forEach(el=>{el.outerHTML=nodeHtml(byId[id])})}
 function setVal(id,v){const n=byId[id];if(n.type==='px'||n.type==='ms'||n.type==='num')v=Number(v);n.value=v;applyToken(n);applyEffects();const same=n.value===BASE[id];D[id]=D[id]||{};if(!same&&!D[id].r)D[id].r='change';if(same&&D[id].r==='change')delete D[id].r;save();requestAnimationFrame(()=>{sizes();if(H.specs)H.specs({byId,fmt})});refreshNode(id);if(H.afterApply)H.afterApply(S,{frame,byId});stat('有未保存改动','')}
 /* ---------- 映射与跳转 ---------- */
@@ -136,7 +148,7 @@ panel.addEventListener('input',e=>{const t=e.target;if(t.dataset.note){(D[t.data
 panel.addEventListener('click',e=>{
   const sw=e.target.closest('.sw[data-set]');if(sw){setVal(sw.dataset.set,sw.dataset.v);return}
   const gp=e.target.closest('button[data-gpass]');if(gp){const k=gp.dataset.gpass;let n2=0;NODES.filter(n=>n.g===k).forEach(n=>{if(!(D[n.id]&&D[n.id].r)&&!isChanged(n)){(D[n.id]=D[n.id]||{}).r='pass';n2++}});save();renderLayer();renderMod();stat(n2?`本层 ${n2} 个标为通过，有未保存改动`:'本层已全部表过态','');return}
-  const pill=e.target.closest('button[data-r]');if(pill){const id=pill.dataset.nid;D[id]=D[id]||{};D[id].r=D[id].r===pill.dataset.r?'':pill.dataset.r;save();refreshNode(id);renderLayer();return}
+  const pill=e.target.closest('button[data-r]');if(pill){const id=pill.dataset.nid;D[id]=D[id]||{};D[id].r=D[id].r===pill.dataset.r?'':pill.dataset.r;save();refreshNode(id);renderLayer();renderQ();return}
   const mb=e.target.closest('button[data-mod]');if(mb){S.mod=mb.dataset.mod;renderMod();return}
   const nh=e.target.closest('.nh');if(nh){jumpTo(byId[nh.parentElement.dataset.nid]);return}
   const tb=e.target.closest('#wb-tabs button[data-t]');if(tb){S.tab=tb.dataset.t;save();apply();if(S.tab==='how')drift();return}
@@ -147,6 +159,7 @@ panel.addEventListener('click',e=>{
   if(e.target.id==='wb-fbadd'){const ta=$('#wb-fbin');ta.value.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{const r=parseRef(l);FB.push({t:l,ref:r?r.ref:null,kind:r?r.kind:null,at:new Date().toISOString().slice(0,16)})});ta.value='';save();renderFb();stat('有未保存改动','');return}
   if(e.target.id==='wb-fbclr'){$('#wb-fbin').value='';return}
   const del=e.target.closest('[data-del]');if(del){FB.splice(+del.dataset.del,1);save();renderFb();return}
+  const qi=e.target.closest('.qi[data-qnid]');if(qi){jumpToNode(qi.dataset.qnid);return}
   const fb=e.target.closest('.fb');if(fb){const f=FB[+fb.dataset.i];if(f&&f.kind==='node')jumpToNode(f.ref);else if(f&&f.kind==='el')jumpToEl(f.ref);return}
   const d=e.target.closest('.d');if(d){d.dataset.ids.split(',').forEach(id=>jumpToEl(id));return}
 });

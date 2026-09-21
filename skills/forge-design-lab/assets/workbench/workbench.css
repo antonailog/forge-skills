@@ -137,3 +137,14 @@ kbd{font:10.5px 'JetBrains Mono',monospace;border:1px solid #C9C6BE;border-botto
 
 .wb-gh .gpass{float:right;font:11px ui-monospace,Menlo,monospace;color:#6B6A65;background:#fff;border:1px solid #DDD;border-radius:4px;padding:2px 7px;cursor:pointer}
 .wb-gh .gpass:hover{border-color:#C65A1E;color:#C65A1E}
+
+#wb-qlist h3{font:600 12px var(--wbsans,system-ui);margin:16px 0 6px;color:#6B6A65}
+#wb-qlist h3:first-child{margin-top:0}
+.qi{border:1px solid #E4E2DC;border-left:3px solid #E2B49F;border-radius:4px;padding:8px 10px;margin:0 0 8px;cursor:pointer;background:#fff}
+.qi:hover{border-left-color:#C65A1E;background:#FDFBF7}
+.qi.done{border-left-color:#CFCBC2;opacity:.62}
+.qi .qtag{font:600 10px ui-monospace,Menlo,monospace;color:#C65A1E;margin-right:6px}
+.qi.done .qtag{color:#8A867E}
+.qi b{font-size:12.5px}
+.qi .qst{float:right;font:10px ui-monospace,Menlo,monospace;color:#8A867E}
+.qi p{font-size:12px;line-height:1.55;color:#54524C;margin:4px 0 0}
