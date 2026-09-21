@@ -174,14 +174,26 @@ def merge_and_write(repo, incoming):
         with open(p, "w", encoding="utf-8") as fh:
             fh.write(text)
 
+    # 到这里三个文件已经落盘，这就是提交点。之后的任何失败都不准把请求报成失败——
+    # 否则用户看到「保存失败」而数据其实已经写进去了，他会以为工作没了、重做一遍，
+    # 或者像这次一样让 Agent 误判、把已保存的内容当成脏数据清掉。（2026-09-21 实发）
     report = {"at": disk["exported"], "repo": repo, "page": disk.get("page"), "version": disk.get("version"),
               "stale": stale, "nodes_user_not_seen": only_disk, "nodes_removed": only_page,
-              "rev": pack_rev(repo, page), "changes": changes, "decisions": counts, "new_feedback": new_fb,
+              "changes": changes, "decisions": counts, "new_feedback": new_fb,
               "files": [disk["files"][k] for k in ("json", "js", "css")], "warnings": warns}
-    with open(os.path.join(state_dir(repo), "last-save.json"), "w", encoding="utf-8") as fh:
-        json.dump(report, fh, ensure_ascii=False, indent=1)
-    with open(os.path.join(state_dir(repo), "saves.jsonl"), "a", encoding="utf-8") as fh:
-        fh.write(json.dumps(report, ensure_ascii=False) + "\n")
+    try:
+        report["rev"] = pack_rev(repo, disk.get("page") or "")
+    except Exception as exc:                        # noqa: BLE001 — 附加信息，坏了不能影响保存
+        report["warnings"] = warns + [f"版本戳算不出来：{exc}"]
+    for name, mode in (("last-save.json", "w"), ("saves.jsonl", "a")):
+        try:
+            with open(os.path.join(state_dir(repo), name), mode, encoding="utf-8") as fh:
+                if mode == "a":
+                    fh.write(json.dumps(report, ensure_ascii=False) + "\n")
+                else:
+                    json.dump(report, fh, ensure_ascii=False, indent=1)
+        except OSError as exc:
+            report.setdefault("warnings", warns).append(f"回执写不进去（文件已保存）：{exc}")
     return report
 
 

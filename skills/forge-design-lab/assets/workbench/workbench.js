@@ -17,7 +17,11 @@ const LS='wb:'+T.page+':'+T.version;
 const S={level:(T.levels.find(l=>l.states)||T.levels[0]).key,state:(T.states[0]&&T.states.find(s=>s.key==='done')?'done':(T.states[0]||{}).key),vp:'follow',fit:true,dims:true,ids:false,dark:false,inspect:false,panel:true,viewOpen:true,tab:'layer',mod:(T.modules[0]||{}).key,toggles:{}};
 /* 反馈以 spec（磁盘）为底，localStorage 只做增量。
    原来 FB 只从 localStorage 来：换浏览器或清了缓存再保存，磁盘上已有的反馈会被整份抹掉。 */
-const D={};const FB=[];(T.feedback||[]).forEach(f=>FB.push(f));
+/* 结局与反馈都以 spec（磁盘）为底，localStorage 只做增量。
+   只从 localStorage 来的话，换浏览器一保存就把磁盘上的结局清空。 */
+const D={};Object.assign(D,JSON.parse(JSON.stringify(T.decisions||{})));
+const FB=[];(T.feedback||[]).forEach(f=>FB.push(f));
+let SAVED_D=JSON.stringify(D);   // 已落盘的结局快照，用来判断「真的有未保存改动吗」
 const fbKey=f=>(f.at||'')+'|'+(f.t||'');
 (T.toggles||[]).forEach(t=>S.toggles[t.key]=false);
 
@@ -344,6 +348,9 @@ async function doSave(){const btn=$('#wb-save');btn.disabled=true;stat('保存�
       // 自己的保存也会改文件时间戳。不把 REV 跟上，监视器下一轮就把页面重载了。
       if(d.rev)REV=d.rev;else fetch('/api/lab/status',{cache:'no-store'}).then(r=>r.json())
         .then(x=>{const r2=(x.revs||{})[T.page];if(r2)REV=r2}).catch(()=>{});
+      // 磁盘现在等于页面了，基线与结局快照都要跟上，否则页面永远自认为脏
+      NODES.forEach(n=>{BASE[n.id]=n.value});SAVED_D=JSON.stringify(D);
+      revBar(false);rerender();
       const el=$('#wb-root');
       if(el) el.innerHTML=`已直写 ${d.files.map(esc).join('、')}`
         +(d.stale&&d.nodes_user_not_seen.length?`\n⚠ 你这个页面是旧的，以下节点你还没见过（已按 id 合并，没覆盖掉）：\n${d.nodes_user_not_seen.join(', ')}\n刷新页面就能看到。`:'')
@@ -361,7 +368,7 @@ async function doSave(){const btn=$('#wb-save');btn.disabled=true;stat('保存�
 function drift(){const cs=getComputedStyle(document.documentElement);let miss=0,bad=[];const withCss=NODES.filter(n=>n.css&&n.type!=='raw');withCss.forEach(n=>{let want=cssVal(n,BASE[n.id]);if(n.type==='colorref'&&BASE[n.id]!=='transparent')want=cs.getPropertyValue('--'+BASE[n.id]).trim();const got=cs.getPropertyValue(n.css).trim();if(!got)miss++;else if(got.replace(/\s/g,'')!==String(want).replace(/\s/g,''))bad.push(`${n.css} 文件=${got} 基线=${want}`)});
   const el=$('#wb-drift');if(!el)return;if(miss===withCss.length){el.className='wb-status bad';el.textContent='未加载前端 tokens.css（检查 <link> 相对路径）。当前按 tokens.js 基线渲染。'}else if(bad.length){el.className='wb-status bad';el.textContent='前端 tokens.css 与 tokens.json 基线不一致 '+bad.length+' 处：\n'+bad.join('\n')}else{el.className='wb-status ok';el.textContent=`同源：前端 import 的 tokens.css 与 tokens.json 基线一致（${withCss.length} 个变量）。未保存改动 ${NODES.filter(isChanged).length} 处。`}}
 /* ---------- 对外 ---------- */
-WB.set=patch=>{Object.assign(S,patch);save();apply()};WB.state=S;WB.jumpToEl=jumpToEl;WB.jumpToNode=jumpToNode;WB.spec=T;WB.byId=byId;WB.fmt=fmt;
+WB.set=patch=>{Object.assign(S,patch);save();apply()};WB.state=S;WB.jumpToEl=jumpToEl;WB.jumpToNode=jumpToNode;WB.spec=T;WB.byId=byId;WB.fmt=fmt;WB.dirty=()=>dirty();WB.dirtyWhat=()=>dirtyWhat();
 /* ---------- 启动 ---------- */
 load();
 if(S.vp!=='follow'){const v=T.viewports.find(x=>x.key===S.vp);if(v&&v.w){$('#wb-vw').value=v.w;$('#wb-vh').value=v.h}}
@@ -371,14 +378,19 @@ if(STALE_EDITS.length)stat('文件已更新，本地 '+STALE_EDITS.length+' 处�
 /* 文件监视：页面一加载就把 spec 读进内存，此后 Agent 改文件它无从知晓。
    没有这一段，用户可以对着旧稿审半小时，保存下去还会把旧值写回磁盘。
    有未保存改动时不擅自重载，出提示条让用户决定。 */
-let REV=null,REVBUSY=false;
-function dirty(){return NODES.some(isChanged)||Object.keys(D).length>0}
+let REV=null,REVBUSY=false,PENDING=null;
+/* 判断真的有未保存的东西。原来写成「D 非空」是错的：结局一旦保存过就一直非空，
+   页面于是永远认为自己是脏的，自动重载那条路等于死掉，每次文件变动都只能弹提示条。 */
+function dirty(){return NODES.some(isChanged)||JSON.stringify(D)!==SAVED_D}
+function dirtyWhat(){const v=NODES.filter(isChanged).length;
+  return [v?v+' 处改值':'',JSON.stringify(D)!==SAVED_D?'结局有变动':''].filter(Boolean).join(' · ')}
 function revBar(show){let el=$('#wb-rev');
   if(!show){if(el)el.remove();return}
   if(el)return;
   el=document.createElement('div');el.id='wb-rev';
-  el.innerHTML='<b>文件已更新</b>（Agent 改过页面包）。你有未保存的改动，重载会丢掉它们。'
-    +'<button id="wb-rev-go">重载看新稿</button><button id="wb-rev-no">先不管</button>';
+  el.innerHTML='<b>文件已更新</b>（Agent 改过页面包）。你还有没保存的东西（'+(dirtyWhat()||'未知')
+    +'），重载会丢掉。先点保存，或者：'
+    +'<button id="wb-rev-go">丢掉并重载</button><button id="wb-rev-no">先不管</button>';
   document.body.appendChild(el);
   el.querySelector('#wb-rev-go').onclick=()=>location.reload();
   el.querySelector('#wb-rev-no').onclick=()=>{el.remove();REV=null};}
@@ -386,8 +398,11 @@ function watchRev(){
   if(!SERVED||REVBUSY||document.hidden)return;REVBUSY=true;
   fetch('/api/lab/status',{cache:'no-store'}).then(r=>r.json()).then(d=>{
     const r=(d.revs||{})[T.page];if(!r)return;
-    if(REV===null){REV=r;return}
-    if(r===REV)return;
+    if(REV===null){REV=r;PENDING=null;return}
+    if(r===REV){PENDING=null;return}
+    // Agent 往往连着改好几个文件。等同一个新版本戳连续看到两轮再动作，
+    // 免得在他改到一半时重载出一个半成品。
+    if(PENDING!==r){PENDING=r;return}
     if(dirty()){revBar(true)}          // 有未保存改动：交给用户决定
     else{stat('文件已更新，正在重载…','ok');location.reload()}   // 没有：直接换成新稿
   }).catch(()=>{}).finally(()=>{REVBUSY=false});}
