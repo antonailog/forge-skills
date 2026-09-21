@@ -213,6 +213,14 @@ function elSelector(el){ // 只给能在骨架 CSS 里查到的选择器：跳�
     if(cur!==el&&cur.dataset&&cur.dataset.id)break;
     cur=cur.parentElement;hops++;}
   return parts.join(' ')||el.tagName.toLowerCase();}
+// 长写属性查不到时要回落到简写：CSSOM 里 border-radius / background / padding 这些
+// 只在简写上有值，按长写去取会拿到空串，误报成「写死」或「无 token」
+const SHORT={'background-color':['background'],
+  'border-top-width':['border-width','border-top','border'],
+  'border-radius':['border-top-left-radius'],
+  'padding-top':['padding'],'padding-right':['padding'],'padding-bottom':['padding'],'padding-left':['padding'],
+  'margin-top':['margin'],'margin-bottom':['margin'],
+  'font-size':['font'],'font-family':['font'],'font-weight':['font'],'line-height':['font']};
 function analyze(el){
   const decls={};
   for(const sheet of document.styleSheets){
@@ -220,10 +228,17 @@ function analyze(el){
     const walk=rs=>{for(const r of rs){
       if(r.cssRules&&!r.selectorText){walk(r.cssRules);continue}
       if(!r.selectorText)continue;let m=false;try{m=el.matches(r.selectorText)}catch(e){}
-      if(!m)continue;for(const prop of r.style)decls[prop]={v:r.style.getPropertyValue(prop),sel:r.selectorText};}};
+      if(!m)continue;
+      const put=(k,v)=>{if(v)decls[k]={v,sel:r.selectorText}};
+      for(const prop of r.style)put(prop,r.style.getPropertyValue(prop));
+      // 简写单独兜一层，枚举不一定给得出来
+      ['border-radius','background','padding','margin','border','border-width','font','gap'].forEach(s=>put(s,r.style.getPropertyValue(s)));}};
     walk(rules);}
+  const KW=/^(initial|inherit|unset|revert|revert-layer)$/;
+  const pick=prop=>{const cands=[decls[prop],...(SHORT[prop]||[]).map(s=>decls[s])].filter(Boolean);
+    return cands.find(d=>/var\(/.test(d.v))||cands.find(d=>!KW.test(d.v.trim()))||null;};
   const cs=getComputedStyle(el),tok={},hard={},none=[];
-  for(const prop of INS_PROPS){const d=decls[prop];const c=cs.getPropertyValue(prop);
+  for(const prop of INS_PROPS){const d=pick(prop);const c=cs.getPropertyValue(prop);
     if(!d){if(meaningful(prop,c))none.push(prop+': '+c);continue}
     const m=/var\((--[a-zA-Z0-9-]+)/.exec(d.v);
     if(m)tok[prop]={token:m[1],computed:c,rule:d.sel};
