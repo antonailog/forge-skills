@@ -46,7 +46,7 @@ panel.innerHTML=`
 <div class="dims8"><span>位置</span><span>尺寸</span><span>间距</span><span>字</span><span>色</span><span>密度</span><span>顺序</span><span>状态</span></div>
 <h3>快捷键</h3><p><small><kbd>P</kbd> 面板 · <kbd>T</kbd> 折叠视图块 · <kbd>I</kbd> 检查 · <kbd>D</kbd> 标注 · <kbd>N</kbd> 编号 · <kbd>Esc</kbd> 退出检查/收面板</small></p>
 <h3>同源检查</h3><div class="wb-status" id="wb-drift">检测中…</div>
-<h3>保存目录</h3><div class="wb-status" id="wb-root">未授权。点「保存」时在弹出的选择框里进到仓库根目录再点「选择」：文件夹名 ${esc(T.repoName||'（仓库根）')}，里面同时有 ${esc(T.files.json.split('/')[0])}/ 与 ${esc(T.files.css.split('/')[0])}/。选成子目录不行。</div><button class="btn ghost" id="wb-reroot">更换目录</button><button class="btn ghost" id="wb-reset">重置为基线</button>
+<h3>保存目录</h3><div class="wb-status" id="wb-bind"></div><div class="wb-status" id="wb-root">未授权。点「保存」时在弹出的选择框里进到仓库根目录再点「选择」：文件夹名 ${esc(T.repoName||'（仓库根）')}，里面同时有 ${esc(T.files.json.split('/')[0])}/ 与 ${esc(T.files.css.split('/')[0])}/。选成子目录不行。</div><button class="btn ghost" id="wb-reroot">更换目录</button><button class="btn ghost" id="wb-reset">重置为基线</button>
 <h3>编号表</h3><table class="sz">${Object.entries(T.elementIds||{}).map(([k,v])=>`<tr><td><code>${esc(k)}</code></td><td>${esc(v)}</td></tr>`).join('')}</table>
 <h3>结局的含义</h3><p><small><b>通过</b>：值和写法都对。<b>改</b>：改了值（自动）或要 Agent 按备注改。<b>拿不准</b>：Agent 出 A/B/C。<b>提议改动</b>：只对站点级只读 token，导出时单列。</small></p>
 <h3>已定的非 token 决策（点了元素闪）</h3><div id="wb-dec"></div>
@@ -195,7 +195,24 @@ const idb={db:null,open(){return new Promise((res,rej)=>{if(idb.db)return res(id
 const idbDel=k=>idb.del(k).catch(()=>{});
 function stat(msg,cls){const el=$('#wb-savestat');el.textContent=msg;el.className=cls||''}
 async function writeFile(root,rel,text){const parts=rel.split('/');let dir=root;for(const p of parts.slice(0,-1))dir=await dir.getDirectoryHandle(p,{create:true});const fh=await dir.getFileHandle(parts[parts.length-1],{create:true});const w=await fh.createWritable();await w.write(text);await w.close()}
-async function doSave(){const btn=$('#wb-save');btn.disabled=true;stat('保存中…');const json=buildJson();const payload={json,js:'// 由 '+T.files.json.split('/').pop()+' 生成，勿手改\nwindow.WB_SPEC='+json+';\n',css:buildCss()};
+const SERVED=location.protocol==='http:'||location.protocol==='https:';
+async function saveViaServer(json){
+  const r=await fetch('/api/lab/save',{method:'POST',headers:{'Content-Type':'application/json'},body:json});
+  const d=await r.json().catch(()=>({ok:false,error:'返回不是 JSON'}));
+  if(!r.ok||!d.ok) throw new Error(d.error||('HTTP '+r.status));
+  return d;}
+async function doSave(){const btn=$('#wb-save');btn.disabled=true;stat('保存中…');const json=buildJson();
+  if(SERVED){
+    try{const d=await saveViaServer(json);
+      const msg=`已保存 ${new Date().toTimeString().slice(0,5)} → 服务直写 · 改动 ${d.changes.length} · 反馈 +${d.new_feedback.length}`;
+      stat(msg,'ok');localStorage.setItem(LS+':saved',msg);
+      const el=$('#wb-root');
+      if(el) el.innerHTML=`已直写 ${d.files.map(esc).join('、')}`
+        +(d.stale&&d.nodes_user_not_seen.length?`\n⚠ 你这个页面是旧的，以下节点你还没见过（已按 id 合并，没覆盖掉）：\n${d.nodes_user_not_seen.join(', ')}\n刷新页面就能看到。`:'')
+        +(d.warnings&&d.warnings.length?`\n提示：${d.warnings.slice(0,3).join('；')}`:'');
+    }catch(e){stat('保存失败：'+(e.message||e),'bad')}
+    finally{btn.disabled=false}
+    return;}const payload={json,js:'// 由 '+T.files.json.split('/').pop()+' 生成，勿手改\nwindow.WB_SPEC='+json+';\n',css:buildCss()};
   try{if(!window.showDirectoryPicker)throw new Error('no-fsa');let root=await idb.get('root');if(!root){root=await window.showDirectoryPicker({id:'wb-root',mode:'readwrite'});await idb.set('root',root)}
     let perm=await root.queryPermission({mode:'readwrite'});if(perm!=='granted')perm=await root.requestPermission({mode:'readwrite'});if(perm!=='granted')throw new Error('未授权');
     try{await root.getDirectoryHandle(T.files.json.split('/')[0])}catch(e){await idbDel('root');throw new Error('选的是「'+root.name+'」，需要仓库根目录（文件夹名 '+(T.repoName||'仓库根目录')+'，里面同时有 '+T.files.json.split('/')[0]+'/ 与 '+T.files.css.split('/')[0]+'/）。下次点保存会重新弹选择框')}
@@ -212,7 +229,12 @@ load();
 if(S.vp!=='follow'){const v=T.viewports.find(x=>x.key===S.vp);if(v&&v.w){$('#wb-vw').value=v.w;$('#wb-vh').value=v.h}}
 apply();rerender();setTimeout(drift,400);
 const saved=localStorage.getItem(LS+':saved');if(saved)stat(saved,'ok');
-idb.get('root').then(r=>{if(r)$('#wb-root').textContent='已授权：'+r.name+'/（重开浏览器后首次保存可能再确认一次）'}).catch(()=>{});
+if(SERVED){fetch('/api/lab/status').then(r=>r.json()).then(d=>{
+    const b=$('#wb-bind');if(b)b.className='wb-status ok',b.textContent=`服务模式 · 直写 ${d.repo}\n点「保存」即写盘，不用选目录、不下载。存完回对话说一声即可。`;
+    const rt=$('#wb-root');if(rt)rt.textContent='服务模式下本节不适用。';
+  }).catch(()=>{const b=$('#wb-bind');if(b)b.className='wb-status bad',b.textContent='页面走的是 HTTP，但没探测到工作台服务（/api/lab/status 不通）。保存会失败。';});}
+else{const b=$('#wb-bind');if(b)b.className='wb-status bad',b.textContent='file:// 打开 ⚠ 保存要手动选目录，容易存错仓库（主仓库与 worktree 都有 docs/ 和 frontend-react/，分不出来）。\n建议改用服务：python3 {skill}/scripts/serve.py <仓库根>';
+  idb.get('root').then(r=>{if(r)$('#wb-root').textContent='已授权：'+r.name+'/（重开浏览器后首次保存可能再确认一次）'}).catch(()=>{});}
 if(H.fonts&&document.fonts){document.fonts.ready.then(()=>{const ok=H.fonts.every(f=>document.fonts.check(f));const b=$('#wb-font');b.textContent=ok?'字体 ✓':'字体 ✗ 回退';b.className='font '+(ok?'ok':'bad')})}
 };
 })();

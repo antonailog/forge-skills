@@ -42,6 +42,7 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 
 | 脚本 | 什么时候 | 用法 | 失败降级 |
 |---|---|---|---|
+| `serve.py` | 每个仓库一次，之后常驻 | `python3 {lab}/scripts/serve.py <repo> [--status\|--stop]` | 端口默认 4577，占用则递增；只绑 127.0.0.1 |
 | `adapt_tokens.py` | S1，每个新页面包一次 | `python3 {lab}/scripts/adapt_tokens.py <repo> --page <slug> [--prefix xx] [--init-spec]` | 没有 `:root` 变量就读 tailwind theme；两者都没有则列候选让用户指认 |
 | `merge_saved.py` | S4 拿到用户保存/下载的 json 后，先于 build | `python3 {lab}/scripts/merge_saved.py <repo> <保存的 json> [--apply]` | 默认只报告；页面过期时退出码 2，报告里列出用户没见过的节点 |
 | `build_tokens.py` | S2/S3 写完 json 后；S4 合并后校验重建 | `python3 {lab}/scripts/build_tokens.py <repo> <tokens.json> [--check]` | 校验不过就修 json，不手改生成的 js/css |
@@ -49,7 +50,19 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | `verify_pack.mjs` | S3 交付前；S4 每次重建后 | `node {lab}/scripts/verify_pack.mjs <html> --repo <repo> [--shots <dir>] [--strict-literals] [--json <out>]` | 没有 Playwright 就只跑 `build_tokens.py --check`，让用户人工开页面报控制台 |
 | `render_design_table.py` | S5 | `python3 {lab}/scripts/render_design_table.py <repo> <tokens.json> --design docs/DESIGN.md --heading "## 模块 28"` | DESIGN.md 里找不到模块标题就只打印区块，提示先走 forge-design |
 
-浏览器侧（用户操作，不是 Agent 工具）：File System Access 直写三文件（首次授权仓库根目录，浏览器记住；Safari/Firefox 不支持则自动下载 tokens.json 到 Downloads）；Google Fonts 让骨架用与产品同族的字体（不通时面板徽标显示「回退」，比例仍真实）。
+**先起服务，再打开页面**。`serve.py` 把仓库根当静态根，页面 URL 形如
+`http://127.0.0.1:4577/docs/assets/visuals/<page>/<file>.html`，页面里那些跨目录相对路径原样可用。
+这样「保存」就是一次 POST，直写仓库，用户不用选目录、不下载，存完回对话说一声即可。
+服务把回执写进 `.forge/design-lab/last-save.json`（改了哪些 token、结局统计、新增反馈、
+页面没见过的节点），你直接读它，不用让用户复述。
+
+**服务端保存必须按 id 合并，不能覆盖**——`serve.py` 已经这么做了。工作台页面一加载 spec 就固定在
+内存里；用户开着页面时你改了 json，他一存就会抹掉你新增的节点，而且直写成功了他只会看到「已保存」。
+合并后服务把「你没见过的节点」回给页面显示，提示刷新。
+
+没有服务时页面仍可用 `file://` 打开，退回 File System Access 选目录 / 下载兜底，但**容易存错仓库**：
+主仓库与 worktree 都有 `docs/` 和 `frontend-react/`，引擎的目录校验分不出来（实发过一次）。
+Google Fonts 让骨架用与产品同族的字体（不通时面板徽标显示「回退」，比例仍真实）。
 
 ## S1 适配：先知道这个项目有什么
 
@@ -73,7 +86,7 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 
 用户在工作台改值、给结局、写反馈，点保存，回来说「保存好了」。此时：
 
-1. 找文件：仓库里的 tokens.json 是否被直写（`git status`）；没有就取 `~/Downloads` 里最新的同名 json。
+1. 起了服务就直接读 `.forge/design-lab/last-save.json`，改动、结局、反馈、过期节点都在里面，跳到第 3 步。没起服务才需要找文件：先看 `git status`，再取 `~/Downloads` 里最新的同名 json。
 2. `merge_saved.py` 按 id 合并，别直接覆盖——工作台页面一加载 spec 就固定在内存里，用户在你改过 json 之后没刷新页面就保存的话，导出的是旧结构，缺你新增的节点、effects 与顶层字段。脚本只取用户那份里真正属于他的三样（值、结局、反馈），结构以仓库为准，并报出「用户没见过的节点」。确认报告无误后 `--apply`，再 `build_tokens.py` 重建、`verify_pack.mjs` 验收。
 3. 出差异表：token、原值、新值、用户结局；同时报七层覆盖（每层有结局的节点数），某层为 0 就在回复里点名，别默认他走过。反馈 tab 里一行一条，逐条回复，能直接改的改进 json（加 options、改判断题），改不了的说为什么。
 4. 「拿不准」的节点出 A/B/C：三档都取阶梯值，每档一句可见后果，直接写进该节点 `options`，用户下轮在工作台上切着看。
@@ -120,8 +133,8 @@ forge-design 第三步遇到页面/组件/布局决策时转到本 skill：输�
 |---|---|
 | 项目没有 `:root` 变量，只有 tailwind theme | 适配脚本读 `theme.extend`；仍无则列候选让用户指认站点色与字体角色 |
 | Playwright 不可用 | 只做 `build_tokens.py --check` 静态校验，请用户打开页面并报告控制台是否有红字 |
-| 浏览器不支持 File System Access | 引擎自动下载 tokens.json；从 `~/Downloads` 取最新一份，按修改时间 |
-| 用户授权目录选错（选到 docs 而非仓库根） | 引擎报错并清除授权，下次保存重选；不用 Agent 侧处理 |
+| 浏览器不支持 File System Access | 起 `serve.py` 走服务模式；不得已才用下载兜底，从 `~/Downloads` 取最新一份 |
+| 用户把文件存到了另一个 checkout（主仓库 vs worktree） | 用 `merge_saved.py` 从那个路径合并回来，再清掉误写的目录；根治办法是改用服务模式，服务绑定哪个仓库页面上就显示哪个 |
 | 用户保存的 json 结构比仓库旧（页面没刷新就保存） | `merge_saved.py` 按 id 合并，值与结局以用户为准、结构以仓库为准；报告里把「他没见过的节点」念给他听，下一轮让他刷新页面再看 |
 | Google Fonts 不通 | 面板徽标显示「字体 ✗ 回退」，比例判断照常，气质判断延后 |
 | DESIGN.md 里没有该模块 | 只输出实现清单，提示先走 forge-design 建模块章节 |
