@@ -54,8 +54,19 @@ panel.innerHTML=`
 </div>`;
 
 /* ---------- 持久化 ---------- */
-function save(){localStorage.setItem(LS,JSON.stringify({values:Object.fromEntries(NODES.map(n=>[n.id,n.value])),decisions:D,feedback:FB,ui:{tab:S.tab,panel:S.panel,viewOpen:S.viewOpen,vp:S.vp,level:S.level,state:S.state,dims:S.dims,ids:S.ids,dark:S.dark}}))}
-function load(){try{const j=JSON.parse(localStorage.getItem(LS)||'null');if(!j)return;NODES.forEach(n=>{if(j.values&&j.values[n.id]!==undefined)n.value=j.values[n.id]});Object.assign(D,j.decisions||{});(j.feedback||[]).forEach(f=>FB.push(f));if(j.ui){['tab','panel','viewOpen','vp','level','state','dims','ids','dark'].forEach(k=>{if(j.ui[k]!==undefined)S[k]=j.ui[k]})}}catch(e){}}
+/* 本地缓存只存「你真的改过」的值，并记下改的时候文件基线是多少。
+   存整份快照会出事：Agent 更新 tokens.json 重建之后，旧快照在 load() 里静默盖回来，
+   你看到的是旧值，一点保存又把旧值写回磁盘，Agent 这轮的改动就没了。 */
+function save(){const edits={};NODES.forEach(n=>{if(JSON.stringify(n.value)!==JSON.stringify(BASE[n.id]))edits[n.id]={v:n.value,b:BASE[n.id]}});
+  localStorage.setItem(LS,JSON.stringify({edits,decisions:D,feedback:FB,ui:{tab:S.tab,panel:S.panel,viewOpen:S.viewOpen,vp:S.vp,level:S.level,state:S.state,dims:S.dims,ids:S.ids,dark:S.dark}}))}
+let STALE_EDITS=[];
+function load(){try{const j=JSON.parse(localStorage.getItem(LS)||'null');if(!j)return;
+  if(j.edits){NODES.forEach(n=>{const e=j.edits[n.id];if(!e)return;
+    // 文件基线动过 = Agent 在这期间改了 tokens.json，文件为准，本地这条作废
+    if(JSON.stringify(e.b)!==JSON.stringify(BASE[n.id])){STALE_EDITS.push(n.id);return}
+    n.value=e.v})}
+  else if(j.values)STALE_EDITS.push('旧版整份快照（已整体丢弃，以文件为准）');
+  Object.assign(D,j.decisions||{});(j.feedback||[]).forEach(f=>FB.push(f));if(j.ui){['tab','panel','viewOpen','vp','level','state','dims','ids','dark'].forEach(k=>{if(j.ui[k]!==undefined)S[k]=j.ui[k]})}}catch(e){}}
 /* ---------- token ---------- */
 function cssVal(n,v){v=v===undefined?n.value:v;switch(n.type){case'px':return v+'px';case'ms':return v+'ms';case'num':return String(v);case'colorref':return v==='transparent'?'transparent':'var(--'+v+')';case'color':return v;case'raw':return String(v);default:return null}}
 function fmt(n,v){v=v===undefined?n.value:v;if(n.type==='px')return v+'px';if(n.type==='ms')return v+'ms';if(n.type==='colorref')return '--'+v;return String(v)}
@@ -349,6 +360,7 @@ load();
 if(S.vp!=='follow'){const v=T.viewports.find(x=>x.key===S.vp);if(v&&v.w){$('#wb-vw').value=v.w;$('#wb-vh').value=v.h}}
 apply();rerender();setTimeout(drift,400);
 const saved=localStorage.getItem(LS+':saved');if(saved)stat(saved,'ok');
+if(STALE_EDITS.length)stat('文件已更新，本地 '+STALE_EDITS.length+' 处旧改动已丢弃（以文件为准）：'+STALE_EDITS.slice(0,6).join('、'),'bad');
 if(SERVED){fetch('/api/lab/status').then(r=>r.json()).then(d=>{
     const b=$('#wb-bind');if(b)b.className='wb-status ok',b.textContent=`服务模式 · 直写 ${d.repo}\n点「保存」即写盘，不用选目录、不下载。存完回对话说一声即可。`;
     const rt=$('#wb-root');if(rt)rt.textContent='服务模式下本节不适用。';
