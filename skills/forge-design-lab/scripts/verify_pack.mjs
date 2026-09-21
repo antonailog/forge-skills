@@ -272,8 +272,10 @@ const firstNode = spec.nodes[0] && spec.nodes[0].id;
 if (firstEl || firstNode) {
   await page.evaluate(() => WB.set({ tab: 'fb' }));
   const lines = [firstEl && `${firstEl} 验收测试`, firstNode && `${firstNode} 验收测试`].filter(Boolean);
+  // 先记存量：反馈以 spec 为底（磁盘上已有的会显示出来），只数自己注入这两条解析出的增量
+  const before = await page.locator('#wb-fblist .fb .ref:not(.none)').count();
   await page.fill('#wb-fbin', lines.join('\n')); await page.click('#wb-fbadd'); await page.waitForTimeout(150);
-  const refs = await page.locator('#wb-fblist .fb .ref:not(.none)').count();
+  const refs = await page.locator('#wb-fblist .fb .ref:not(.none)').count() - before;
   if (refs === lines.length) pass('feedback', `反馈行首编号解析 ${refs}/${lines.length}`); else warn('feedback', `反馈行首编号解析 ${refs}/${lines.length}（元素编号大小写或 elementIds 与 data-id 不一致？）`);
   await page.evaluate(() => { const T = WB.spec; localStorage.removeItem('wb:' + T.page + ':' + T.version); });
 }

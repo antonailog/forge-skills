@@ -15,7 +15,10 @@ const H=opts.hooks||{};const NODES=T.nodes;const byId=Object.fromEntries(NODES.m
 const BASE=Object.fromEntries(NODES.map(n=>[n.id,n.value]));
 const LS='wb:'+T.page+':'+T.version;
 const S={level:(T.levels.find(l=>l.states)||T.levels[0]).key,state:(T.states[0]&&T.states.find(s=>s.key==='done')?'done':(T.states[0]||{}).key),vp:'follow',fit:true,dims:true,ids:false,dark:false,inspect:false,panel:true,viewOpen:true,tab:'layer',mod:(T.modules[0]||{}).key,toggles:{}};
-const D={};const FB=[];
+/* 反馈以 spec（磁盘）为底，localStorage 只做增量。
+   原来 FB 只从 localStorage 来：换浏览器或清了缓存再保存，磁盘上已有的反馈会被整份抹掉。 */
+const D={};const FB=[];(T.feedback||[]).forEach(f=>FB.push(f));
+const fbKey=f=>(f.at||'')+'|'+(f.t||'');
 (T.toggles||[]).forEach(t=>S.toggles[t.key]=false);
 
 /* ---------- DOM 搭建 ---------- */
@@ -66,7 +69,8 @@ function load(){try{const j=JSON.parse(localStorage.getItem(LS)||'null');if(!j)r
     if(JSON.stringify(e.b)!==JSON.stringify(BASE[n.id])){STALE_EDITS.push(n.id);return}
     n.value=e.v})}
   else if(j.values)STALE_EDITS.push('旧版整份快照（已整体丢弃，以文件为准）');
-  Object.assign(D,j.decisions||{});(j.feedback||[]).forEach(f=>FB.push(f));if(j.ui){['tab','panel','viewOpen','vp','level','state','dims','ids','dark'].forEach(k=>{if(j.ui[k]!==undefined)S[k]=j.ui[k]})}}catch(e){}}
+  Object.assign(D,j.decisions||{});
+  {const have=new Set(FB.map(fbKey));(j.feedback||[]).forEach(f=>{if(!have.has(fbKey(f))){FB.push(f);have.add(fbKey(f))}});}if(j.ui){['tab','panel','viewOpen','vp','level','state','dims','ids','dark'].forEach(k=>{if(j.ui[k]!==undefined)S[k]=j.ui[k]})}}catch(e){}}
 /* ---------- token ---------- */
 function cssVal(n,v){v=v===undefined?n.value:v;switch(n.type){case'px':return v+'px';case'ms':return v+'ms';case'num':return String(v);case'colorref':return v==='transparent'?'transparent':'var(--'+v+')';case'color':return v;case'raw':return String(v);default:return null}}
 function fmt(n,v){v=v===undefined?n.value:v;if(n.type==='px')return v+'px';if(n.type==='ms')return v+'ms';if(n.type==='colorref')return '--'+v;return String(v)}
