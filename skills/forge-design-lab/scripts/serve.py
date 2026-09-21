@@ -22,6 +22,7 @@
 """
 import argparse
 import datetime
+import hashlib
 import json
 import os
 import signal
@@ -66,6 +67,24 @@ def alive(port):
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 
+def pack_rev(repo, name):
+    """页面包的版本戳：spec、生成物、骨架、引擎的 mtime+size 摘要。
+    页面拿它和自己启动时记下的比，一旦不同就知道 Agent 在这期间改过文件。
+    没有这个，页面可以一直显示旧稿而用户毫不知情——保存下去还会把旧值写回磁盘。"""
+    d = os.path.join(repo, "docs", "assets", "visuals", name)
+    paths = [os.path.join(d, f"{name}.tokens.json"), os.path.join(d, f"{name}.tokens.js"),
+             os.path.join(repo, "docs", "assets", "visuals", "_workbench", "workbench.js")]
+    paths += sorted(os.path.join(d, f) for f in os.listdir(d) if f.endswith(".html")) if os.path.isdir(d) else []
+    h = hashlib.sha1()
+    for p in paths:
+        try:
+            st = os.stat(p)
+            h.update(f"{os.path.basename(p)}:{int(st.st_mtime)}:{st.st_size};".encode())
+        except OSError:
+            h.update(f"{os.path.basename(p)}:missing;".encode())
+    return h.hexdigest()[:12]
+
+
 def find_packs(repo):
     base = os.path.join(repo, "docs", "assets", "visuals")
     out = []
@@ -89,7 +108,8 @@ def find_packs(repo):
                     "exported": s.get("exported"),
                     "questions": sum(1 for n in s.get("nodes") or [] if n.get("q")),
                     "feedback": len(s.get("feedback") or []),
-                    "html": [f"/docs/assets/visuals/{name}/{h}" for h in htmls]})
+                    "html": [f"/docs/assets/visuals/{name}/{h}" for h in htmls],
+                    "rev": pack_rev(repo, name)})
     return out
 
 
@@ -181,8 +201,10 @@ def make_handler(repo):
         def do_GET(self):
             path = unquote(urlparse(self.path).path)
             if path == "/api/lab/status":
+                packs = find_packs(repo)
                 return self._json(200, {"ok": True, "repo": repo, "repoName": os.path.basename(repo),
-                                        "port": self.server.server_address[1], "packs": len(find_packs(repo))})
+                                        "port": self.server.server_address[1], "packs": len(packs),
+                                        "revs": {p["page"]: p["rev"] for p in packs}})
             if path == "/api/lab/packs":
                 return self._json(200, {"repo": repo, "packs": find_packs(repo)})
             if path in ("/", "/index.html"):

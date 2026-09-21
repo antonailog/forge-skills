@@ -365,9 +365,33 @@ if(S.vp!=='follow'){const v=T.viewports.find(x=>x.key===S.vp);if(v&&v.w){$('#wb-
 apply();rerender();setTimeout(drift,400);
 const saved=localStorage.getItem(LS+':saved');if(saved)stat(saved,'ok');
 if(STALE_EDITS.length)stat('文件已更新，本地 '+STALE_EDITS.length+' 处旧改动已丢弃（以文件为准）：'+STALE_EDITS.slice(0,6).join('、'),'bad');
+/* 文件监视：页面一加载就把 spec 读进内存，此后 Agent 改文件它无从知晓。
+   没有这一段，用户可以对着旧稿审半小时，保存下去还会把旧值写回磁盘。
+   有未保存改动时不擅自重载，出提示条让用户决定。 */
+let REV=null,REVBUSY=false;
+function dirty(){return NODES.some(isChanged)||Object.keys(D).length>0}
+function revBar(show){let el=$('#wb-rev');
+  if(!show){if(el)el.remove();return}
+  if(el)return;
+  el=document.createElement('div');el.id='wb-rev';
+  el.innerHTML='<b>文件已更新</b>（Agent 改过页面包）。你有未保存的改动，重载会丢掉它们。'
+    +'<button id="wb-rev-go">重载看新稿</button><button id="wb-rev-no">先不管</button>';
+  document.body.appendChild(el);
+  el.querySelector('#wb-rev-go').onclick=()=>location.reload();
+  el.querySelector('#wb-rev-no').onclick=()=>{el.remove();REV=null};}
+function watchRev(){
+  if(!SERVED||REVBUSY||document.hidden)return;REVBUSY=true;
+  fetch('/api/lab/status',{cache:'no-store'}).then(r=>r.json()).then(d=>{
+    const r=(d.revs||{})[T.page];if(!r)return;
+    if(REV===null){REV=r;return}
+    if(r===REV)return;
+    if(dirty()){revBar(true)}          // 有未保存改动：交给用户决定
+    else{stat('文件已更新，正在重载…','ok');location.reload()}   // 没有：直接换成新稿
+  }).catch(()=>{}).finally(()=>{REVBUSY=false});}
 if(SERVED){fetch('/api/lab/status').then(r=>r.json()).then(d=>{
-    const b=$('#wb-bind');if(b)b.className='wb-status ok',b.textContent=`服务模式 · 直写 ${d.repo}\n点「保存」即写盘，不用选目录、不下载。存完回对话说一声即可。`;
+    const b=$('#wb-bind');if(b)b.className='wb-status ok',b.textContent=`服务模式 · 直写 ${d.repo}\n点「保存」即写盘，不用选目录、不下载。存完回对话说一声即可。\n页面会自己盯着文件：Agent 改过页面包后，没有未保存改动就自动重载，有就出提示条问你。`;
     const rt=$('#wb-root');if(rt)rt.textContent='服务模式下本节不适用。';
+    REV=(d.revs||{})[T.page]||null;setInterval(watchRev,4000);
   }).catch(()=>{const b=$('#wb-bind');if(b)b.className='wb-status bad',b.textContent='页面走的是 HTTP，但没探测到工作台服务（/api/lab/status 不通）。保存会失败。';});}
 else{const b=$('#wb-bind');if(b)b.className='wb-status bad',b.textContent='file:// 打开 ⚠ 保存要手动选目录，容易存错仓库（主仓库与 worktree 都有 docs/ 和 frontend-react/，分不出来）。\n建议改用服务：python3 {skill}/scripts/serve.py <仓库根>';
   idb.get('root').then(r=>{if(r)$('#wb-root').textContent='已授权：'+r.name+'/（重开浏览器后首次保存可能再确认一次）'}).catch(()=>{});}
