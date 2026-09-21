@@ -148,3 +148,20 @@ kbd{font:10.5px 'JetBrains Mono',monospace;border:1px solid #C9C6BE;border-botto
 .qi b{font-size:12.5px}
 .qi .qst{float:right;font:10px ui-monospace,Menlo,monospace;color:#8A867E}
 .qi p{font-size:12px;line-height:1.55;color:#54524C;margin:4px 0 0}
+
+/* 检查模式覆盖层：只画边框与标签，不画盒模型色块 */
+#wb-ov{position:fixed;display:none;pointer-events:none;z-index:9999;outline:1px solid #C65A1E;background:rgba(198,90,30,.07)}
+#wb-ov b{position:absolute;left:0;font:10.5px/1.6 ui-monospace,Menlo,monospace;background:#C65A1E;color:#fff;padding:1px 6px;border-radius:3px;white-space:nowrap}
+#frame .pick{outline:2px dashed #C65A1E !important;outline-offset:1px}
+#wb-el{display:none}
+#wb-el.on{display:block;margin:10px 0 0;padding:10px;border:1px solid #E2B49F;border-radius:5px;background:#FDF8F4}
+#wb-el .eh{display:flex;align-items:center;gap:8px}
+#wb-el .eh b{flex:1;font:600 12.5px ui-monospace,Menlo,monospace;color:#1A1917;word-break:break-all}
+#wb-el .ex{cursor:pointer;color:#8A867E;font-size:15px;line-height:1}
+#wb-el .em{font:11px ui-monospace,Menlo,monospace;color:#6B6A65;margin-top:3px;word-break:break-all}
+#wb-el .et,#wb-el .ew{margin-top:6px;font:11px ui-monospace,Menlo,monospace;color:#6B6A65}
+#wb-el .ew{color:#B4551E}
+#wb-el code{display:inline-block;background:#fff;border:1px solid #E4E2DC;border-radius:3px;padding:1px 5px;margin:2px 4px 0 0;cursor:pointer}
+#wb-el .et code:hover{border-color:#C65A1E;color:#C65A1E}
+#wb-el .ew code{cursor:default;border-color:#E2B49F}
+#wb-el .eb{margin-top:8px;display:flex;gap:6px}

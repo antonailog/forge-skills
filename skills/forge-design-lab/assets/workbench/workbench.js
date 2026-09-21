@@ -36,7 +36,7 @@ const VIEW_HTML=`
 </div></div>`;
 panel.innerHTML=`
 <div id="wb-phead"><div id="wb-tabs"><button data-t="layer">按层</button><button data-t="mod">按模块</button><button data-t="q">判断题</button><button data-t="fb">反馈</button><button data-t="how">指南</button><button class="close" id="wb-pclose" title="收起（P）">×</button></div>
-<div id="wb-saverow"><button id="wb-save">保存</button><span id="wb-savestat">未保存</span></div>${VIEW_HTML}</div>
+<div id="wb-saverow"><button id="wb-save">保存</button><span id="wb-savestat">未保存</span></div><div id="wb-el"></div>${VIEW_HTML}</div>
 <div class="wb-tab" data-t="layer"><p><small>从上往下走七层，每层先读问题再看节点。黄框是我替你标出的风险点。改值即时生效；点节点名跳到它所在的层级/状态并闪一下。</small></p><div id="wb-layer"></div></div>
 <div class="wb-tab" data-t="mod"><p><small>选一个模块看它全部 token 并现场改。或开工具条「检查」后直接点骨架上的元素。</small></p><div class="wb-mods" id="wb-mods"></div><div id="wb-modlist"></div></div>
 <div class="wb-tab" data-t="q"><p><small>本页所有需要你判断的问题，按七层排。点一条就跳到它所在的层级与状态，并把对应元素闪一下——不用自己翻。给了结局的会打勾。</small></p><div id="wb-qlist"></div></div>
@@ -84,7 +84,7 @@ function apply(){
   $$('#wb-view [data-state]').forEach(b=>{b.classList.toggle('on',b.dataset.state===S.state);b.disabled=!curLevel().states});
   $$('#wb-view [data-vp]').forEach(b=>b.classList.toggle('on',b.dataset.vp===S.vp));
   $('#wb-zoomg').style.display=follow?'none':'';$('#wb-fit').classList.toggle('on',S.fit);$('#wb-one').classList.toggle('on',!S.fit);
-  $('#wb-inspect').classList.toggle('on',S.inspect);$('#wb-dims').classList.toggle('on',S.dims);$('#wb-ids').classList.toggle('on',S.ids);$('#wb-dark').classList.toggle('on',S.dark);
+  $('#wb-inspect').classList.toggle('on',S.inspect);if(!S.inspect&&ov)ov.style.display='none';$('#wb-dims').classList.toggle('on',S.dims);$('#wb-ids').classList.toggle('on',S.ids);$('#wb-dark').classList.toggle('on',S.dark);
   $$('#wb-view [data-toggle]').forEach(b=>b.classList.toggle('on',!!S.toggles[b.dataset.toggle]));
   $('#wb-view').classList.toggle('collapsed',!S.viewOpen);$('#wb-viewtoggle').textContent=S.viewOpen?'折叠':'展开';
   panel.classList.toggle('closed',!S.panel);
@@ -125,7 +125,7 @@ function renderQ(){const el=$('#wb-qlist');if(!el)return;
     ||'<p class="wb-muted">本页没有判断题。</p>';
   const done=qs.filter(n=>(D[n.id]&&D[n.id].r)||isChanged(n)).length;
   const h=$('#wb-tabs button[data-t="q"]');if(h)h.textContent=`判断题 ${done}/${qs.length}`;}
-function renderFb(){$('#wb-fblist').innerHTML=FB.map((f,i)=>`<div class="fb" data-i="${i}"><span class="ref ${f.ref?'':'none'}">${f.ref?esc(f.ref):'—'}</span><span class="t">${esc(f.t)}</span><span class="x" data-del="${i}" title="删除">×</span></div>`).join('')||'<p class="wb-muted">还没有反馈。</p>'}
+function renderFb(){$('#wb-fblist').innerHTML=FB.map((f,i)=>`<div class="fb" data-i="${i}"><span class="ref ${f.ref||f.els?'':'none'}">${f.els?f.els.length+' 元素':(f.ref?esc(f.ref):'—')}</span><span class="t">${esc(f.t)}</span><span class="x" data-del="${i}" title="删除">×</span></div>`).join('')||'<p class="wb-muted">还没有反馈。</p>'}
 function renderDec(){const el=$('#wb-dec');if(!el)return;el.innerHTML=(H.decisions||[]).map(d=>`<div class="d" data-ids="${d[2].join(',')}"><b>${d[0]}</b><span>${esc(d[1])}</span></div>`).join('')||'<p class="wb-muted">无</p>'}
 function rerender(){renderLayer();renderMod();renderQ();renderFb();renderDec()}
 function refreshNode(id){$$(`.nd[data-nid="${id}"]`).forEach(el=>{el.outerHTML=nodeHtml(byId[id])})}
@@ -156,9 +156,27 @@ panel.addEventListener('click',e=>{
   if(e.target.id==='wb-save'){doSave();return}
   if(e.target.id==='wb-reroot'){idbDel('root').then(()=>{$('#wb-root').textContent='已清除授权，下次保存重新选目录。'});return}
   if(e.target.id==='wb-reset'){if(!confirm('清除所有改动、结局与反馈，回到基线？'))return;localStorage.removeItem(LS);NODES.forEach(n=>{n.value=BASE[n.id];if(n.css)frame.style.removeProperty(n.css)});Object.keys(D).forEach(k=>delete D[k]);FB.length=0;apply();rerender();return}
-  if(e.target.id==='wb-fbadd'){const ta=$('#wb-fbin');ta.value.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{const r=parseRef(l);FB.push({t:l,ref:r?r.ref:null,kind:r?r.kind:null,at:new Date().toISOString().slice(0,16)})});ta.value='';save();renderFb();stat('有未保存改动','');return}
+  if(e.target.id==='wb-fbadd'){const ta=$('#wb-fbin');ta.value.split('\n').map(l=>l.trim()).filter(Boolean).forEach(l=>{
+      const r=parseRef(l);const hs=[...l.matchAll(/\[(E\d+)[^\]]*\]/g)].map(m=>m[1]);
+      const els=hs.map(h=>ELS[h]?{h,...ELS[h]}:null).filter(Boolean);
+      FB.push({t:l,ref:r?r.ref:null,kind:r?r.kind:null,at:new Date().toISOString().slice(0,16),...(els.length?{els}:{})})});
+    ta.value='';save();renderFb();stat('有未保存改动','');return}
   if(e.target.id==='wb-fbclr'){$('#wb-fbin').value='';return}
   const del=e.target.closest('[data-del]');if(del){FB.splice(+del.dataset.del,1);save();renderFb();return}
+  if(e.target.id==='wb-elx'){PICK=null;$$('#frame .pick').forEach(x=>x.classList.remove('pick'));renderPick();return}
+  if(e.target.id==='wb-elins'&&PICK){const h=PICK.h||('E'+(++ELN));PICK.h=h;ELS[h]=PICK.a;
+    S.tab='fb';apply();const ta=$('#wb-fbin');
+    const nice=[PICK.a.modLabel,PICK.a.dataId].filter(Boolean).join(' ')||PICK.a.sel;
+    const tag=`[${h} ${nice}] `;
+    const s=ta.selectionStart??ta.value.length,e2=ta.selectionEnd??s;
+    ta.value=ta.value.slice(0,s)+tag+ta.value.slice(e2);ta.focus();ta.selectionStart=ta.selectionEnd=s+tag.length;
+    renderPick();stat('已插入 '+h+'，接着写你的问题','');return}
+  if(e.target.id==='wb-elcopy'&&PICK){const txt=elReport(PICK.a,PICK.h);
+    (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>stat('详情已复制到剪贴板',''),
+      ()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();
+        try{document.execCommand('copy')}catch(x){}ta.remove();stat('详情已复制到剪贴板','')});return}
+  const jc=e.target.closest('code[data-jump]');
+  if(jc){const tk=jc.dataset.jump;const nd=NODES.find(x=>x.css===tk);if(nd)jumpToNode(nd.id);else stat(tk+' 是站点级变量，本页不可改','');return}
   const qi=e.target.closest('.qi[data-qnid]');if(qi){jumpToNode(qi.dataset.qnid);return}
   const fb=e.target.closest('.fb');if(fb){const f=FB[+fb.dataset.i];if(f&&f.kind==='node')jumpToNode(f.ref);else if(f&&f.kind==='el')jumpToEl(f.ref);return}
   const d=e.target.closest('.d');if(d){d.dataset.ids.split(',').forEach(id=>jumpToEl(id));return}
@@ -166,6 +184,86 @@ panel.addEventListener('click',e=>{
 panel.addEventListener('mouseover',e=>{const nd=e.target.closest('.nd');if(!nd)return;$$('#frame .hl').forEach(x=>x.classList.remove('hl'));mapEls(byId[nd.dataset.nid]).forEach(el=>el.classList.add('hl'))});
 panel.addEventListener('mouseleave',()=>$$('#frame .hl').forEach(x=>x.classList.remove('hl')));
 function parseRef(line){let m=line.match(/^([a-z]{1,2}\.[a-z0-9.-]+)\b/i);if(m&&byId[m[1].toLowerCase()])return{kind:'node',ref:m[1].toLowerCase()};m=line.match(/^([A-Za-z][A-Za-z0-9-]*\d*)\b/);if(m){const id=m[1].toUpperCase();if(document.querySelector(`#frame [data-id="${id}"]`)||/^C\d+$/.test(id))return{kind:'el',ref:id}}return null}
+/* ---------- 检查模式：任意元素可选，像 F12，但多回答一件事——哪些属性有 token、哪些没有 ---------- */
+const ELS={};let ELN=0,PICK=null;
+const INS_PROPS=['font-family','font-size','font-weight','line-height','letter-spacing','color','background-color',
+  'border-top-width','border-radius','padding-top','padding-right','padding-bottom','padding-left',
+  'margin-top','margin-bottom','gap'];
+// 缺 token 只报「确实是设计决策、且当前值不是默认」的；否则一屏噪声会把真信号盖掉
+const NOISE={'font-weight':'400','letter-spacing':'normal','background-color':'rgba(0, 0, 0, 0)','gap':'normal'};
+function meaningful(prop,v){
+  if(!v||v==='none'||v==='auto'||v==='normal')return false;
+  if(NOISE[prop]===v)return false;
+  if(/^(padding|margin|border|gap)/.test(prop)&&/^0(px)?$/.test(v))return false;
+  if(prop==='border-radius'&&/^0(px)?$/.test(v))return false;
+  return true;}
+const ov=document.createElement('div');ov.id='wb-ov';ov.innerHTML='<i></i><b></b>';document.body.appendChild(ov);
+function elName(el){
+  const d=el.closest('[data-id]');const tag=el.tagName.toLowerCase();
+  const cls=[...el.classList].filter(c=>!/^(hl|flash|ins-hover|on|sel)$/.test(c)).slice(0,3).map(c=>'.'+c).join('');
+  return (d?d.dataset.id+' ':'')+tag+cls;}
+function elSelector(el){ // 只给能在骨架 CSS 里查到的选择器：跳过无 class 的祖先，到最近的 data-id 为止
+  const parts=[];let cur=el,hops=0;
+  while(cur&&cur.id!=='frame'&&parts.length<3&&hops<8){
+    const cls=[...cur.classList].filter(c=>!/^(hl|flash|ins-hover|on|sel|pick)$/.test(c));
+    if(cls.length)parts.unshift('.'+cls.join('.'));
+    else if(cur===el)parts.unshift(cur.tagName.toLowerCase());
+    if(cur!==el&&cur.dataset&&cur.dataset.id)break;
+    cur=cur.parentElement;hops++;}
+  return parts.join(' ')||el.tagName.toLowerCase();}
+function analyze(el){
+  const decls={};
+  for(const sheet of document.styleSheets){
+    let rules;try{rules=sheet.cssRules}catch(e){continue}
+    const walk=rs=>{for(const r of rs){
+      if(r.cssRules&&!r.selectorText){walk(r.cssRules);continue}
+      if(!r.selectorText)continue;let m=false;try{m=el.matches(r.selectorText)}catch(e){}
+      if(!m)continue;for(const prop of r.style)decls[prop]={v:r.style.getPropertyValue(prop),sel:r.selectorText};}};
+    walk(rules);}
+  const cs=getComputedStyle(el),tok={},hard={},none=[];
+  for(const prop of INS_PROPS){const d=decls[prop];const c=cs.getPropertyValue(prop);
+    if(!d){if(meaningful(prop,c))none.push(prop+': '+c);continue}
+    const m=/var\((--[a-zA-Z0-9-]+)/.exec(d.v);
+    if(m)tok[prop]={token:m[1],computed:c,rule:d.sel};
+    else if(d.sel!==':where(#frame *)')hard[prop]={declared:d.v,computed:c,rule:d.sel};}
+  const r=el.getBoundingClientRect(),fr=frame.getBoundingClientRect();
+  const dataEl=el.closest('[data-id]');
+  let mod=null;const scored=[];
+  NODES.forEach(nd=>{if(!nd.maps)return;let best=Infinity;
+    nd.maps.forEach(s=>{try{const a=el.closest(s);if(a){let d2=0;for(let x=el;x&&x!==a;x=x.parentElement)d2++;best=Math.min(best,d2)}}catch(e){}});
+    if(best<Infinity)scored.push([best,nd]);});
+  scored.sort((a,b)=>a[0]-b[0]||((a[1].css?0:1)-(b[1].css?0:1)));
+  if(scored.length)mod=scored[0][1].mod;
+  const modDef=(T.modules||[]).find(m=>m.key===mod);
+  return {sel:elSelector(el),name:elName(el),dataId:dataEl?dataEl.dataset.id:null,mod,
+    modLabel:modDef?modDef.label:null,impl:modDef&&modDef.impl?modDef.impl:null,
+    level:S.level,state:S.state,
+    box:{x:Math.round(r.left-fr.left),y:Math.round(r.top-fr.top),w:Math.round(r.width),h:Math.round(r.height)},
+    text:(el.textContent||'').trim().slice(0,40),
+    tokens:tok,hardcoded:hard,missing:none};}
+function elReport(a,h){
+  const L=[`${h?'['+h+'] ':''}${a.name}`,
+    `  选择器 ${a.sel}`+(a.dataId?` · 编号 ${a.dataId}`:'')+(a.mod?` · 模块 ${a.modLabel}(${a.mod})`:''),
+    `  可见于 ${a.level} / ${a.state} · 盒 ${a.box.w}×${a.box.h} @ ${a.box.x},${a.box.y}`+(a.text?` · 文本「${a.text}」`:'')];
+  if(a.impl)L.push(`  产品代码 ${[].concat(a.impl).join(' , ')}`);
+  const tk=Object.entries(a.tokens);
+  if(tk.length)L.push('  来自 token：'+tk.map(([p,v])=>`${p}=${v.token}(${v.computed})`).join(' · '));
+  const hd=Object.entries(a.hardcoded);
+  if(hd.length)L.push('  ⚠ 写死：'+hd.map(([p,v])=>`${p}:${v.declared} @${v.rule}`).join(' · '));
+  if(a.missing.length)L.push('  ⚠ 无人管（浏览器默认）：'+a.missing.join(' · '));
+  return L.join('\n');}
+function renderPick(){const box=$('#wb-el');if(!box)return;
+  if(!PICK){box.innerHTML='';box.classList.remove('on');return}
+  const a=PICK.a,h=PICK.h;box.classList.add('on');
+  const tk=Object.entries(a.tokens),hd=Object.entries(a.hardcoded);
+  box.innerHTML=`<div class="eh"><b>${esc(a.name)}</b><span class="ex" id="wb-elx" title="关掉">×</span></div>
+   <div class="em">${esc(a.sel)}${a.mod?' · '+esc(a.modLabel):''}${a.dataId?' · '+esc(a.dataId):''} · ${a.box.w}×${a.box.h}</div>
+   ${tk.length?`<div class="et">token ${tk.map(([p,v])=>`<code data-jump="${v.token}">${esc(p)}=${esc(v.token)}</code>`).join('')}</div>`:''}
+   ${hd.length||a.missing.length?`<div class="ew">⚠ 没 token ${hd.map(([p,v])=>`<code>${esc(p)}:${esc(v.declared)}</code>`).join('')}${a.missing.map(m=>`<code>${esc(m)}</code>`).join('')}</div>`:''}
+   <div class="eb"><button class="btn" id="wb-elins">插入反馈</button><button class="btn ghost" id="wb-elcopy">复制详情</button></div>`;}
+function pickEl(el){const a=analyze(el);PICK={el,a,h:null};renderPick();
+  if(a.mod){S.mod=a.mod;renderMod();}
+  $$('#frame .pick').forEach(x=>x.classList.remove('pick'));el.classList.add('pick');}
 /* ---------- 工具条 / 快捷键 / 检查 ---------- */
 $('#wb-view').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();
   if(b.dataset.level)S.level=b.dataset.level;else if(b.dataset.state)S.state=b.dataset.state;else if(b.dataset.vp){S.vp=b.dataset.vp;const v=T.viewports.find(x=>x.key===S.vp);if(v&&v.w){$('#wb-vw').value=v.w;$('#wb-vh').value=v.h}}
@@ -175,14 +273,16 @@ $('#wb-view').addEventListener('click',e=>{const b=e.target.closest('button');if
 ['#wb-vw','#wb-vh'].forEach(s=>$(s).addEventListener('change',()=>{S.vp='custom';apply()}));
 ptab.onclick=()=>{S.panel=true;save();apply()};
 document.addEventListener('keydown',e=>{const t=e.target;if(t&&(t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable))return;if(e.metaKey||e.ctrlKey||e.altKey)return;
-  const k=e.key.toLowerCase();if(k==='p'){S.panel=!S.panel}else if(k==='t'){S.viewOpen=!S.viewOpen;S.panel=true}else if(k==='i'){S.inspect=!S.inspect}else if(k==='d'){S.dims=!S.dims}else if(k==='n'){S.ids=!S.ids}else if(k==='escape'){if(S.inspect)S.inspect=false;else S.panel=false}else return;e.preventDefault();save();apply()});
-frame.addEventListener('mouseover',e=>{if(!S.inspect)return;$$('#frame .ins-hover').forEach(x=>x.classList.remove('ins-hover'));e.target.classList.add('ins-hover')});
+  const k=e.key.toLowerCase();if(k==='p'){S.panel=!S.panel}else if(k==='t'){S.viewOpen=!S.viewOpen;S.panel=true}else if(k==='i'){S.inspect=!S.inspect}else if(k==='d'){S.dims=!S.dims}else if(k==='n'){S.ids=!S.ids}else if(k==='escape'){if(S.inspect){S.inspect=false;ov.style.display='none'}else S.panel=false}else return;e.preventDefault();save();apply()});
+frame.addEventListener('mousemove',e=>{if(!S.inspect){ov.style.display='none';return}
+  const el=e.target;if(!el||el===frame){ov.style.display='none';return}
+  const r=el.getBoundingClientRect();ov.style.display='block';
+  ov.style.left=r.left+'px';ov.style.top=r.top+'px';ov.style.width=r.width+'px';ov.style.height=r.height+'px';
+  ov.querySelector('b').textContent=`${elName(el)}  ${Math.round(r.width)}×${Math.round(r.height)}`;
+  ov.querySelector('b').style.top=(r.top<24?r.height:-20)+'px';});
+frame.addEventListener('mouseleave',()=>{ov.style.display='none'});
 frame.addEventListener('click',e=>{if(!S.inspect)return;e.preventDefault();e.stopPropagation();
-  // 命中按「距离」排序：目标元素自身 0、父级 1……只选最近的一到两层，避免点一张卡把整个引用列的 token 都选上
-  const dist=(el,anc)=>{let d=0;for(let x=el;x&&x!==anc;x=x.parentElement)d++;return d};
-  const scored=[];NODES.forEach(n=>{if(!n.maps)return;let best=Infinity;n.maps.forEach(sel=>{try{const a=e.target.closest(sel);if(a)best=Math.min(best,dist(e.target,a))}catch(x){}});if(best<Infinity)scored.push([best,n])});
-  if(!scored.length)return;scored.sort((a,b)=>a[0]-b[0]||((a[1].css?0:1)-(b[1].css?0:1)));const mod=scored[0][1].mod;const hits=scored.filter(x=>x[1].mod===mod).map(x=>x[1]);
-  S.mod=hits[0].mod;S.tab='mod';S.panel=true;apply();renderMod();const ids=new Set(hits.map(h=>h.id));$$('#wb-modlist .nd').forEach(el=>el.classList.toggle('sel',ids.has(el.dataset.nid)));const first=$('#wb-modlist .nd.sel');if(first)first.scrollIntoView({block:'start',behavior:'smooth'})},true);
+  S.panel=true;apply();pickEl(e.target);},true);
 window.addEventListener('resize',apply);
 /* ---------- 构建输出 ---------- */
 function buildCss(){return ['/* 由 '+T.files.json+' 生成（工作台「保存」或 build_tokens.py），勿手改。',' * '+(T.title||T.page)+' '+T.version+' 页面级与组件级 token。站点基础 token 只引用 var(--…)，值在站点全局样式。',' * 工作台与前端组件读的是同一个文件。 */',':root{',...NODES.filter(n=>n.css&&cssVal(n)!==null).map(n=>`  ${n.css}: ${cssVal(n)}; /* ${n.label} */`),'}',''].join('\n')}

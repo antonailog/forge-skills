@@ -91,7 +91,7 @@
 ```
 
 - `groups` 固定七层，key 依次 `structure hierarchy type color space motion consistency`（见 seven-layers.md）；`ask` 是这一层的问题，`how` 是走法，都显示在面板。
-- `modules` 是「按模块」tab 的分组；每个节点必须属于一个模块。
+- `modules` 是「按模块」tab 的分组；每个节点必须属于一个模块。可给 `impl: ["path/to/Component.tsx", …]` 指向产品代码，检查模式的元素卡会显示它——拿到「模块 history」就知道实现轮该改哪个文件；尚未实现的模块写 `impl: []` 加 `implNote`。
 - `scale` 来自 `adapt_tokens.py` 的实际用量统计；节点值不在对应阶梯上时面板标红（`options` 里列出的值不算）。
 - `foundation` 是站点级色板（名 → 色值，不带 `--`）；colorref 节点的色块从这里取色，暗色模式切 `dark`。
 
@@ -127,8 +127,17 @@
 
 ```json
 "decisions": {"s.col-w": {"r": "pass", "note": ""}, "s.bp": {"r": "unsure"}, "c.f.brand": {"r": "propose", "note": "略暗"}},
-"feedback": [{"t": "C12 太挤", "ref": "C12", "kind": "el", "at": "2026-09-20T11:43"}, {"t": "s.doc-max 960 还是宽了", "ref": "s.doc-max", "kind": "node", "at": "..."}]
+"feedback": [
+  {"t": "C12 太挤", "ref": "C12", "kind": "el", "at": "2026-09-20T11:43"},
+  {"t": "[E1 搜索记录 H1-1] 和 [E2 搜索框 S1] 左边没对齐", "at": "2026-09-21T09:40",
+   "els": [{"h": "E1", "sel": ".hrow.run .hq", "dataId": "H1-1", "mod": "history",
+            "impl": ["…/SearchHistory.tsx"], "level": "page", "state": "idle-hist",
+            "box": {"x": 420, "y": 300, "w": 752, "h": 23}, "text": "怎么使用 seedance 2.5",
+            "tokens": {"font-size": {"token": "--ai-hist-q", "computed": "15px", "rule": ".hist .hq"}},
+            "hardcoded": {}, "missing": ["line-height: 22.5px"]}]}
+]
 ```
+`els` 由检查模式的「插入反馈」写入，句柄与正文里的 `[E1 …]` 对应；旧格式（只有 `ref`/`kind`）继续兼容。
 
 - `r` ∈ `pass` 通过 / `change` 改（改过值自动记） / `unsure` 拿不准（Agent 出 A/B/C） / `propose` 提议改动（只对 readonly，导出单列）。
 - 反馈一行一条，行首是元素编号或节点 id 时引擎解析出 `ref`/`kind`，点它能跳；不写编号也收。
