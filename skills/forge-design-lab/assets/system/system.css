@@ -152,3 +152,45 @@ body { background: var(--background); color: var(--foreground); font: 14px/1.6 I
 .sys-fbl small { color: var(--muted-foreground); font: 11px "JetBrains Mono", monospace; white-space: nowrap; }
 .sys-fbl span { flex: 1; }
 .sys-fbl button { border: 0; background: none; color: var(--muted-foreground); cursor: pointer; }
+
+/* ---- 模板视图 ---- */
+.sys-tcolors { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.sys-tcolor { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--card); }
+.sys-tcolor .sw { display: flex; height: 72px; }
+.sys-tcolor .sw label { flex: 1; position: relative; cursor: pointer; }
+.sys-tcolor .sw input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; cursor: pointer; }
+.sys-tcolor .sw em { position: absolute; left: 8px; bottom: 5px; font: 10.5px "JetBrains Mono", monospace; font-style: normal; color: #fff; mix-blend-mode: difference; pointer-events: none; }
+.sys-tcolor .meta { padding: 10px 12px; }
+.sys-tcolor .nm { font: 600 13px "JetBrains Mono", monospace; }
+.sys-tcolor .role { font-size: 13px; margin-top: 2px; }
+.sys-tcolor .from { font-size: 11px; color: var(--muted-foreground); margin-top: 2px; }
+.sys-trow { display: grid; grid-template-columns: 380px 1fr; gap: 24px; padding: 16px 6px; border-bottom: 1px solid var(--border); align-items: center; }
+.sys-trow .k small, .sys-font .k small, .sys-radius small { display: block; font-size: 12px; color: var(--muted-foreground); font-weight: 400; }
+.sys-trow .smp { max-width: 640px; }
+.ctl { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 12px; color: var(--muted-foreground); }
+.ctl select, .ctl input, .sys-radius input, .sys-wbar input, .sys-listin { font: 12px "JetBrains Mono", monospace; border: 1px solid var(--border); border-radius: 4px; padding: 3px 4px; background: var(--background); color: var(--foreground); }
+.sys-listin { width: 320px; margin-right: 8px; }
+.sys-row { margin: 10px 0 0; display: flex; align-items: center; }
+.sys-radii { display: flex; gap: 32px; flex-wrap: wrap; }
+.sys-radius { display: flex; gap: 12px; align-items: center; }
+.sys-radius .box { width: 72px; height: 44px; border: 1.5px solid var(--foreground); background: var(--card); }
+.sys-btable .ctl select { max-width: 150px; }
+.sys-dk { background: var(--background); padding: 8px; border-radius: 4px; display: inline-block; }
+.sys-cust { border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px; margin: 0 0 12px; background: var(--card); max-width: 860px; }
+.sys-cust.off { opacity: .55; }
+.sys-cust .hd b { font-size: 15px; }
+.sys-cust .why { font-size: 13.5px; margin: 4px 0; }
+.sys-cust .meta { font-size: 12px; color: var(--muted-foreground); }
+.sys-cust .sys-note { margin-top: 8px; width: 100%; box-sizing: border-box; font: 12.5px Inter, "Noto Sans SC", sans-serif; border: 1px solid var(--border); border-radius: 4px; padding: 5px 8px; background: var(--background); color: var(--foreground); }
+.sys-audit { border-collapse: collapse; width: 100%; max-width: 1100px; }
+.sys-audit td { padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+.sys-audit td:first-child { width: 120px; color: var(--muted-foreground); }
+.sys-audit td:nth-child(2) { width: 300px; }
+.sys-audit td.sys-mono { font-size: 11px; color: var(--muted-foreground); word-break: break-all; }
+
+.ctl2 { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+.ctl2 label { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11.5px; color: var(--muted-foreground); }
+.ctl2 select, .ctl2 input { font: 11.5px "JetBrains Mono", monospace; border: 1px solid var(--border); border-radius: 4px; padding: 2px 4px; background: var(--background); color: var(--foreground); max-width: 128px; }
+.ctl2 label { white-space: nowrap; }
+.ctl2 select, .ctl2 input { max-width: 112px; }
+.sys-btable td:first-child { width: 340px; }

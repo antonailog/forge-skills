@@ -556,7 +556,8 @@ def main():
         "updated": datetime.date.today().isoformat(),
         "extracted": datetime.datetime.now().isoformat(timespec="seconds"),
         "files": {"json": os.path.join(PACK_REL, "system.tokens.json"), "css_source": a.css_file,
-                  "tailwind": a.tw, "product_css": os.path.join(PACK_REL, "product.css")},
+                  "tailwind": a.tw, "product_css": os.path.join(PACK_REL, "product.css"),
+                  "template_css": os.path.join(PACK_REL, "template.css")},
         "families": [{"key": k, "label": l} for k, l, _ in FAMILIES],
         "colors": colors,
         "tw_colors": tw_static,
@@ -568,6 +569,8 @@ def main():
         "containers": mw, "grids": grids,
         "buttons": build_buttons(repo, src),
         "layouts": old.get("layouts") or [],
+        "template": old.get("template") or {},
+        "custom": old.get("custom") or [],
         "edits": old.get("edits") or {},
         "decisions": old.get("decisions") or {},
         "feedback": old.get("feedback") or [],
@@ -578,7 +581,7 @@ def main():
     # 页面模板：页面本体放包内，引擎放 _workbench（与页面包共用目录）
     wb = os.path.join(repo, "docs", "assets", "visuals", "_workbench")
     os.makedirs(wb, exist_ok=True)
-    for f in ("system.js", "system.css"):
+    for f in ("system.js", "system.css", "template-css.js"):
         shutil.copyfile(os.path.join(LAB_ASSETS, f), os.path.join(wb, f))
     html = os.path.join(pack_dir, "system.html")
     shutil.copyfile(os.path.join(LAB_ASSETS, "system.html"), html)

@@ -144,6 +144,35 @@ def merge_system(repo, incoming):
     seen = {(f.get("at"), f.get("t")) for f in old_fb}
     new_fb = [f for f in in_fb if (f.get("at"), f.get("t")) not in seen]
     disk["edits"], disk["decisions"], disk["feedback"] = new_e, new_d, in_fb
+    tpl_changes, cust_changes = [], []
+    if isinstance(incoming.get("template"), dict) and incoming["template"].get("colors"):
+        old_t = disk.get("template") or {}
+        new_t = incoming["template"]
+        for k in sorted(set(old_t) | set(new_t)):
+            a, b = old_t.get(k), new_t.get(k)
+            if isinstance(a, list) and isinstance(b, list) and len(a) == len(b) and all(isinstance(x, dict) for x in a + b):
+                for x, y in zip(a, b):
+                    if x != y:
+                        key = y.get("name") or y.get("id")
+                        tpl_changes.append({"part": k, "item": key,
+                                            "fields": {f: [x.get(f), y.get(f)] for f in set(x) | set(y) if x.get(f) != y.get(f)}})
+            elif a != b:
+                tpl_changes.append({"part": k, "from": a, "to": b})
+        disk["template"] = new_t
+    if isinstance(incoming.get("custom"), list):
+        old_c = {c.get("id"): c for c in disk.get("custom") or []}
+        for c in incoming["custom"]:
+            o = old_c.get(c.get("id")) or {}
+            if o.get("status") != c.get("status") or (o.get("note") or "") != (c.get("note") or ""):
+                cust_changes.append({"id": c.get("id"), "name": c.get("name"), "status": [o.get("status"), c.get("status")], "note": c.get("note") or ""})
+        disk["custom"] = incoming["custom"]
+    css = incoming.get("template_css")
+    css_rel = (disk.get("files") or {}).get("template_css")
+    if css and css_rel:
+        cp = os.path.join(repo, css_rel)
+        if os.path.abspath(cp).startswith(os.path.abspath(repo) + os.sep):
+            with open(cp, "w", encoding="utf-8") as fh:
+                fh.write(css)
     disk["exported"] = incoming.get("exported") or datetime.datetime.now().isoformat(timespec="seconds")
     with open(spath, "w", encoding="utf-8") as fh:
         json.dump(disk, fh, ensure_ascii=False, indent=1)
@@ -151,6 +180,7 @@ def merge_system(repo, incoming):
     for v in new_d.values():
         counts[v.get("r") or "（只有备注）"] = counts.get(v.get("r") or "（只有备注）", 0) + 1
     report = {"at": disk["exported"], "repo": repo, "page": "system", "kind": "system", "files": [rel],
+              "template_changes": tpl_changes, "custom_changes": cust_changes,
               "edit_changes": edit_changes, "decision_changes": dec_changes, "decisions": counts,
               "pending_edits": len(new_e), "new_feedback": new_fb,
               "removed_feedback": len(old_fb) + len(new_fb) - len(in_fb)}

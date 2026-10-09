@@ -36,7 +36,7 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | 弱 | 只说「看看设计」「效果对不对」，没点名对象 | 列出项目里已有的页面包（`docs/assets/visuals/*/`）让选；没有就问模块号，不猜 |
 | 潜在 | 在 forge-design / forge-prd 讨论里出现「比例」「一屏几张」「行长」「挤」「留白」 | 反问一句「要不要开工作台按真实尺寸看」，不自动开 |
 | 交接 | 「保存好了」「按调整后的来」「在 download 里」 | 直接进 S4：读 json → 重建校验 → 差异表 → 回反馈 |
-| 零件库 | 「零件库」「设计 token 总表」「全站颜色/字体/按钮」「统一按钮」「站点 token 改值」 | 走 S0；用户在零件库保存后读回执，「同步进代码」时跑 `apply_system.py` |
+| 零件库 | 「零件库」「设计模板」「设计 token 总表」「全站颜色/字体/按钮」「这个要不要定制」 | 走 S0；用户在零件库保存后读回执 |
 
 ## 工具
 
@@ -50,8 +50,9 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | `build_tokens.py` | S2/S3 写完 json 后；S4 合并后校验重建 | `python3 {lab}/scripts/build_tokens.py <repo> <tokens.json> [--check]` | 校验不过就修 json，不手改生成的 js/css |
 | `scaffold_pack.py` | S2，线框确认后建骨架壳 | `python3 {lab}/scripts/scaffold_pack.py <repo> <tokens.json> [--adapt <adapt.json>] [--sample <json>]` | 同时把引擎母本同步到 `docs/assets/visuals/_workbench/` |
 | `verify_pack.mjs` | S3 交付前；S4 每次重建后 | `node {lab}/scripts/verify_pack.mjs <html> --repo <repo> [--shots <dir>] [--strict-literals] [--json <out>]` | 没有 Playwright 就只跑 `build_tokens.py --check`，让用户人工开页面报控制台 |
-| `extract_system.py` | S0，建零件库；产品 CSS 或组件改过后刷新 | `python3 {lab}/scripts/extract_system.py <repo> --product-css` | worktree 没有 node_modules 就软链主仓库的；编译失败页面仍能看颜色与阶梯，按钮不按真像素 |
-| `apply_system.py` | 用户说零件库的改值「同步进代码」 | `python3 {lab}/scripts/apply_system.py <repo> [--apply]` | 行号对不上就整体中止，先重跑 extract 再来，不做模糊替换 |
+| `extract_system.py` | S0，抽现状（对账用）；产品样式改过后刷新 | `python3 {lab}/scripts/extract_system.py <repo> --product-css` | worktree 没有 node_modules 就软链主仓库的 |
+| `build_template.js` | 改了 json 的 template 段之后 | `node {lab}/scripts/build_template.js <repo> [--check]` | 与页面同一个生成器（`assets/system/template-css.js`），不手改 template.css |
+| `check_system.py` | forge-review / forge-qa 收尾；用户问「有没有越界」 | `python3 {lab}/scripts/check_system.py <repo> [--base origin/main] [--all]` | 默认只查新增行；`--all` 看遗留规模，不作门禁 |
 | `render_design_table.py` | S5 | `python3 {lab}/scripts/render_design_table.py <repo> <tokens.json> --design docs/DESIGN.md --heading "## 模块 28"` | DESIGN.md 里找不到模块标题就只打印区块，提示先走 forge-design |
 
 **先起服务，再打开页面**。`serve.py` 把仓库根当静态根，页面 URL 形如
@@ -68,17 +69,23 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 主仓库与 worktree 都有 `docs/` 和 `frontend-react/`，引擎的目录校验分不出来（实发过一次）。
 Google Fonts 让骨架用与产品同族的字体（不通时面板徽标显示「回退」，比例仍真实）。
 
-## S0 零件库：全站只有一份的设计零件
+## S0 零件库：一套模板 + 有限的定制
 
-零件库是站点级的页面包（`docs/assets/visuals/system/`），把项目里已有的颜色、字体与文字角色、阶梯、按钮、版面骨架盘点在一页上，按产品真像素渲染。它解决两件事：现有零件在哪里维护和展示；新设计开工前先从这里挑零件。
+零件库（`docs/assets/visuals/system/`）保证全站设计零件可枚举、不无限增长。分三层：
 
-**建与刷新**：跑 `extract_system.py --product-css`。它从产品 CSS 和 Tailwind 配置抽颜色变量（亮暗配对、使用次数、出处），把所有 `<button>` 按长相归类，统计阶梯与容器宽度，并用产品自己的 Tailwind 编译一份 `product.css` 供页面渲染。版面骨架是手写的（`layouts` 字段），重跑保留；用户的改值、结论、反馈也保留。
+- **模板**：唯一的一套成熟零件。颜色约十几个，每个有固定用途；字体三种；文字样式不到十种；字号、间距、圆角各一条阶梯；按钮六种左右；版面骨架三四种。所有新设计默认只从这里取。
+- **定制**：模板确实不够的地方，逐条登记名字、为什么、用在哪、基于哪个模板零件。新增定制要用户确认后才进清单，清单就是全站全部的例外。
+- **历史遗留**：现有代码里两样都不属于的写法。冻结，不要求马上迁移，也不让用户逐个判断，只在「对账」里给覆盖率。
 
-**用户在页面上做三件事**：改值（色值、文字角色的字号行高字重，整页即时生效）；给结论（按钮选「定为标准 / 归并到 / 废弃」，其他零件选「保留 / 归并到 / 废弃」）；写反馈。保存走 `serve.py`，回执在 `.forge/design-lab/last-save.json`。读回执后照 S4 的方式出差异表、逐条回反馈。
+用户只管前两层长什么样，不看现状盘点、不做逐项裁决。第一版做成「把现有乱值全部摊开让用户判断」被否了，原因就在这里：人眼能分辨的东西很少，他也不关心哪些用错了。
 
-**同步进代码**：用户明确说同步时才跑 `apply_system.py --apply`，它把改值写回产品 CSS 并清空待同步记录。这是产品代码改动，走 worktree、过 QA。结论（标准/归并）不自动改代码，而是转成实现清单交 forge-eng。
+**建零件库**：先跑 `extract_system.py --product-css` 抽现状，再由你从现状里提炼模板初稿写进 `template`。取值原则：取用量最大的值，名字沿用现有变量名，这样现有代码天然有一部分已经落在模板上；同值同用途的变量记成 `aliases`；有明确独特用途的一组值记成 `custom`，状态「待确认」。然后 `build_template.js` 生成 `template.css`，开页面请用户整体看一遍，只需要他回答三件事：模板哪里不顺眼、哪些定制认可、哪些定制不需要。
 
-**选材门禁**：任何新页面包在 S1 之前先写选材清单，格式见 `references/system-pack.md`：这一页复用哪些颜色、文字角色、按钮标准、版面骨架；需要新造哪些页面 token，每个一句理由。理由不能是「差一点」：差 1–2px 或相邻色阶的，先用零件库的值，在骨架上看不顺眼再提。新造的值在 S5 交接时检查：两个以上页面包都在用的，提议升格进零件库。
+**用户保存后**：读 `.forge/design-lab/last-save.json` 的 `template_changes` 与 `custom_changes`，列成差异表，逐条回反馈。模板的改值只改零件库，不自动改产品代码；要让产品用上模板，是一次单独的实现任务（引入 `template.css`、把组件改成 `.t-*` 类），走 forge-eng。
+
+**守门**：`check_system.py` 查当前分支相对 origin/main 的新增行，出现模板和定制以外的颜色、字号、圆角、间距就失败。forge-review 与 forge-qa 收尾时跑它。确需例外的，先登记定制，再在行尾写 `design: <定制 id>`。
+
+**新页面包开工**：S1 之前写选材清单（格式见 `references/system-pack.md`）：用模板的哪些零件、怎么组合；模板没有的列出来，每条说明理由，作为「定制申请」给用户确认，确认后进 `custom`。不能用「差一点」做理由，差 1–2px 或相邻色阶的直接用模板值。
 
 ## S1 适配：先知道这个项目有什么
 
@@ -133,7 +140,7 @@ forge-design 第三步遇到页面/组件/布局决策时转到本 skill：输�
 3 页面包      文件清单 + verify 结果 + 开场（先看哪层、重点判断题）        —— 线框确认后必出
 4 审查回合    差异表 / 结局统计 / 反馈逐条回 / 拿不准的 A/B/C            —— 用户保存后必出，可重复
 5 交接        DESIGN.md 区块位置 / 实现清单 / 站点级提议 / 提交号          —— 用户说「按调整后的来」后必出
-0 零件库      分区计数 / 本轮改值与结论 / 待同步行 / 选材清单             —— 建零件库、零件库保存、新页面包开工时出
+0 零件库      模板改动 / 定制确认情况 / 覆盖率 / 选材清单与定制申请       —— 建零件库、零件库保存、新页面包开工时出
 ```
 
 触发式模块：A/B/C 提案（有「拿不准」才出，按七层顺序，每个 ≤3 选项）；站点级提议清单（有「提议改动」才出）；响应式压力提示（面板停靠后正文宽低于阶梯最小舒适行长时报一次）。

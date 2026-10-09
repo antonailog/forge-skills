@@ -1,60 +1,75 @@
-# 零件库（system 页面包）
+# 零件库：模板 + 定制 + 对账
 
-站点级只有一份，路径固定 `docs/assets/visuals/system/`。和普通页面包的区别：它不是一个页面的设计稿，而是全站零件的总账；数据主要来自代码抽取，用户只在上面做结论和少量改值。
+站点级只有一份，路径固定 `docs/assets/visuals/system/`。目的：全站设计零件可枚举、不无限增长；将来调整时只改模板一处。
+
+## 三层
+
+| 层 | 在 json 里 | 谁决定 | 用户要做什么 |
+|---|---|---|---|
+| 模板 | `template` | 用户 | 整体看，哪里不顺眼直接在页面上改 |
+| 定制 | `custom[]` | 用户逐条确认 | 每条选 已确认 / 待确认 / 不需要 |
+| 历史遗留 | 其余抽取字段 | 不需要决定 | 不看；「对账」只给覆盖率 |
 
 ## 文件
 
 | 文件 | 谁写 | 说明 |
 |---|---|---|
-| `system.tokens.json` | `extract_system.py` 抽取 + 用户保存 | 唯一数据源，进 git |
-| `system.html` | 从 skill `assets/system/` 同步 | 页面壳，勿手改 |
-| `product.css` | `extract_system.py --product-css` | 用产品 Tailwind 编译，勿手改；产品样式改过就重跑 |
-| `_workbench/system.js` `system.css` | 从 skill 同步 | 页面逻辑与外壳样式 |
+| `system.tokens.json` | 抽取脚本 + Agent 写模板初稿 + 用户保存 | 唯一数据源，进 git |
+| `template.css` | `build_template.js` 或页面保存 | 模板生成的样式：颜色变量、`--t-*`、`.t-<文字样式>`、`.t-btn-<按钮>`；勿手改 |
+| `product.css` | `extract_system.py --product-css` | 产品现有样式，供页面外壳与对账；勿手改 |
+| `system.html`，`_workbench/system.js` `system.css` `template-css.js` | 从 skill `assets/system/` 同步 | 页面与生成器 |
 
-## json 字段（`kind: "system"`）
+## template 字段
 
-抽取字段，每次重跑覆盖：
+```json
+{
+ "version": "v1 初稿",
+ "colors": [{"name": "--brand", "group": "品牌", "role": "主按钮、当前项、链接", "light": "#C65A1E", "dark": "#F0A273", "from": "现有 --brand，引用 173 次"}],
+ "aliases": {"--primary": "--brand", ".admin-scope --a-ok": "--success"},
+ "fonts": [{"id": "sans", "label": "无衬线", "use": "界面", "stack": ["Noto Sans SC", "Inter", "sans-serif"]}],
+ "sizes": [11, 12, 13, 14, 16, 18, 20, 28],
+ "type": [{"id": "meta", "label": "元信息", "use": "来源、时间", "font": "sans", "size": 13, "lh": 1.5, "weight": 400, "color": "--muted-foreground"}],
+ "space": [2, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40],
+ "radius": [{"id": "sm", "v": 4, "use": "按钮、卡片（默认）"}],
+ "containers": [{"id": "page", "v": 1200, "use": "全站主区"}],
+ "buttons": [{"id": "primary", "label": "主按钮", "use": "一屏最多一个", "h": 36, "px": 16, "size": 14, "weight": 600,
+              "radius": "sm", "bg": "--brand", "fg": "--brand-foreground", "border": "", "hover": "darken"}],
+ "layouts": ["app-shell", "event-full", "event-modal"]
+}
+```
 
-- `colors[]`：`id`（作用域变量为 `.admin-scope --a-ok`）、`name`、`scope`、`family`、`light`、`dark`、`line`、`dark_line`、`note`（代码注释）、`uses`（var 引用 + Tailwind 语义类）、`files`、`files_n`
-- `tw_colors[]`：Tailwind 配置里写死的色板，`uses` 为类名引用次数
-- `hardcoded_colors[]`：TSX 里的 `#hex`，`same_as` 为同值的站点变量
-- `other_vars[]`：非颜色变量（阴影、高度、圆角等）
-- `fonts[]`：Tailwind 字体角色；`text_roles[]`：全局 CSS 里带字号与字体的类（四元组）
-- `scales`：`px space radius lh weight` 各档 `{v, n}`
-- `containers[]`（`max-w-[Npx]`）、`grids[]`（`grid-cols-[…]`）
-- `buttons`：`total`、`dynamic`、`unstyled[]`、`families[]`；变体 `id` 是长相签名的哈希（重跑不漂移），`sig` 为影响外观的类，`cls` 为渲染用类名（动态拼接的按属性取第一个值近似），`cls_hover` `cls_focus` 为强制状态，`where[]` 为出处
+- 颜色沿用产品现有变量名，引入 `template.css` 时现有代码自动吃到模板值。
+- 按钮、文字样式的每个字段只能引用模板里的值（颜色名、字号阶梯、圆角 id），页面上的下拉框也只给这些选项。这就是「组合而不是新造」。
+- `hover` ∈ `darken border-brand soft-brand muted-bg underline`，含义见 `template-css.js`。
+- `layouts` 是 `layouts[]`（手写骨架目录）里的 id；页面独有的骨架挂在对应定制的 `layout` 上。
 
-保留字段，重跑不动：
+## custom 字段
 
-- `layouts[]`：手写版面骨架，`{id, label, desc, source, impl[], vw, vh, regions[{label, x, y, w, h, tone(main|side|chrome), note}]}`，坐标为该视口下的真实像素
-- `edits`：`color:<id>` → `{light, dark}`；`role:<类名>` → `{size, lh, weight}`。只存与代码不同的值
-- `decisions`：键为零件 id（`color:--brand`、`btn.3be44a7c`、`scale:px:11.5`、`mw:1168`、`layout:info`、`hex:#171512`、`font:mono`、`role:reading-body`），值 `{r, to, note}`；`r` ∈ `std keep merge drop unsure`
-- `feedback[]`：`{t, at}`
+`{id, name, status: 已确认|待确认|不需要, why, where, tokens: [变量前缀或类名前缀], based_on, layout?, note?}`
+
+`tokens` 同时用于对账分类和守门放行：`--modal-` 表示所有 `--modal-*` 变量属于这条定制。状态为「不需要」的定制不再放行，它的值算历史遗留，后续并回模板。
+
+## 提炼模板初稿的取值原则
+
+1. 每组只留用量最大、用途清楚的值；字号 6–8 档，颜色 12–16 个，按钮 4–6 种。
+2. 名字与值沿用现有代码里的主力变量，现有代码天然有一部分已经落在模板上。
+3. 同值同用途的变量记 `aliases`，不算遗留。
+4. 一组值只服务于一个独特场景（阅读纸面、Logo、平台色）记 `custom`，状态待确认，写清为什么模板不够。
+5. 取完看「对账」覆盖率：颜色、字号、间距、圆角的用量覆盖率都应在 85% 以上，低于这个说明漏了主力值。
+
+## 选材清单与定制申请（新页面包开工前）
+
+```
+复用  颜色：--background --card --foreground --muted-foreground --brand
+      文字：.t-title .t-reading .t-meta
+      按钮：.t-btn-primary .t-btn-ghost
+      版面：全站外壳；容器 content 1040
+组合  卡片 = --card 底 + --border 边 + 圆角 sm + 内距 12/16 + .t-meta 来源行
+申请定制  引用列宽 300：模板没有侧栏宽度；只用于 AI 搜索页
+```
+
+申请的定制经用户确认后写进 `custom`，页面包 token 用自己的前缀（如 `--ai-`），守门脚本按页面包前缀放行。
 
 ## 读用户保存
 
-回执 `.forge/design-lab/last-save.json` 里有 `edit_changes`、`decision_changes`、`new_feedback`、`pending_edits`。回复顺序：
-
-1. 值改动表：零件、原值、新值；提醒这些还没进代码，问是否同步（同步是产品代码改动）
-2. 结论汇总：每类按钮定了几个标准、几种归并、几种废弃；还有哪类一个标准都没定
-3. 「拿不准」的出 A/B/C，三档都来自零件库里已有的值
-4. 反馈逐条回
-
-结论转实现清单时按文件分组：哪个文件第几行的按钮，改成哪个标准的类名。数量大时建议先抽一个共享组件（如 `Button` 的几个变体），再分批替换。
-
-## 选材清单（新页面包开工前）
-
-写在 feature-spec 或对话里，四段：
-
-```
-复用  颜色：--background --foreground --muted-foreground --brand --border
-      文字：.reading-body .reading-meta；字号阶梯 13 / 15 / 20
-      按钮：描边·中性标准（btn.xxxx）、文字链接标准（btn.yyyy）
-      版面：信息页骨架（1168 内容区）
-新造  --xx-col-w 300：引用列宽，零件库没有侧栏宽度这一档
-      --xx-card-gap 12：……
-组合  卡片 = card 底 + border 1px + 圆角 4 + 内距 12/16 + .reading-meta 来源行
-不用  Tailwind 固定色、写死的 #hex
-```
-
-S5 交接时对照这份清单检查：页面 token 的值与零件库某个值相同却没引用，改成引用；新造的被两个以上页面包用到，提议升格进零件库。
+回执 `.forge/design-lab/last-save.json`：`template_changes`（哪个零件哪个字段从什么改成什么）、`custom_changes`（状态与备注）、`new_feedback`。回复顺序：模板改动表；定制确认情况（还剩几条待确认）；反馈逐条回。模板改值不自动改产品代码，要产品用上模板另开实现任务。
