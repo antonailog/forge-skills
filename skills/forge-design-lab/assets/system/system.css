@@ -1,0 +1,154 @@
+/* forge-design-lab · 设计零件库页面外壳。零件本身用 product.css 渲染，这里只管外壳。
+   外壳也用产品变量，切暗色时整页一起变，顺便看暗色效果。 */
+html, body { margin: 0; height: 100%; }
+body { background: var(--background); color: var(--foreground); font: 14px/1.6 Inter, "Noto Sans SC", system-ui, sans-serif; }
+#sys-top { position: sticky; top: 0; z-index: 20; height: 52px; display: flex; align-items: center; gap: 24px;
+  padding: 0 20px; background: var(--background); border-bottom: 1px solid var(--border); }
+.sys-title { white-space: nowrap; }
+.sys-title b { font-size: 15px; }
+.sys-title span { margin-left: 8px; font: 11.5px "JetBrains Mono", ui-monospace, monospace; color: var(--muted-foreground); }
+#sys-tabs { display: flex; gap: 4px; flex: 1; overflow-x: auto; }
+#sys-tabs button { border: 0; background: none; padding: 6px 12px; font: inherit; color: var(--muted-foreground); cursor: pointer; border-radius: 4px; white-space: nowrap; }
+#sys-tabs button:hover { color: var(--foreground); background: var(--muted); }
+#sys-tabs button.on { color: var(--foreground); font-weight: 600; box-shadow: inset 0 -2px 0 var(--brand); border-radius: 0; background: none; }
+#sys-tabs button i { font-style: normal; font-size: 11px; margin-left: 4px; color: var(--muted-foreground); font-weight: 400; }
+.sys-right { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+#sys-dirty { font-size: 12px; color: var(--brand); }
+.sys-btn { border: 1px solid var(--border); background: var(--card); color: var(--foreground); padding: 5px 12px; border-radius: 4px; font: inherit; font-size: 13px; cursor: pointer; }
+.sys-btn:hover { border-color: var(--brand-border); }
+.sys-primary { background: var(--brand); border-color: var(--brand); color: var(--brand-foreground); font-weight: 600; }
+.sys-primary:hover { filter: brightness(.95); }
+
+#sys-wrap { display: flex; height: calc(100vh - 53px); }
+#sys-main { flex: 1; min-width: 0; overflow: auto; padding: 24px 32px 80px; }
+#sys-drawer { width: 380px; flex: none; overflow: auto; border-left: 1px solid var(--border); background: var(--card); padding: 20px; box-sizing: border-box; }
+#sys-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--foreground); color: var(--background); padding: 8px 16px; border-radius: 4px; font-size: 13px; z-index: 50; }
+
+.sys-muted { color: var(--muted-foreground); }
+.sys-mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
+.sys-intro { max-width: 780px; margin: 0 0 20px; color: var(--muted-foreground); font-size: 13.5px; }
+.sys-intro b { color: var(--foreground); }
+.sys-h2 { font-size: 17px; font-weight: 600; margin: 36px 0 4px; }
+.sys-h2:first-child { margin-top: 0; }
+.sys-h2 small { font-weight: 400; font-size: 12px; color: var(--muted-foreground); margin-left: 8px; }
+.sys-sub { font-size: 12.5px; color: var(--muted-foreground); margin: 0 0 12px; max-width: 780px; }
+.sys-stat { display: flex; gap: 28px; flex-wrap: wrap; margin: 0 0 20px; }
+.sys-stat div { font-size: 12px; color: var(--muted-foreground); }
+.sys-stat b { display: block; font: 600 22px "JetBrains Mono", monospace; color: var(--foreground); }
+
+/* 可点的条目统一：点了右侧抽屉出详情 */
+.sys-item { cursor: pointer; position: relative; }
+.sys-item.sel { outline: 2px solid var(--brand); outline-offset: 2px; }
+.sys-badge { display: inline-block; font: 10.5px/16px Inter, "Noto Sans SC", sans-serif; padding: 0 5px; border-radius: 3px; margin-left: 4px; vertical-align: 1px; white-space: nowrap; }
+.sys-badge.std { background: var(--brand); color: var(--brand-foreground); }
+.sys-badge.keep { background: var(--muted); color: var(--foreground); }
+.sys-badge.merge { background: var(--brand-soft); color: var(--brand); }
+.sys-badge.drop { background: var(--muted); color: var(--muted-foreground); text-decoration: line-through; }
+.sys-badge.unsure { border: 1px dashed var(--muted-foreground); color: var(--muted-foreground); }
+.sys-badge.edit { background: var(--brand-soft); color: var(--brand); }
+.sys-badge.rare { border: 1px solid var(--border); color: var(--muted-foreground); }
+.sys-badge.dyn { border: 1px solid var(--border); color: var(--muted-foreground); }
+
+/* 颜色 */
+.sys-colors { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: 12px; }
+.sys-color { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--card); }
+.sys-color .sw { display: flex; height: 60px; }
+.sys-color .sw > div { flex: 1; position: relative; }
+.sys-color .sw > div > div { position: absolute; inset: 0; }
+.sys-color .sw em { position: absolute; left: 6px; bottom: 3px; font: 10px "JetBrains Mono", monospace; font-style: normal; color: #fff; mix-blend-mode: difference; }
+.sys-color .meta { padding: 8px 10px; }
+.sys-color .nm { font: 600 12px "JetBrains Mono", monospace; word-break: break-all; }
+.sys-color .vals { font: 11px "JetBrains Mono", monospace; color: var(--muted-foreground); }
+.sys-color .use { font-size: 11px; color: var(--muted-foreground); }
+.sys-color.zero { opacity: .6; }
+.sys-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sys-chip { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 4px; padding: 3px 8px 3px 3px; font: 11px "JetBrains Mono", monospace; background: var(--card); }
+.sys-chip i { width: 18px; height: 18px; border-radius: 3px; border: 1px solid rgba(0,0,0,.08); }
+.sys-chip.zero { opacity: .5; }
+
+/* 字体 */
+.sys-font { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 14px 6px; border-bottom: 1px solid var(--border); align-items: baseline; }
+.sys-font .k { font: 600 12px "JetBrains Mono", monospace; }
+.sys-font .k small { display: block; font-weight: 400; color: var(--muted-foreground); font-family: Inter, "Noto Sans SC", sans-serif; font-size: 11.5px; }
+.sys-font .s { font-size: 22px; line-height: 1.4; }
+.sys-font .s small { display: block; font-size: 11px; color: var(--muted-foreground); font-family: "JetBrains Mono", monospace; }
+.sys-role { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 14px 6px; border-bottom: 1px solid var(--border); align-items: start; }
+.sys-role .spec { font: 11.5px "JetBrains Mono", monospace; color: var(--muted-foreground); }
+.sys-role .smp { max-width: 640px; }
+
+/* 阶梯 */
+.sys-ladder { display: flex; flex-direction: column; gap: 2px; }
+.sys-step { display: grid; grid-template-columns: 64px 1fr 96px; gap: 12px; align-items: center; padding: 4px 6px; border-radius: 4px; min-height: 26px; }
+.sys-step:hover { background: var(--muted); }
+.sys-step .v { font: 600 12px "JetBrains Mono", monospace; text-align: right; }
+.sys-step .n { font: 11px "JetBrains Mono", monospace; color: var(--muted-foreground); }
+.sys-step.rare .v { color: var(--muted-foreground); font-weight: 400; }
+.sys-step .bar { height: 10px; background: var(--brand-soft); border: 1px solid var(--brand-border); box-sizing: border-box; }
+.sys-step .rad { width: 48px; height: 28px; border: 1.5px solid var(--foreground); box-sizing: border-box; }
+.sys-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 12px 40px; }
+
+/* 按钮 */
+.sys-btable { width: 100%; border-collapse: collapse; }
+.sys-btable th { text-align: left; font-size: 11px; font-weight: 500; color: var(--muted-foreground); padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.sys-btable td { padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.sys-btable tr.sys-item:hover td { background: color-mix(in srgb, var(--muted) 60%, transparent); }
+.sys-btable tr.sel td { background: var(--brand-soft); }
+.sys-btable .stage { display: flex; align-items: center; min-height: 40px; max-width: 220px; }
+.sys-btable .stage.dk { background: #3a3530; padding: 6px; border-radius: 4px; justify-content: center; }
+.sys-btable .n { font: 600 13px "JetBrains Mono", monospace; text-align: right; }
+.sys-btable .w { font: 11px "JetBrains Mono", monospace; color: var(--muted-foreground); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sys-more { margin: 8px 0 0; font-size: 12.5px; color: var(--muted-foreground); cursor: pointer; border: 0; background: none; padding: 4px 0; font-family: inherit; }
+.sys-more:hover { color: var(--foreground); }
+
+/* 版面 */
+.sys-shells { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 28px; }
+.sys-shell h4 { margin: 0 0 2px; font-size: 14px; }
+.sys-shell p { margin: 0 0 8px; font-size: 12px; color: var(--muted-foreground); }
+.sys-canvas { position: relative; width: 100%; border: 1px solid var(--border); background: var(--background); overflow: hidden; }
+.sys-rg { position: absolute; box-sizing: border-box; border: 1px dashed var(--muted-foreground); background: color-mix(in srgb, var(--card) 75%, transparent); padding: 3px 5px; overflow: hidden; }
+.sys-rg.main { border-style: solid; border-color: var(--brand-border); background: var(--brand-soft); }
+.sys-rg.chrome { background: var(--muted); border-style: solid; border-color: var(--border); }
+.sys-rg.side { background: var(--card); }
+.sys-rg b { display: block; font-size: 10.5px; font-weight: 600; line-height: 1.3; }
+.sys-rg i { display: block; font: 9.5px "JetBrains Mono", monospace; font-style: normal; color: var(--muted-foreground); }
+.sys-wbar { display: grid; grid-template-columns: 64px 1fr 240px; gap: 12px; align-items: center; padding: 3px 6px; border-radius: 4px; }
+.sys-wbar:hover { background: var(--muted); }
+.sys-wbar .v { font: 600 12px "JetBrains Mono", monospace; text-align: right; }
+.sys-wbar .bar { height: 14px; background: var(--brand-soft); border: 1px solid var(--brand-border); box-sizing: border-box; }
+.sys-wbar .f { font: 11px "JetBrains Mono", monospace; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* 待清理 */
+.sys-debt { display: grid; grid-template-columns: 36px 84px 56px 1fr; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+.sys-debt i { width: 28px; height: 20px; border-radius: 3px; border: 1px solid rgba(0,0,0,.1); }
+
+/* 抽屉 */
+#sys-drawer h3 { margin: 0 0 4px; font: 600 15px "JetBrains Mono", monospace; word-break: break-all; padding-right: 24px; }
+#sys-drawer .x { position: absolute; right: 12px; top: 12px; border: 0; background: none; font-size: 18px; cursor: pointer; color: var(--muted-foreground); }
+#sys-drawer { position: relative; }
+#sys-drawer .sec { margin: 18px 0 0; }
+#sys-drawer .sec > b { display: block; font-size: 11px; font-weight: 600; color: var(--muted-foreground); margin-bottom: 6px; letter-spacing: .02em; }
+#sys-drawer .row { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; }
+#sys-drawer .row label { width: 52px; color: var(--muted-foreground); font-size: 12px; flex: none; }
+#sys-drawer input[type=text], #sys-drawer input[type=number], #sys-drawer textarea, #sys-drawer select { font: 12px "JetBrains Mono", monospace; border: 1px solid var(--border); border-radius: 4px; padding: 4px 6px; background: var(--background); color: var(--foreground); }
+#sys-drawer input[type=number] { width: 72px; }
+#sys-drawer textarea { width: 100%; box-sizing: border-box; min-height: 56px; font-family: inherit; font-size: 13px; }
+#sys-drawer input[type=color] { width: 32px; height: 26px; padding: 0; border: 1px solid var(--border); border-radius: 4px; background: none; }
+#sys-drawer .reset { font-size: 11px; border: 0; background: none; color: var(--muted-foreground); cursor: pointer; text-decoration: underline; }
+.sys-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.sys-pills button { border: 1px solid var(--border); background: var(--background); color: var(--foreground); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.sys-pills button.on { background: var(--foreground); color: var(--background); border-color: var(--foreground); }
+.sys-files { list-style: none; padding: 0; margin: 0; font: 11px "JetBrains Mono", monospace; }
+.sys-files li { padding: 2px 0; word-break: break-all; }
+.sys-files a { color: var(--muted-foreground); text-decoration: none; }
+.sys-files a:hover { color: var(--brand); }
+.sys-code { font: 11px/1.5 "JetBrains Mono", monospace; background: var(--muted); padding: 8px; border-radius: 4px; word-break: break-all; white-space: pre-wrap; margin: 0; }
+.sys-preview { padding: 16px; border: 1px solid var(--border); border-radius: 4px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+/* 反馈 */
+.sys-fb { display: flex; gap: 8px; margin: 0 0 16px; max-width: 780px; align-items: flex-start; }
+.sys-fb textarea { flex: 1; min-height: 64px; font: 13px/1.5 Inter, "Noto Sans SC", sans-serif; border: 1px solid var(--border); border-radius: 4px; padding: 8px; background: var(--card); color: var(--foreground); }
+.sys-fbl { max-width: 780px; }
+.sys-fbl div { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; gap: 12px; }
+.sys-fbl small { color: var(--muted-foreground); font: 11px "JetBrains Mono", monospace; white-space: nowrap; }
+.sys-fbl span { flex: 1; }
+.sys-fbl button { border: 0; background: none; color: var(--muted-foreground); cursor: pointer; }

@@ -106,7 +106,7 @@ def find_packs(repo):
         except (OSError, ValueError):
             continue
         out.append({"page": name, "title": s.get("title") or name, "version": s.get("version"),
-                    "nodes": len(s.get("nodes") or []), "updated": s.get("updated"),
+                    "nodes": len(s.get("nodes") or s.get("colors") or []), "updated": s.get("updated"),
                     "exported": s.get("exported"),
                     "questions": sum(1 for n in s.get("nodes") or [] if n.get("q")),
                     "feedback": len(s.get("feedback") or []),
@@ -115,8 +115,53 @@ def find_packs(repo):
     return out
 
 
+def write_receipt(repo, report):
+    for name, mode in (("last-save.json", "w"), ("saves.jsonl", "a")):
+        try:
+            with open(os.path.join(state_dir(repo), name), mode, encoding="utf-8") as fh:
+                if mode == "a":
+                    fh.write(json.dumps(report, ensure_ascii=False) + "\n")
+                else:
+                    json.dump(report, fh, ensure_ascii=False, indent=1)
+        except OSError as exc:
+            report.setdefault("warnings", []).append(f"回执写不进去（文件已保存）：{exc}")
+
+
+def merge_system(repo, incoming):
+    """零件库（kind=system）：抽取出来的数据以磁盘为准，只收用户的三样产出——edits、decisions、feedback。"""
+    rel = (incoming.get("files") or {}).get("json") or os.path.join("docs", "assets", "visuals", "system", "system.tokens.json")
+    spath = os.path.join(repo, rel)
+    if not os.path.abspath(spath).startswith(os.path.abspath(repo) + os.sep) or not os.path.exists(spath):
+        raise ValueError(f"磁盘上没有 {rel}")
+    with open(spath, encoding="utf-8") as fh:
+        disk = json.load(fh)
+    old_e, old_d = disk.get("edits") or {}, disk.get("decisions") or {}
+    new_e, new_d = incoming.get("edits") or {}, incoming.get("decisions") or {}
+    edit_changes = {k: {"from": old_e.get(k), "to": new_e.get(k)} for k in set(old_e) | set(new_e) if old_e.get(k) != new_e.get(k)}
+    dec_changes = {k: {"from": old_d.get(k), "to": new_d.get(k)} for k in set(old_d) | set(new_d) if old_d.get(k) != new_d.get(k)}
+    old_fb = disk.get("feedback") or []
+    in_fb = incoming.get("feedback") or []
+    seen = {(f.get("at"), f.get("t")) for f in old_fb}
+    new_fb = [f for f in in_fb if (f.get("at"), f.get("t")) not in seen]
+    disk["edits"], disk["decisions"], disk["feedback"] = new_e, new_d, in_fb
+    disk["exported"] = incoming.get("exported") or datetime.datetime.now().isoformat(timespec="seconds")
+    with open(spath, "w", encoding="utf-8") as fh:
+        json.dump(disk, fh, ensure_ascii=False, indent=1)
+    counts = {}
+    for v in new_d.values():
+        counts[v.get("r") or "（只有备注）"] = counts.get(v.get("r") or "（只有备注）", 0) + 1
+    report = {"at": disk["exported"], "repo": repo, "page": "system", "kind": "system", "files": [rel],
+              "edit_changes": edit_changes, "decision_changes": dec_changes, "decisions": counts,
+              "pending_edits": len(new_e), "new_feedback": new_fb,
+              "removed_feedback": len(old_fb) + len(new_fb) - len(in_fb)}
+    write_receipt(repo, report)
+    return report
+
+
 def merge_and_write(repo, incoming):
     """按 id 合并页面提交的 spec 到磁盘 spec，写三文件与回执。返回报告。"""
+    if incoming.get("kind") == "system":
+        return merge_system(repo, incoming)
     rel = (incoming.get("files") or {}).get("json")
     if not rel:
         raise ValueError("spec 里没有 files.json")

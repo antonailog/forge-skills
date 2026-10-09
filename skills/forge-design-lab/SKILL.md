@@ -26,6 +26,7 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | `references/engine-hooks.md` | S3 写页面包 HTML（data-id、hooks、状态切换）之前 |
 | `references/pitfalls.md` | S3 写组件 CSS 之前；verify 报错、页面空白或列表不渲染时 |
 | `references/example-ai-search.md` | 第一次在一个新项目用本 skill，想对照一个完整范例时 |
+| `references/system-pack.md` | 建或刷新零件库、读用户在零件库的保存、写选材清单之前 |
 
 ## 意图分流
 
@@ -35,6 +36,7 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | 弱 | 只说「看看设计」「效果对不对」，没点名对象 | 列出项目里已有的页面包（`docs/assets/visuals/*/`）让选；没有就问模块号，不猜 |
 | 潜在 | 在 forge-design / forge-prd 讨论里出现「比例」「一屏几张」「行长」「挤」「留白」 | 反问一句「要不要开工作台按真实尺寸看」，不自动开 |
 | 交接 | 「保存好了」「按调整后的来」「在 download 里」 | 直接进 S4：读 json → 重建校验 → 差异表 → 回反馈 |
+| 零件库 | 「零件库」「设计 token 总表」「全站颜色/字体/按钮」「统一按钮」「站点 token 改值」 | 走 S0；用户在零件库保存后读回执，「同步进代码」时跑 `apply_system.py` |
 
 ## 工具
 
@@ -48,6 +50,8 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | `build_tokens.py` | S2/S3 写完 json 后；S4 合并后校验重建 | `python3 {lab}/scripts/build_tokens.py <repo> <tokens.json> [--check]` | 校验不过就修 json，不手改生成的 js/css |
 | `scaffold_pack.py` | S2，线框确认后建骨架壳 | `python3 {lab}/scripts/scaffold_pack.py <repo> <tokens.json> [--adapt <adapt.json>] [--sample <json>]` | 同时把引擎母本同步到 `docs/assets/visuals/_workbench/` |
 | `verify_pack.mjs` | S3 交付前；S4 每次重建后 | `node {lab}/scripts/verify_pack.mjs <html> --repo <repo> [--shots <dir>] [--strict-literals] [--json <out>]` | 没有 Playwright 就只跑 `build_tokens.py --check`，让用户人工开页面报控制台 |
+| `extract_system.py` | S0，建零件库；产品 CSS 或组件改过后刷新 | `python3 {lab}/scripts/extract_system.py <repo> --product-css` | worktree 没有 node_modules 就软链主仓库的；编译失败页面仍能看颜色与阶梯，按钮不按真像素 |
+| `apply_system.py` | 用户说零件库的改值「同步进代码」 | `python3 {lab}/scripts/apply_system.py <repo> [--apply]` | 行号对不上就整体中止，先重跑 extract 再来，不做模糊替换 |
 | `render_design_table.py` | S5 | `python3 {lab}/scripts/render_design_table.py <repo> <tokens.json> --design docs/DESIGN.md --heading "## 模块 28"` | DESIGN.md 里找不到模块标题就只打印区块，提示先走 forge-design |
 
 **先起服务，再打开页面**。`serve.py` 把仓库根当静态根，页面 URL 形如
@@ -63,6 +67,18 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 没有服务时页面仍可用 `file://` 打开，退回 File System Access 选目录 / 下载兜底，但**容易存错仓库**：
 主仓库与 worktree 都有 `docs/` 和 `frontend-react/`，引擎的目录校验分不出来（实发过一次）。
 Google Fonts 让骨架用与产品同族的字体（不通时面板徽标显示「回退」，比例仍真实）。
+
+## S0 零件库：全站只有一份的设计零件
+
+零件库是站点级的页面包（`docs/assets/visuals/system/`），把项目里已有的颜色、字体与文字角色、阶梯、按钮、版面骨架盘点在一页上，按产品真像素渲染。它解决两件事：现有零件在哪里维护和展示；新设计开工前先从这里挑零件。
+
+**建与刷新**：跑 `extract_system.py --product-css`。它从产品 CSS 和 Tailwind 配置抽颜色变量（亮暗配对、使用次数、出处），把所有 `<button>` 按长相归类，统计阶梯与容器宽度，并用产品自己的 Tailwind 编译一份 `product.css` 供页面渲染。版面骨架是手写的（`layouts` 字段），重跑保留；用户的改值、结论、反馈也保留。
+
+**用户在页面上做三件事**：改值（色值、文字角色的字号行高字重，整页即时生效）；给结论（按钮选「定为标准 / 归并到 / 废弃」，其他零件选「保留 / 归并到 / 废弃」）；写反馈。保存走 `serve.py`，回执在 `.forge/design-lab/last-save.json`。读回执后照 S4 的方式出差异表、逐条回反馈。
+
+**同步进代码**：用户明确说同步时才跑 `apply_system.py --apply`，它把改值写回产品 CSS 并清空待同步记录。这是产品代码改动，走 worktree、过 QA。结论（标准/归并）不自动改代码，而是转成实现清单交 forge-eng。
+
+**选材门禁**：任何新页面包在 S1 之前先写选材清单，格式见 `references/system-pack.md`：这一页复用哪些颜色、文字角色、按钮标准、版面骨架；需要新造哪些页面 token，每个一句理由。理由不能是「差一点」：差 1–2px 或相邻色阶的，先用零件库的值，在骨架上看不顺眼再提。新造的值在 S5 交接时检查：两个以上页面包都在用的，提议升格进零件库。
 
 ## S1 适配：先知道这个项目有什么
 
@@ -117,6 +133,7 @@ forge-design 第三步遇到页面/组件/布局决策时转到本 skill：输�
 3 页面包      文件清单 + verify 结果 + 开场（先看哪层、重点判断题）        —— 线框确认后必出
 4 审查回合    差异表 / 结局统计 / 反馈逐条回 / 拿不准的 A/B/C            —— 用户保存后必出，可重复
 5 交接        DESIGN.md 区块位置 / 实现清单 / 站点级提议 / 提交号          —— 用户说「按调整后的来」后必出
+0 零件库      分区计数 / 本轮改值与结论 / 待同步行 / 选材清单             —— 建零件库、零件库保存、新页面包开工时出
 ```
 
 触发式模块：A/B/C 提案（有「拿不准」才出，按七层顺序，每个 ≤3 选项）；站点级提议清单（有「提议改动」才出）；响应式压力提示（面板停靠后正文宽低于阶梯最小舒适行长时报一次）。

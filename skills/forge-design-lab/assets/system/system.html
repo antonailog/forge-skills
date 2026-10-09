@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>设计零件库</title>
+<!-- 生成物：extract_system.py 从 forge-design-lab/assets/system/ 同步，勿手改 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@300;400;600;700&family=Cormorant+Garamond:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<!-- product.css：用产品自己的 Tailwind 配置编译，零件按产品真像素渲染 -->
+<link rel="stylesheet" href="product.css">
+<link rel="stylesheet" href="../_workbench/system.css">
+<style id="sys-edits"></style>
+</head>
+<body>
+<header id="sys-top">
+  <div class="sys-title"><b>设计零件库</b><span id="sys-repo"></span></div>
+  <nav id="sys-tabs"></nav>
+  <div class="sys-right">
+    <button id="sys-mode" class="sys-btn" type="button">切到暗色</button>
+    <span id="sys-dirty"></span>
+    <button id="sys-save" class="sys-btn sys-primary" type="button">保存</button>
+  </div>
+</header>
+<div id="sys-wrap">
+  <main id="sys-main"><p class="sys-muted" style="padding:32px">加载中…</p></main>
+  <aside id="sys-drawer" hidden></aside>
+</div>
+<div id="sys-toast" hidden></div>
+<script src="../_workbench/system.js"></script>
+</body>
+</html>
