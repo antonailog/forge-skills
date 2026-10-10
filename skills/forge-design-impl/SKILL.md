@@ -51,6 +51,8 @@ description: |
 
 ## 第2步：实现设计变更
 
+宿主是 Claude Code 时，样式代码由 Codex 写：调用 `codex-delegate`，任务书里写明以 DESIGN.md 哪个模块和哪些 token 为准、以下实现原则必须遵守；Claude 截图验收后再走第 3 步提交。宿主是 Codex 时直接写。
+
 ### 实现原则
 
 **1. CSS 优先**

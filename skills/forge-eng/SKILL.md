@@ -197,6 +197,7 @@ worktree 建好后：① 若项目需要运行应用 → 遵守项目统一 dev 
 方案确认后进入实现。**执行前必读 [references/wave-execution.md](references/wave-execution.md)**，其中：
 - 第 6 步：把实现拆成原子任务（每个任务独立可验证、可 commit），按依赖关系分 Wave
 - 第 7 步：每个 Wave 内 TDD 红绿循环 + **Verification Gate**——证据先于断言，每个任务跑验证命令读完整输出确认后才 commit
+- 宿主是 Claude Code 时，第 7 步的代码由 Codex 写：调用 `codex-delegate`，每个原子任务一份任务书，派活、按任务书验收后由 Claude 提交。宿主是 Codex 时直接写
 
 骨架红线：三条铁律见文首（TDD 分级：严格/轻量/验证驱动，按任务风险选）；另加一条——每个原子任务一个独立 commit，不打包不相关变更。
 
