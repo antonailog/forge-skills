@@ -1,0 +1,46 @@
+{
+  "skill_name": "forge-feature-doc",
+  "runs_per_query": 3,
+  "split": {"train": 0.6, "test": 0.4},
+  "_how_to_use": [
+    "python3 evals/forge-feature-doc/run_trigger_eval.py [--runs 3] [--only train|test] [--cwd <项目目录>]",
+    "每条跑 3 次取触发率；改 description 只看 train 的失败案例，按 test 分数选版本。",
+    "负例全是 near-miss：共享「文档 / 设计 / 更新 / prompt / 截图」等词，但该归 forge-design-lab / forge-status / forge-prd / forge-fupan / prompt-craft / forge-eng，或不归任何 skill。"
+  ],
+  "should_trigger": [
+    {"id": "t1", "split": "train", "why": "标准新建：嫌长文档看不懂 + 点名要看的设计内容",
+     "query": "AI 搜索的 PRD 和 DESIGN 都太长了我看不完，帮我出一份我能看懂的设计文档，要能看到三栏布局和召回阈值"},
+    {"id": "t2", "split": "train", "why": "把已有长文档转成给人看的版本",
+     "query": "精选筛选那份文档太长了，整理成我能看懂的版本，先放图后写字"},
+    {"id": "t3", "split": "train", "why": "阶段更新：规则改了，同步设计文档",
+     "query": "额度规则改成每人每天 2 次了，把 AI 搜索的设计文档同步一下"},
+    {"id": "t4", "split": "train", "why": "设计阶段新建：还没有页面",
+     "query": "新需求：精选页加一个按标签筛选，还没有页面，先建一份需求设计文档"},
+    {"id": "t5", "split": "train", "why": "出图：截图过期",
+     "query": "设计文档里的截图还是旧的，重拍一下，别往生产库写东西"},
+    {"id": "t6", "split": "test", "why": "检查：上线前看文档跟上没有",
+     "query": "准备上线了，帮我看看 AI 搜索的设计文档有没有跟上代码"},
+    {"id": "t7", "split": "test", "why": "隐含需求：描述症状没说方案",
+     "query": "这几轮改了好多交互和 prompt，我都不知道到底改了啥，有没有一个地方能让我看到这个功能现在的设计"},
+    {"id": "t8", "split": "test", "why": "阶段更新：prompt 版本变了",
+     "query": "总结 prompt 升到 v5.2 了，设计文档里 AI 生成那部分更新一下"}
+  ],
+  "should_not_trigger": [
+    {"id": "n1", "split": "train", "why": "token 表 → forge-design-lab",
+     "query": "把 DESIGN.md 模块 28 的 token 表按工作台的值重新生成一下"},
+    {"id": "n2", "split": "train", "why": "进度 → forge-status",
+     "query": "AI 搜索现在做到哪了，还有哪些没做完"},
+    {"id": "n3", "split": "train", "why": "写给 AI 的 PRD → forge-prd",
+     "query": "帮我写一份标签筛选功能的 PRD 和 feature-spec"},
+    {"id": "n4", "split": "train", "why": "对外文章 → 不归任何 skill",
+     "query": "给 AI 搜索写一篇对外发布的产品介绍文章，发公众号用"},
+    {"id": "n5", "split": "train", "why": "复盘 → forge-fupan",
+     "query": "复盘一下这次 AI 搜索的迭代，总结一下经验教训"},
+    {"id": "n6", "split": "test", "why": "改 prompt 本身 → prompt-craft",
+     "query": "AI 搜索的总结 prompt 效果不好，老是漏细节，帮我改改 prompt"},
+    {"id": "n7", "split": "test", "why": "在骨架上看比例 → forge-design-lab",
+     "query": "开工作台看一下结果页三栏的比例，我想当场调间距"},
+    {"id": "n8", "split": "test", "why": "写给工程的文档 → 不归本 skill",
+     "query": "把 ENGINEERING.md 里 AI 搜索的接口说明更新成现在的代码"}
+  ]
+}

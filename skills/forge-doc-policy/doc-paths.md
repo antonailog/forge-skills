@@ -43,6 +43,7 @@ last_updated: 2026-06-09
 | 路径 | 用途 |
 | --- | --- |
 | `docs/modules/*.md` | 模块附录、快速定位图、代码/接口/表映射 |
+| `docs/modules/<功能>.md`（frontmatter 带 `watch`） | **需求设计文档**：给人看的唯一入口，每个功能一份；写法、维护、检查归 `forge-feature-doc` |
 | `docs/ops/*.md` | 当前运维 runbook、排障、部署、数据库、调度 |
 | `docs/assets/` / `docs/qa-screenshots/` | 当前文档引用的图片、截图和 QA 附件 |
 

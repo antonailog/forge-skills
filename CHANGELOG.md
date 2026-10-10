@@ -9,9 +9,11 @@
 ## [Unreleased]
 
 ### Added
+- **forge-feature-doc**（新 skill，完整档，经 /skill-build S0–S5）：每个功能一份给人看的需求设计文档 `docs/modules/<功能>.md`——待拍板置顶、按类型取舍 12 部分、先图后字、只写当前设计、末尾关键改动 ≤15 条。4 个脚本（scaffold / render-diagrams / annotate / check）、文档模板 + 6 个示意图模板、4 份 references。设计文档 `docs/forge-feature-doc-设计文档.md`，评测报告 `docs/forge-feature-doc-评测报告.md`（触发 v2：train 10/10、test 6/6；精选留出样本三位盲评 3 : 0 选用 skill 的版本，正文 2,428 字 vs 对照组 5,732 字）。
 - **forge-design-lab**（新 skill，完整档，经 /skill-build S0–S3）：真 token、真像素骨架上的设计工作台与闭环——适配 → 线框确认 → 骨架 → 七层审查 → 保存直写 → token 同源导出 → DESIGN.md token 表。引擎母本 `assets/workbench/`（自 forge-design/assets 迁入并通用化：去掉 ai-search 专名、生成器统一为 build_tokens.py、layout.el 映射）；5 个脚本；5 份 references。设计文档见 `docs/forge-design-lab-设计文档.md`，评测报告见 `docs/forge-design-lab-评测报告.md`（触发评测 24 条 × 3 次 0 误判；范例页面包 verify 12 PASS / 1 WARN）。
 
 ### Changed
+- **forge 各阶段挂钩 forge-feature-doc**：forge-prd（E 同步需求设计文档）、forge-design（D）、forge-design-lab（S5 第 4 步）、forge-eng（第 8 步）、forge-bugfix（P8 第 5 条）收尾时调用；forge-review 第 6 步、forge-ship 第 3 步跑 `scripts/design-doc/check.mjs` 当门禁；forge-doc-policy/doc-paths.md 登记这类文档；总入口 SKILL.md 表格加一行。快照 `_archive/snapshots/2026-10-10-feature-doc/`。
 - **forge-design 第三步**：Image 2 视觉稿门禁改为 forge-design-lab 工作台门禁（必调），Image 2 退为气质判断的辅助；规则 1 改为「不写产品代码」（骨架页面包是设计产物）；交付模板加「工作台页面包」一行。快照 `_archive/snapshots/forge-design-2026-09-20-pre-design-lab/`。
 - **_shared/visual-decision-layer.md**：三类视觉产物增「工作台骨架」一行；design / design-impl 生命周期改为工作台真相源；产物保存约定加页面包路径。快照 `_archive/snapshots/visual-decision-layer-2026-09-20.md`。
 

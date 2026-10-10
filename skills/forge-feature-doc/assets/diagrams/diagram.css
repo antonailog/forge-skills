@@ -1,0 +1,31 @@
+/* 需求设计文档的示意图公共样式。先把下面的颜色换成项目的站点色（:root 变量或设计 token），
+   品牌色只用来标关键数字。改图只改同目录的 *.html，再运行 scripts/design-doc/render-diagrams.mjs。 */
+:root {
+  --bg: #F4F3EF; --card: #FFFFFF; --ink: #1A1917; --mute: #6B6A65;
+  --line: #E4E2DC; --brand: #C2410C; --soft: #FBEDE4; --soft-line: #F2C7AE;
+}
+* { box-sizing: border-box; margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.5 "PingFang SC", "Noto Sans SC", sans-serif;
+  padding: 28px; width: 960px;
+}
+h1 { font-size: 18px; margin-bottom: 18px; }
+.row { display: flex; gap: 14px; align-items: stretch; }
+.col { display: flex; flex-direction: column; gap: 10px; }
+.box {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; flex: 1; min-width: 0;
+}
+.box b { display: block; font-size: 15px; margin-bottom: 4px; }
+.box p { color: var(--mute); font-size: 13.5px; }
+.box.key { background: var(--soft); border-color: var(--soft-line); }
+.box.side { background: transparent; border-style: dashed; }
+.tag { font-size: 12.5px; color: var(--brand); font-weight: 600; letter-spacing: .04em; margin-bottom: 6px; }
+.num { color: var(--brand); font-weight: 700; font-size: 22px; line-height: 1.1; margin: 0 3px; white-space: nowrap; }
+.big { color: var(--brand); font-weight: 700; font-size: 44px; line-height: 1; display: block; margin: 6px 0 4px; }
+.arrow { text-align: center; color: var(--mute); font-size: 15px; margin: 8px 0; }
+.harrow { align-self: center; color: var(--mute); font-size: 20px; flex: 0 0 auto; }
+.note { color: var(--mute); font-size: 12.5px; margin-top: 14px; }
+.step { display: inline-block; min-width: 20px; height: 20px; border-radius: 10px; background: var(--ink); color: #fff;
+  font-size: 12px; text-align: center; line-height: 20px; margin-right: 6px; }

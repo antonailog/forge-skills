@@ -193,6 +193,7 @@ git diff origin/<基础分支>
 对比 diff 与根目录下的文档文件（README.md、ARCHITECTURE.md、CLAUDE.md 等）：
 - 如果代码改动影响了文档描述的功能，但文档没有在此分支更新，标记为信息性发现：
   "文档可能过时：[文件] 描述了 [功能]，但本分支修改了相关代码。考虑运行 `/forge-ship` 后更新文档。"
+- 项目有 `scripts/design-doc/check.mjs` 时运行 `node scripts/design-doc/check.mjs <基础分支>`（需求设计文档检查，见 `forge-feature-doc`）。没通过标记为**严重**发现：设计文档没跟上代码，读者会拿过期的设计拍板。修法是调用 `forge-feature-doc` 更新。
 
 ---
 

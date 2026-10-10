@@ -1,0 +1,15 @@
+<!doctype html><html lang="zh"><meta charset="utf-8"><link rel="stylesheet" href="diagram.css">
+<!-- 模板：把「…」换成真实内容，数字从代码和配置里取。 -->
+<h1>召回：从哪里找、找多少</h1>
+<div class="box"><b>范围</b><p>…（时间窗、字段、可见性），<span class="num">…</span>天</p></div>
+<div class="arrow">↓ …（几路同时找）</div>
+<div class="row">
+  <div class="box"><div class="tag">…路</div><b>…（保留规则）</b><p>…（处理方式）· 最多<span class="num">…</span>条</p></div>
+  <div class="box"><div class="tag">…路</div><b>…（门槛）<span class="num">…</span></b><p>…（失败时怎么办）</p></div>
+</div>
+<div class="arrow">↓ 合并 · …（排序规则）</div>
+<div class="row">
+  <div class="box key" style="flex:2"><b>取前<span class="num">…</span>条</b><p>…（交给谁、怎么展示）</p></div>
+  <div class="box side"><b>0 条</b><p>…（用户看到什么）</p></div>
+</div>
+</html>

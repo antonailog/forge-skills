@@ -1,0 +1,16 @@
+<!doctype html><html lang="zh"><meta charset="utf-8"><link rel="stylesheet" href="diagram.css">
+<!-- 模板：把「…」换成真实内容，数字从代码和配置里取。 -->
+<h1>…：一次生成的全过程</h1>
+<div class="row">
+  <div class="box"><div class="tag">1 · 输入</div><b>…</b><p>…（每条上限<span class="num">…</span>，总量上限，超了怎么降级）</p></div>
+  <div class="harrow">→</div>
+  <div class="box"><div class="tag">2 · 模型</div><b>…（模型名）</b><p>…（关键参数）<span class="num">…</span></p></div>
+  <div class="harrow">→</div>
+  <div class="box"><div class="tag">3 · 模型输出</div><b>…（格式）</b><p>…</p></div>
+</div>
+<div class="arrow">↓</div>
+<div class="row">
+  <div class="box key" style="flex:2"><div class="tag">4 · 服务端校验</div><b>…</b><p>…（删什么、补什么、怎么编号）</p></div>
+  <div class="box side"><div class="tag">出错时</div><p>…（重试规则、降级）</p></div>
+</div>
+</html>

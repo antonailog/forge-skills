@@ -178,7 +178,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | 审查 | forge-review | `/forge-review` | 代码审查（测试捕获不到的结构性问题） | 审查结论 + 修复 |
 | 发布 | forge-ship | `/forge-ship` | 合并 + 测试 + CHANGELOG + PR | PR / 合并上线 |
 
-### 辅助技能（5 个）
+### 辅助技能（6 个）
 
 | Skill | 命令 | 职责 |
 |-------|------|------|
@@ -186,6 +186,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | forge-status | `/forge-status` | 并行会话巡检与清理（扫 `.forge/active.md`，按硬信号判活/死，不用时间戳启发式） |
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步（README/ARCHITECTURE/CHANGELOG 对齐已发布内容） |
 | forge-doc-policy | `/forge-doc-policy` | 文档治理规范（doc-paths.md 真相源白名单 + frontmatter schema + init-project.sh 脚手架） |
+| forge-feature-doc | `/forge-feature-doc` | 需求设计文档：每个功能一份给人看的设计文档（待拍板置顶、先图后字、只写当前设计、末尾关键改动），配出图脚本和上线前检查；forge 各阶段收尾时同步，review / ship 当门禁 |
 | forge-fupan | `/forge-fupan` | 复盘 v3：Workbench 门禁（独立会话页确认知识点和深度）→ 调研产出复盘文档；账本（learnings.jsonl）作副产出，开工回放 + 复发检测 |
 
 ### 总入口
@@ -341,7 +342,7 @@ forge-skills/
 ├── CHANGELOG.md                    ← 版本变更账本
 ├── LICENSE                         ← MIT
 ├── install.sh                      ← 一键安装/卸载（symlink，自动发现 skill）
-├── skills/                         ← 14 个专职 Skill + 共享层
+├── skills/                         ← 16 个专职 Skill + 共享层
 │   ├── _shared/                    ←   跨 skill 公共规范（文档加载协议、视觉决策层）
 │   ├── forge-brainstorm/           ←   头脑风暴
 │   ├── forge-prd/                  ←   PRD 当前事实 + .features Feature Spec
@@ -356,6 +357,7 @@ forge-skills/
 │   ├── forge-ship/                 ←   发布
 │   ├── forge-doc-release/          ←   发布后文档更新
 │   ├── forge-doc-policy/           ←   文档治理规范 + init 脚手架
+│   ├── forge-feature-doc/          ←   需求设计文档（每功能一份给人看 + 出图 + 上线前检查）
 │   ├── forge-status/               ←   并行会话巡检
 │   └── forge-fupan/                ←   复盘（Workbench 门禁 + 账本副产出）
 │       └── */references/           ←   各 skill 的阶段手册（按需加载）

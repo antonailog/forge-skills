@@ -1,0 +1,57 @@
+<!doctype html><html lang="zh"><meta charset="utf-8"><link rel="stylesheet" href="diagram.css">
+<!-- 页面示意：截不到真实页面、也没有设计骨架时用；能截了就换成截图。
+     照真实页面的结构画，文字用真实文案（标题、分类名、按钮字、状态文案），别写「标题 1」「卡片」这类占位词。
+     区域用编号标出（最多 6 个），文档里在图下配「编号 / 区域 / 说明」表。
+     尺寸取自代码，写在图注里并注明来源文件；不按比例的地方在标题里说明。
+     页面本身夹在「样例」两行注释之间：检查脚本不扫这段（真实标题里本来就可能有「新增」这类词），标题和图注照常检查。 -->
+<style>
+  .mock { background: var(--card); border: 1.5px solid var(--line); border-radius: 12px; }
+  .mock-top { display: flex; align-items: center; gap: 16px; padding: 10px 16px; border-bottom: 1.5px solid var(--line); font-size: 13.5px; }
+  .mock-top .logo { font-weight: 700; }
+  .mock-top .nav { display: flex; gap: 16px; margin: 0 auto; color: var(--mute); }
+  .mock-top .nav .on { color: var(--brand); font-weight: 700; }
+  .mock-body { display: grid; grid-template-columns: 140px 1fr; gap: 18px; padding: 16px; }
+  .mock-side { font-size: 13px; color: var(--mute); display: flex; flex-direction: column; gap: 6px; }
+  .mock-side .on { color: var(--brand); font-weight: 600; }
+  .mock-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .region { position: relative; }
+  .blk { border: 1.5px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .blk.soft { background: var(--soft); border-color: var(--soft-line); }
+  .blk.split { display: grid; grid-template-columns: 1fr 160px; gap: 14px; }
+  .blk h3 { font-size: 15px; margin-bottom: 4px; }
+  .blk p { font-size: 13px; color: var(--mute); }
+  .ph { background: var(--line); border-radius: 6px; display: grid; place-items: center; font-size: 12px; color: var(--mute); min-height: 64px; }
+  .faded { opacity: .45; }
+  /* 编号压在区域右上角的边框上，不挡区域里的字 */
+  .mark { position: absolute; top: -10px; right: -10px; width: 20px; height: 20px; border-radius: 10px; box-shadow: 0 0 0 3px var(--card);
+    background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+</style>
+<h1>…页长什么样（示意图，不是截图）</h1>
+<!-- 样例 -->
+<div class="mock">
+  <div class="mock-top region">
+    <span class="logo">…（产品名）</span>
+    <span class="nav"><span class="on">…（当前页）</span><span>…</span><span>…</span></span>
+    <span>…（右上角入口）</span>
+    <span class="mark">1</span>
+  </div>
+  <div class="mock-body">
+    <div class="mock-side region">
+      <span class="on">…（选中项）</span><span>…</span><span>…</span><span>…</span>
+      <span class="mark">2</span>
+    </div>
+    <div class="mock-main">
+      <div class="blk soft region"><h3>…（页面顶部的重点块）</h3><p>…（真实文案）</p><span class="mark">3</span></div>
+      <div class="blk split region">
+        <div><h3>…（一条真实内容的标题）</h3><p>…（真实的摘要或说明，长度和线上一致）</p></div>
+        <div class="ph">配图</div>
+        <span class="mark">4</span>
+      </div>
+      <div class="blk"><h3>…（没有配图的一条）</h3><p>…</p></div>
+      <div class="blk faded"><h3>…（读过、禁用这类降档状态）</h3><p>…</p></div>
+    </div>
+  </div>
+</div>
+<!-- /样例 -->
+<p class="note">尺寸（取自 …）：…</p>
+</html>

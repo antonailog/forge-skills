@@ -124,7 +124,8 @@ Google Fonts 让骨架用与产品同族的字体（不通时面板徽标显示�
 1. `render_design_table.py` 把 json 生成 DESIGN.md 模块内的 token 表区块（带生成标记，勿手改），散文部分不动。
 2. 写实现清单给 forge-eng / codex：`<page>.tokens.css` 的路径与 import 位置、变量清单、非 token 决策（effects、hooks 里的 decisions）、样例里出现过的边界（长标题、空态）。
 3. 站点级「提议改动」单列一份清单，注明另走全站审查，本轮不改。
-4. 提交，报告页面包路径。
+4. 调用 `forge-feature-doc` 更新需求设计文档的布局、状态、细节（用骨架页面截图加标注）。
+5. 提交，报告页面包路径。
 
 ## 和 forge-design 的接口
 

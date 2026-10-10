@@ -166,6 +166,15 @@ last_updated: 2026-07-04
 **规矩**：14 个 forge skill 顶部都引用它；规则改动锁版本号、走 worktree 预演。
 **附属**：init-project.sh（新项目一键脚手架，✅ 2026-07-04 已兑现）；audit-project.sh 等其余脚本仍待实现。
 
+## 16.1 forge-feature-doc — 需求设计文档
+
+**一句话**：每个功能一份给人看的设计文档，先图后字、只写当前设计，读者 10 分钟内能看懂并拍板。
+**什么时候用**：PRD / DESIGN 太长看不过来、看不到功能现在的设计和最近改了什么时；forge 各阶段改了规则、文案、交互、布局、阈值、prompt、模型、架构后收尾；上线前看文档跟上没有。
+**怎么工作**：判类型（有无界面 / 后端 / AI）→ scaffold 建骨架（待拍板置顶 + 按需 12 部分 + 细节在哪 + 关键改动）→ 照写法规则填内容（数值以代码为准，只写现在）→ 出图（示意图模板渲染；页面图用真实截图加标注，截不到画页面示意）→ check.mjs 检查（漏更新、讲历史的词、坏链接和绝对路径、关键改动条数）。
+**规矩**：截图只读（拦下所有非 GET）；图和数值不编；不写凭证和内部地址；文档和功能改动放进同一个提交。
+**产出**：`docs/modules/<功能>.md` + `docs/assets/visuals/<短名>/overview/`；项目里 `scripts/design-doc/` 三个脚本。
+**附属**：scripts/ scaffold · render-diagrams · annotate · check；assets/ 文档模板 + 6 个示意图模板；references/ 写法规则、阶段对照、出图、范例。评测见 `docs/forge-feature-doc-评测报告.md`。
+
 ## 17. _shared — 共享层（非 skill）
 
 - `current-doc-loading.md`：文档加载契约——先读当前真相源（CLAUDE.md/README/INDEX/根级文档），长 changelog 和 raw archive 只在追溯历史时读。

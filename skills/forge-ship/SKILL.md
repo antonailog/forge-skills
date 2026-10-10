@@ -131,6 +131,8 @@ git merge origin/<基础分支> --no-edit
 - B) 只做静态检查和人工验证
 - C) 停止
 
+**需求设计文档门禁**：项目有 `scripts/design-doc/check.mjs` 时运行 `node scripts/design-doc/check.mjs <基础分支>`。没通过就停下，先调用 `forge-feature-doc` 更新文档；用户明确说跳过才继续，并在发布总结里写明跳过了什么。
+
 ## 第4步：发布前 diff 审查
 
 ```bash

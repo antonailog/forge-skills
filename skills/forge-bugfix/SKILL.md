@@ -163,8 +163,9 @@ Mode B 调用 forge-qa 的参数契约以 `~/.claude/skills/forge-qa/SKILL.md`�
 2. 将活跃 BF 报告从 `docs/bugfix/reviews/{BUG_ID}.md` 移动到 `docs/archive/raw/bugfix-reviews/{BUG_ID}.md`，frontmatter `status` 改为 `archive`，并确认截图链接仍可打开。
 3. 批量修复时维护 `docs/bugfix/batches/BATCH-YYYY-MM-DD.md`，用于最终人工验收汇总；每个 bug 的技术证据仍回到各自 BF 报告。
 4. Memory 默认不写，除非能说明这条经验下次会触发什么具体行为。
-5. 同类模式扫描不在 bugfix 内做，交给 `/forge-review`。
-6. 出口默认建议新会话或 `/clear`、`/compact` 后继续下一个 bug；全部完成则建议 `/forge-review`、`/forge-ship`、`/forge-fupan` 或 `/forge-status`。
+5. 修复改变了设计（规则、文案、交互、阈值、prompt 等）时，调用 `forge-feature-doc` 更新需求设计文档对应部分并记一行关键改动；只是修回原设计则不用。
+6. 同类模式扫描不在 bugfix 内做，交给 `/forge-review`。
+7. 出口默认建议新会话或 `/clear`、`/compact` 后继续下一个 bug；全部完成则建议 `/forge-review`、`/forge-ship`、`/forge-fupan` 或 `/forge-status`。
 
 ---
 

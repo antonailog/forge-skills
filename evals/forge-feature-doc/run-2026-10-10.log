@@ -1,0 +1,71 @@
+16 条 × 3 次 = 48 次运行，cwd=/Users/dbwu/claudecode_workspace/项目/info2action，并行 4
+  t1 #1 HIT  9.1s skills=['forge-feature-doc'] tools=['Skill']
+  t2 #1 HIT  9.5s skills=['forge-feature-doc'] tools=['Skill']
+  t1 #3 HIT  12.0s skills=['forge-feature-doc'] tools=['Skill']
+  t1 #2 HIT  14.3s skills=['forge-feature-doc'] tools=['Skill']
+  t2 #3 HIT  8.0s skills=['forge-feature-doc'] tools=['Skill']
+  t2 #2 HIT  9.0s skills=['forge-feature-doc'] tools=['Skill']
+  t3 #1 miss 11.8s skills=- tools=['Grep', 'Glob']
+  t3 #2 miss 9.8s skills=- tools=['Grep', 'Glob']
+  t3 #3 miss 9.5s skills=- tools=['Grep']
+  t4 #1 HIT  9.2s skills=['forge-feature-doc'] tools=['Skill']
+  t4 #2 HIT  10.6s skills=['forge-feature-doc'] tools=['Skill']
+  t5 #2 HIT  8.3s skills=['forge-feature-doc'] tools=['Skill']
+  t4 #3 HIT  11.8s skills=['forge-feature-doc'] tools=['Skill']
+  t5 #1 HIT  11.0s skills=['forge-feature-doc'] tools=['Skill']
+  t6 #2 HIT  14.9s skills=['forge-feature-doc'] tools=['Skill']
+  t5 #3 HIT  17.0s skills=['forge-feature-doc'] tools=['Skill']
+  t6 #1 HIT  16.6s skills=['forge-feature-doc'] tools=['Skill']
+  t6 #3 HIT  14.5s skills=['forge-feature-doc'] tools=['Skill']
+  t7 #1 miss 12.8s skills=- tools=['Glob', 'Grep']
+  t8 #1 HIT  11.9s skills=['forge-feature-doc'] tools=['Skill']
+  t7 #2 miss 14.0s skills=- tools=['Glob', 'Grep']
+  t7 #3 miss 14.5s skills=- tools=['Glob', 'Grep']
+  t8 #3 HIT  9.9s skills=['forge-feature-doc'] tools=['Skill']
+  n1 #1 miss 12.7s skills=['forge-design-lab'] tools=['Skill']
+  n1 #2 miss 12.9s skills=['forge-design-lab'] tools=['Skill']
+  t8 #2 HIT  16.4s skills=['forge-feature-doc'] tools=['Skill']
+  n1 #3 miss 8.8s skills=['forge-design-lab'] tools=['Skill']
+  n2 #1 miss 11.2s skills=- tools=['Grep', 'Read', 'Glob']
+  n3 #1 miss 9.0s skills=['forge-prd'] tools=['Skill']
+  n2 #2 miss 13.6s skills=- tools=['Grep']
+  n2 #3 miss 16.1s skills=- tools=['Grep', 'Glob', 'Glob']
+  n3 #3 miss 9.4s skills=['forge-prd'] tools=['Skill']
+  n3 #2 miss 14.3s skills=['forge-prd'] tools=['Skill']
+  n5 #1 miss 8.1s skills=['forge-fupan'] tools=['Skill']
+  n4 #3 miss 10.6s skills=['wechat-publisher'] tools=['Skill', 'Glob', 'Grep']
+  n4 #1 miss 20.4s skills=- tools=['Glob', 'Glob', 'Grep']
+  n4 #2 miss 17.6s skills=['wechat-publisher'] tools=['Skill', 'Glob', 'Grep']
+  n5 #3 miss 9.0s skills=['forge-fupan'] tools=['Skill']
+  n6 #1 miss 10.6s skills=['prompt-craft'] tools=['Skill']
+  n6 #2 miss 12.5s skills=['prompt-craft'] tools=['Skill']
+  n5 #2 miss 20.1s skills=['forge-fupan'] tools=['Skill']
+  n6 #3 miss 10.9s skills=['prompt-craft'] tools=['Skill']
+  n7 #1 miss 10.8s skills=['forge-design-lab'] tools=['Skill']
+  n7 #2 miss 8.8s skills=['forge-design-lab'] tools=['Skill']
+  n7 #3 miss 8.4s skills=['forge-design-lab'] tools=['Skill']
+  n8 #1 miss 9.5s skills=- tools=['Grep', 'Grep']
+  n8 #2 miss 9.4s skills=- tools=['Grep', 'Grep']
+  n8 #3 miss 13.5s skills=- tools=['Grep', 'Grep']
+
+| id | split | 期望 | 触发 | 判定 | 其他 skill |
+|---|---|---|---|---|---|
+| t1 | train | 应触发 | 3/3 | ✓ |  |
+| t2 | train | 应触发 | 3/3 | ✓ |  |
+| t3 | train | 应触发 | 0/3 | ✗ |  |
+| t4 | train | 应触发 | 3/3 | ✓ |  |
+| t5 | train | 应触发 | 3/3 | ✓ |  |
+| t6 | test | 应触发 | 3/3 | ✓ |  |
+| t7 | test | 应触发 | 0/3 | ✗ |  |
+| t8 | test | 应触发 | 3/3 | ✓ |  |
+| n1 | train | 不应触发 | 0/3 | ✓ | forge-design-lab |
+| n2 | train | 不应触发 | 0/3 | ✓ |  |
+| n3 | train | 不应触发 | 0/3 | ✓ | forge-prd |
+| n4 | train | 不应触发 | 0/3 | ✓ | wechat-publisher |
+| n5 | train | 不应触发 | 0/3 | ✓ | forge-fupan |
+| n6 | test | 不应触发 | 0/3 | ✓ | prompt-craft |
+| n7 | test | 不应触发 | 0/3 | ✓ | forge-design-lab |
+| n8 | test | 不应触发 | 0/3 | ✓ |  |
+train: 正例召回 4/5 · 负例不误触 5/5 · 准确 9/10
+test: 正例召回 2/3 · 负例不误触 3/3 · 准确 5/6
+→ /Users/dbwu/claudecode_workspace/Skill/forge-skills/evals/forge-feature-doc/results-2026-10-10.json
