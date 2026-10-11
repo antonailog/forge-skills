@@ -240,6 +240,7 @@ def main():
     ap.add_argument("--out", help="adapt.json 输出路径（默认 docs/assets/visuals/<page>/<page>.adapt.json）")
     ap.add_argument("--init-spec", action="store_true", help="同时生成起步 <page>.tokens.json（已存在则不覆盖）")
     ap.add_argument("--css-out", help="前端 tokens.css 的仓库相对路径（默认放在主全局 CSS 同目录）")
+    ap.add_argument("--no-template", action="store_true", help="不用零件库模板，退回按实际用量统计（只在模板还没建时用）")
     a = ap.parse_args()
     repo = os.path.abspath(a.repo)
     slug = a.page.strip().lower()
@@ -304,6 +305,30 @@ def main():
             scale[k] = d
             warnings.append(f"阶梯 {k} 没有统计到足够用量，先用默认 {d}，请人工确认")
 
+    # 零件库模板存在时，它就是唯一来源：色板只给模板颜色，阶梯只给模板阶梯。
+    # 页面包不再各自从代码里抽站点值，否则每个页面一套「站点色」，模板就不唯一了。
+    template_src = None
+    tpl_path = os.path.join(repo, "docs", "assets", "visuals", "system", "system.tokens.json")
+    if not a.no_template and os.path.exists(tpl_path):
+        try:
+            T = (json.load(open(tpl_path, encoding="utf-8")).get("template") or {})
+        except (OSError, ValueError):
+            T = {}
+        if T.get("colors"):
+            colors_light = {c["name"][2:]: c["light"] for c in T["colors"] if c.get("light")}
+            colors_dark = {c["name"][2:]: c["dark"] for c in T["colors"] if c.get("dark")}
+            types = T.get("type") or []
+            scale = {
+                "px": sorted(T.get("sizes") or scale["px"]),
+                "space": sorted(set([0] + (T.get("space") or scale["space"]))),
+                "radius": sorted(r["v"] for r in T.get("radius") or [] if r["v"] < 999) or scale["radius"],
+                "lh": sorted({t["lh"] for t in types}) or scale["lh"],
+                "weight": sorted({t["weight"] for t in types} | {400, 600}) or scale["weight"],
+            }
+            fonts_roles = {f"--t-font-{f['id']}": ", ".join(f["stack"]) for f in T.get("fonts") or []} or fonts_roles
+            template_src = f"零件库模板 {T.get('version', '')}（{os.path.relpath(tpl_path, repo)}）"
+            warnings = [w for w in warnings if not w.startswith("阶梯")]
+
     seg = re.sub(r"[^a-z0-9]", "", slug.split("-")[0]) or "pg"
     prefix = "--" + (a.prefix or seg).strip().lstrip("-").rstrip("-")
     collide = sorted(n for n in light if n.startswith(prefix + "-"))
@@ -323,7 +348,7 @@ def main():
         "fonts": {"roles": fonts_roles, "google": sorted(google), "selfHosted": sorted(fontface_names), "fontFaceCount": fontface_count},
         "sizes": sizes, "tailwind": tw, "scale": scale,
         "usage": {k: dict(sorted(((str(v), n) for v, n in c.most_common(20)), key=lambda x: -x[1])) for k, c in cnt.items()},
-        "suggestedCssOut": css_out, "warnings": warnings,
+        "suggestedCssOut": css_out, "warnings": warnings, "templateSource": template_src,
     }
     with open(out_path, "w", encoding="utf-8") as fh:
         json.dump(adapt, fh, ensure_ascii=False, indent=1)
@@ -339,7 +364,7 @@ def main():
     for v in tw.values():
         if v.get("fontFamily"):
             print(f"  fontFamily：{', '.join(v['fontFamily']['keys'])}  ← 字体角色在 tailwind 里，骨架的站点变量复刻要手工补 --serif/--sans/--mono")
-    print("阶梯（来自实际用量，次数≥阈值）：")
+    print(f"色板与阶梯来源：{template_src}——页面只从模板取值，模板没有的值走定制申请" if template_src else "阶梯（来自实际用量，次数≥阈值）：")
     for k, lab in (("px", "字号"), ("space", "间距"), ("radius", "圆角"), ("lh", "行高"), ("weight", "字重")):
         top = ", ".join(f"{v}×{n}" for v, n in cnt[k].most_common(6))
         print(f"  {lab:<3} {scale[k]}    最常用 {top or '—'}")

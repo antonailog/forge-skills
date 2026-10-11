@@ -1,6 +1,6 @@
 ---
 name: forge-design-lab
-description: 在真实 token、真实像素的 HTML 骨架上做页面与组件的设计决策：生成可点、可改、可存的设计工作台，按七层逐节点审查，保存即导出 token 与 CSS 并回写 DESIGN.md 的 token 表。用户说「开工作台」「看骨架」「讨论 XX 的设计稿」「改 token」「我保存好了，按调整后的来」时用；只要在争论比例、密度、一屏几张、行长、栏宽、留白这类要看见才能判断的问题，哪怕没提工作台也用；forge-design 第三步遇到页面、组件、布局决策时必调。不处理：DESIGN.md 散文与评分（forge-design）、产品代码（forge-eng、forge-design-impl）、效果图气质预判（Image 2）、实现后截图验收（forge-qa）。
+description: 在真实 token、真实像素的 HTML 骨架上做页面与组件的设计决策：生成可点、可改、可存的设计工作台，按七层逐节点审查，保存即导出 token 与 CSS 并回写 DESIGN.md 的 token 表。用户说「开工作台」「看骨架」「讨论 XX 的设计稿」「改 token」「我保存好了，按调整后的来」时用；只要在争论比例、密度、一屏几张、行长、栏宽、留白这类要看见才能判断的问题，哪怕没提工作台也用；forge-design 第三步遇到页面、组件、布局决策时必调。也负责全站唯一的设计零件库（一套模板 + 逐条确认的定制 + 守门检查）：说「零件库」「设计模板」「全站设计 token 总表」「这个算不算定制」「查一下有没有用模板外的值」时用。不处理：DESIGN.md 散文与评分（forge-design）、产品代码（forge-eng、forge-design-impl）、效果图气质预判（Image 2）、实现后截图验收（forge-qa）、设计概念问答（直接答）。
 ---
 
 # forge-design-lab — 在真比例骨架上定设计
@@ -52,6 +52,7 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | `verify_pack.mjs` | S3 交付前；S4 每次重建后 | `node {lab}/scripts/verify_pack.mjs <html> --repo <repo> [--shots <dir>] [--strict-literals] [--json <out>]` | 没有 Playwright 就只跑 `build_tokens.py --check`，让用户人工开页面报控制台 |
 | `extract_system.py` | S0，抽现状（对账用）；产品样式改过后刷新 | `python3 {lab}/scripts/extract_system.py <repo> --product-css` | worktree 没有 node_modules 就软链主仓库的 |
 | `build_template.js` | 改了 json 的 template 段之后 | `node {lab}/scripts/build_template.js <repo> [--check]` | 与页面同一个生成器（`assets/system/template-css.js`），不手改 template.css |
+| `compare_impl.mjs` | 实现完成后（forge-qa 视觉维度调用）；用户问「实现和设计稿对不对得上」 | `node {lab}/scripts/compare_impl.mjs <骨架 html> [--app URL] [--json out] [--shots dir]` | 读 tokens.json 的 `implCheck`；没配就写「未配置」，不当通过 |
 | `check_system.py` | forge-review / forge-qa 收尾；用户问「有没有越界」 | `python3 {lab}/scripts/check_system.py <repo> [--base origin/main] [--all]` | 默认只查新增行；`--all` 看遗留规模，不作门禁 |
 | `render_design_table.py` | S5 | `python3 {lab}/scripts/render_design_table.py <repo> <tokens.json> --design docs/DESIGN.md --heading "## 模块 28"` | DESIGN.md 里找不到模块标题就只打印区块，提示先走 forge-design |
 
@@ -83,13 +84,13 @@ Google Fonts 让骨架用与产品同族的字体（不通时面板徽标显示�
 
 **用户保存后**：读 `.forge/design-lab/last-save.json` 的 `template_changes` 与 `custom_changes`，列成差异表，逐条回反馈。模板的改值只改零件库，不自动改产品代码；要让产品用上模板，是一次单独的实现任务（引入 `template.css`、把组件改成 `.t-*` 类），走 forge-eng。
 
-**守门**：`check_system.py` 查当前分支相对 origin/main 的新增行，出现模板和定制以外的颜色、字号、圆角、间距就失败。forge-review 与 forge-qa 收尾时跑它。确需例外的，先登记定制，再在行尾写 `design: <定制 id>`。
+**守门**：`check_system.py` 查当前分支相对 origin/main 的新增行（含未提交改动与未跟踪的新文件），出现模板和定制以外的颜色（#hex、rgb/hsl/oklch、Tailwind 调色板类、未登记的变量）、字号、圆角、间距（Tailwind 任意值、CSS 声明、JSX 内联样式，px 与 rem 都算）就失败；基础分支不存在时退出码 2，不报通过。`font:` 简写、`calc()` 里的数值、JS 拼出来的类名查不到，靠 review 兜底。forge-review 与 forge-qa 收尾时跑它。确需例外的，先登记定制，再在行尾写 `design: <定制 id>`，豁免只对那一行生效。
 
 **新页面包开工**：S1 之前写选材清单（格式见 `references/system-pack.md`）：用模板的哪些零件、怎么组合；模板没有的列出来，每条说明理由，作为「定制申请」给用户确认，确认后进 `custom`。不能用「差一点」做理由，差 1–2px 或相邻色阶的直接用模板值。
 
 ## S1 适配：先知道这个项目有什么
 
-跑 `adapt_tokens.py`，读它打印的适配报告，再定页面 token 前缀。报告里四组阶梯（字号、间距、圆角、行高与字重）来自项目实际用量而不是拍脑袋，后面所有备选值只从阶梯上取，自定义值在面板里标红。站点级变量原样进 `foundation`，在工作台里只读。
+跑 `adapt_tokens.py`，读它打印的适配报告，再定页面 token 前缀。项目有零件库模板时，色板只给模板颜色、四组阶梯（字号、间距、圆角、行高与字重）就是模板阶梯，报告第一行写明来源；没有模板时才按项目实际用量统计。后面所有备选值只从阶梯上取，自定义值在面板里标红；模板没有的值走定制申请（见 S0）。站点级变量原样进 `foundation`，在工作台里只读。
 
 带 `--init-spec` 生成起步 json：七层 groups、scale、foundation 已填，nodes 为空等你写。把一屏适配报告给用户看，不用等确认就进 S2。
 

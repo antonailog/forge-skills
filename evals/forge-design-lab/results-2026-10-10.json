@@ -1,0 +1,1326 @@
+{
+ "skill": "forge-design-lab",
+ "runs": 3,
+ "cwd": "/Users/dbwu/claudecode_workspace/项目/info2action",
+ "when": "2026-10-10 20:49",
+ "agg": {
+  "train": {
+   "tp": 7,
+   "tn": 7,
+   "fp": 0,
+   "fn": 1
+  },
+  "test": {
+   "tp": 5,
+   "tn": 9,
+   "fp": 0,
+   "fn": 2
+  }
+ },
+ "cases": [
+  {
+   "id": "t1",
+   "split": "train",
+   "why": "标准场景：点名模块 + 看比例密度 + 明确不写代码",
+   "query": "模块 28 AI 搜索页的设计定了，先别写代码，开工作台把两栏比例和紧凑卡密度给我看一下，样例用 docs/assets/visuals/ai-search 里那条 seedance 的真实总结",
+   "expect": true,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.1,
+     "bytes": 10758
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Bash",
+      "Skill"
+     ],
+     "sec": 12.1,
+     "bytes": 21753
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 12.7,
+     "bytes": 20801
+    }
+   ],
+   "rate": 0.3333333333333333,
+   "ok": false
+  },
+  {
+   "id": "t2",
+   "split": "train",
+   "why": "口语 + 没说工作台，但要在骨架上现场调间距",
+   "query": "右边那列卡片看着太挤了 像广告一样，你先别改代码，出个骨架我在上面调调间距再说",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 16.2,
+     "bytes": 23334
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 18.6,
+     "bytes": 58825
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 21.6,
+     "bytes": 60377
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t3",
+   "split": "train",
+   "why": "隐含需求：读文字规格想象不出比例，要按真实尺寸看",
+   "query": "DESIGN.md 里写的 7fr:3fr 我完全想象不出来一屏能放几张卡，有没有办法让我按真实尺寸看一眼再定",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 13.8,
+     "bytes": 61782
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 14.3,
+     "bytes": 60229
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Bash",
+      "Skill"
+     ],
+     "sec": 14.7,
+     "bytes": 61990
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t4",
+   "split": "train",
+   "why": "交接口令：保存好了 / 在 download 里 / 按调整后的来",
+   "query": "我在工作台里把引用列改成 316、顶部留白改 48 然后保存了，文件在 download 里，按调整后的来",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 9.0,
+     "bytes": 20496
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.3,
+     "bytes": 19856
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 15.3,
+     "bytes": 29543
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t5",
+   "split": "train",
+   "why": "forge-design 第三步转交，新页面先线框",
+   "query": "forge-design 走到第三步了，这次是新页面「订阅设置」的布局，按新流程先线框我确认",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 9.8,
+     "bytes": 20891
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.9,
+     "bytes": 20731
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 13.3,
+     "bytes": 22006
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t6",
+   "split": "train",
+   "why": "表格密度也是布局/排版决策，要按层过",
+   "query": "admin 日志 tab 的表格密度感觉不对，行高、字号、padding 一起看，开个工作台按层过一遍",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.9,
+     "bytes": 20924
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 9.5,
+     "bytes": 19720
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.0,
+     "bytes": 21260
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t7",
+   "split": "test",
+   "why": "边缘正例：跨项目 + tailwind-only，先出适配报告",
+   "query": "换个项目：~/dev/shop-admin 这仓库用 tailwind theme 没有 :root 变量，帮我把商品列表页建个页面包，先出适配报告",
+   "expect": true,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 13.1,
+     "bytes": 12817
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 15.4,
+     "bytes": 27678
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Bash",
+      "Skill"
+     ],
+     "sec": 15.6,
+     "bytes": 60368
+    }
+   ],
+   "rate": 0.3333333333333333,
+   "ok": false
+  },
+  {
+   "id": "t8",
+   "split": "test",
+   "why": "与 forge-design 抢活但本 skill 该赢：要在真实尺寸上切着看并导成 css 变量",
+   "query": "精选页头版那块留白到底 32 还是 48 我俩争了半天，能不能在真实页面尺寸上切着看、然后把定下来的值直接导成 css 变量给前端",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.4,
+     "bytes": 21643
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.7,
+     "bytes": 56930
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 14.2,
+     "bytes": 57231
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t9",
+   "split": "test",
+   "why": "审查回合：拿不准出 A/B/C 写进备选",
+   "query": "工作台里我标了三个拿不准，逐个给我 ABC 选项，别在对话里描述，写进备选让我切着看",
+   "expect": true,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 12.4,
+     "bytes": 26473
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 15.4,
+     "bytes": 61115
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 17.4,
+     "bytes": 28663
+    }
+   ],
+   "rate": 0.6666666666666666,
+   "ok": true
+  },
+  {
+   "id": "t10",
+   "split": "test",
+   "why": "口语 + 改排版 token + 回写 DESIGN token 表",
+   "query": "看下模块 21 信息卡的骨架 我想改改卡标题字号和行高 顺便把结论写进 DESIGN 的 token 表",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.9,
+     "bytes": 21291
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 12.5,
+     "bytes": 22068
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 16.2,
+     "bytes": 24128
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "t11",
+   "split": "test",
+   "why": "追加（首轮全对后的加难）：读完 DESIGN.md 仍判断不了栏宽，没提工作台",
+   "query": "看完你写的 DESIGN.md 模块 28 我还是不知道右栏到底该多宽、一屏能放几张卡，你有什么办法让我自己定",
+   "expect": true,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 11.9,
+     "bytes": 60752
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 14.2,
+     "bytes": 69814
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 12.8,
+     "bytes": 65288
+    }
+   ],
+   "rate": 0.3333333333333333,
+   "ok": false
+  },
+  {
+   "id": "s1",
+   "split": "train",
+   "why": "零件库原始诉求：一处维护全站 token",
+   "query": "我想要一个页面维护项目里所有的设计 token，颜色、字体、按钮、版面都在里面，以后改设计就只改这一处",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.8,
+     "bytes": 57210
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 18.3,
+     "bytes": 67065
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 14.3,
+     "bytes": 58531
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "s2",
+   "split": "train",
+   "why": "在零件库里改模板值",
+   "query": "零件库里主按钮的圆角改大一档，顺便让我看看次按钮和强调描边要不要一起变",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.3,
+     "bytes": 20821
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.2,
+     "bytes": 21821
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.0,
+     "bytes": 21846
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "s3",
+   "split": "test",
+   "why": "定制申请：模板没有的值",
+   "query": "新做的订阅页需要一个 280 宽的侧栏，模板里没有这个宽度，这算不算定制？要的话帮我登记进去",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 9.7,
+     "bytes": 19975
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 8.3,
+     "bytes": 20455
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 10.4,
+     "bytes": 21625
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "s4",
+   "split": "test",
+   "why": "守门检查",
+   "query": "这个分支提交前帮我查一下，有没有用到模板以外的颜色、字号或者圆角",
+   "expect": true,
+   "runs": [
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Bash",
+      "Skill"
+     ],
+     "sec": 12.8,
+     "bytes": 53275
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 15.9,
+     "bytes": 28268
+    },
+    {
+     "hit": true,
+     "skills": [
+      "forge-design-lab"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 17.2,
+     "bytes": 27813
+    }
+   ],
+   "rate": 1.0,
+   "ok": true
+  },
+  {
+   "id": "n1",
+   "split": "train",
+   "why": "共享『设计/DESIGN.md/层级』，但是设计评分与 AI 模板痕迹审计，归 forge-design",
+   "query": "把 DESIGN.md 模块 28 的设计评分再审一遍，重点看有没有 AI 模板痕迹和层级是否可答",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.1,
+     "bytes": 18209
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 8.7,
+     "bytes": 15612
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 11.6,
+     "bytes": 15802
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n2",
+   "split": "train",
+   "why": "共享『紧凑卡/DESIGN.md』，但是写产品代码，归 forge-eng / forge-design-impl",
+   "query": "按 DESIGN.md 28.7 把紧凑卡组件实现出来，Tailwind 写，vitest 补上",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 11.0,
+     "bytes": 13596
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 12.6,
+     "bytes": 15354
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 13.7,
+     "bytes": 14441
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n3",
+   "split": "train",
+   "why": "共享『AI 搜索页/效果图』，但要的是气质预判，归 Image 2",
+   "query": "给 AI 搜索页出一张手机端效果图，想看看整体气质是不是报纸感，发给同事看",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 31.1,
+     "bytes": 28547
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 28.9,
+     "bytes": 27659
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 30.6,
+     "bytes": 25967
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n4",
+   "split": "train",
+   "why": "共享『设计稿/对比』，但是实现后的截图验收，归 forge-qa",
+   "query": "本地起前端，帮我截图对比一下实现和设计稿差多少，差异列表给我",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 15.8,
+     "bytes": 32974
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 16.6,
+     "bytes": 37480
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 15.3,
+     "bytes": 29104
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n5",
+   "split": "train",
+   "why": "共享『token/色』，但是站点级 brand 色全站更换，归 forge-design L1",
+   "query": "brand 色 #C65A1E 全站偏暗，想整体换一个暖一点的，连带 hover 一起",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 17.4,
+     "bytes": 45500
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 19.7,
+     "bytes": 44007
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 18.7,
+     "bytes": 45967
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n6",
+   "split": "train",
+   "why": "共享『DESIGN.md/模块 28/正文最大宽』，但是改散文规格，归 forge-design",
+   "query": "把 DESIGN.md 模块 28 里 28.5 SummaryPane 那段散文改一下，说清楚正文最大宽 960 的原因",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 8.9,
+     "bytes": 10211
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 9.3,
+     "bytes": 10689
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.3,
+     "bytes": 11388
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n7",
+   "split": "test",
+   "why": "共享『布局/页面』，但是 PRD 层面要不要拆页面，归 forge-prd / brainstorm",
+   "query": "帮我看看这个 PRD 里对搜索结果页布局的描述合不合理，要不要拆成两个页面",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 16.3,
+     "bytes": 19581
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 16.6,
+     "bytes": 16715
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 16.4,
+     "bytes": 17951
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n8",
+   "split": "test",
+   "why": "共享『骨架 html』，但是想把骨架当产品页面上线，归 forge-eng（且应被劝阻）",
+   "query": "把 docs/assets/visuals/ai-search 那个骨架 html 稍微改改直接当页面上线，反正长得差不多",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 13.8,
+     "bytes": 13591
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 13.8,
+     "bytes": 14308
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 13.6,
+     "bytes": 14114
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n9",
+   "split": "test",
+   "why": "共享『token 表/--ai-col-w』，但只是讲解，不开工作台",
+   "query": "DESIGN.md 的 token 表怎么读，--ai-col-w 是干嘛的，给我解释下",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 11.0,
+     "bytes": 12523
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 14.7,
+     "bytes": 11553
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 13.6,
+     "bytes": 17689
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n10",
+   "split": "test",
+   "why": "共享『ai-search/Playwright』，但是 QA 用例回归，归 forge-qa",
+   "query": "Playwright 跑一下 ai-search 的 QA 用例，看 API-003 现在过不过",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 10.1,
+     "bytes": 14350
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 11.1,
+     "bytes": 14064
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 19.8,
+     "bytes": 18986
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n11",
+   "split": "test",
+   "why": "追加：共享『工作台』一词，但是复盘工作台工具的代码改动，归 forge-eng",
+   "query": "复盘工作台（tools/fupan-workbench）的前端 main.jsx 改一下，把任务列表默认按时间倒序",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.6,
+     "bytes": 12370
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 13.9,
+     "bytes": 12655
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 25.7,
+     "bytes": 11762
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n12",
+   "split": "test",
+   "why": "追加：排版数值改动但用户明确要直接改代码不讨论，归 forge-eng / design-impl",
+   "query": "把 admin 日志 tab 的字号从 12 改成 13，直接改 Tailwind 类就行，不用讨论",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 9.1,
+     "bytes": 22909
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 9.4,
+     "bytes": 14904
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 9.6,
+     "bytes": 15247
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "n13",
+   "split": "test",
+   "why": "追加：只是读一个 token 的当前值，一步查完，不开工作台",
+   "query": "看一下 docs/assets/visuals/ai-search 的 tokens.json 里 s.col-w 现在是多少",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 8.8,
+     "bytes": 10276
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 8.2,
+     "bytes": 8951
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 8.2,
+     "bytes": 8967
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "m1",
+   "split": "train",
+   "why": "明确直接改产品代码，不讨论",
+   "query": "把 globals.css 里的 --brand 直接改成 #B8531B，不用讨论也不用开什么页面，改完跑下测试",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 12.0,
+     "bytes": 11755
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash",
+      "Bash"
+     ],
+     "sec": 19.0,
+     "bytes": 23700
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 21.9,
+     "bytes": 15878
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "m2",
+   "split": "test",
+   "why": "概念问答",
+   "query": "给我讲讲 design token 和普通 CSS 变量到底有什么区别，业界一般分几层",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 14.0,
+     "bytes": 23312
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [
+      "Bash"
+     ],
+     "sec": 14.1,
+     "bytes": 11846
+    },
+    {
+     "hit": false,
+     "skills": [],
+     "tools": [],
+     "sec": 61.6,
+     "bytes": 22650
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  },
+  {
+   "id": "m3",
+   "split": "test",
+   "why": "复盘，同词干扰",
+   "query": "复盘一下这周做设计零件库的过程，我想沉淀几条经验",
+   "expect": false,
+   "runs": [
+    {
+     "hit": false,
+     "skills": [
+      "forge-fupan"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 11.8,
+     "bytes": 37160
+    },
+    {
+     "hit": false,
+     "skills": [
+      "forge-fupan"
+     ],
+     "tools": [
+      "Skill"
+     ],
+     "sec": 13.0,
+     "bytes": 37322
+    },
+    {
+     "hit": false,
+     "skills": [
+      "forge-fupan"
+     ],
+     "tools": [
+      "Skill",
+      "Bash"
+     ],
+     "sec": 17.8,
+     "bytes": 50299
+    }
+   ],
+   "rate": 0.0,
+   "ok": true
+  }
+ ]
+}

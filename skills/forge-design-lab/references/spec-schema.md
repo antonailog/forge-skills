@@ -29,6 +29,7 @@
 | `elementIds` | `{编号: 说明}` | 指南 tab 的编号表；反馈行首编号的解析依据；键可写范围如 `"C1…Cn"` | 引擎、verify |
 | `exported` | ISO 时间 | 引擎保存时写入；Agent 记账用，引擎不读 | 人 |
 | `baseline` | object | Agent 记账（哪次导出成为基线、改了几处）；引擎不读 | 人 |
+| `implCheck` | object | 实现比对清单（S5 写）：`app` 产品页 URL、`viewport {w,h}`（必须是 `viewports` 里有的一档）、`lab {level,state}`、`tolerance`（默认 2）、`waitFor` 产品页就绪选择器、`pairs[{name, lab, app, props}]`（`props` ⊆ x y w h） | compare_impl.mjs |
 
 ## levels / states / viewports / toggles
 

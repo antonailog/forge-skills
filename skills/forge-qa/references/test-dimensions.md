@@ -640,6 +640,22 @@ await browser.close();
 
 ---
 
+### 设计系统一致性（项目有 forge-design-lab 页面包时加跑）
+
+两条命令都给 pass/fail，结果写进视觉维度：
+
+```bash
+# 1 零件库守门：本分支新增代码里不准出现模板与定制以外的颜色/字号/圆角/间距
+python3 ~/.claude/skills/forge-design-lab/scripts/check_system.py <repo> --base origin/main
+# 2 实现比对：骨架与真实页面同视口下逐元素比位置尺寸，误差 > 容差（默认 2px）即 fail
+node ~/.claude/skills/forge-design-lab/scripts/compare_impl.mjs docs/assets/visuals/<page>/<骨架>.html \
+     --app <本 worktree 的前端 URL> --json .forge/qa/impl-compare.json --shots .forge/qa/impl-shots
+```
+
+- 没有 `docs/assets/visuals/system/system.tokens.json` 就跳过 1；页面包的 tokens.json 没有 `implCheck` 就跳过 2，并在报告里写「未配置实现比对」，不算通过。
+- `--app` 必须是当前 worktree 自己的前端地址（读 `.devserver.json`），不猜端口。
+- 2 失败时附上两张截图与超差元素清单；是设计改了还是实现偏了，由用户在 User Gate 判断。
+
 ## Dimension 5: Interaction Completeness [functional]
 
 ### 测试目标

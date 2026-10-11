@@ -17,7 +17,7 @@
   const LS_UI = 'sys:ui2';
   const SAMPLE = { title: 'OpenAI 发布 GPT-6，推理成本降低 60%', body: '今天值得看的 AI 要点：Claude 发布新模型，GitHub Copilot 更新 Agent 模式。' };
 
-  let J = null, T = null, BASE = null, REPO = '', SAVED = '';
+  let J = null, T = null, BASE = null, REPO = '', SAVED = '', REV = null;
   const S = Object.assign({ tab: 'colors', dark: false }, (() => { try { return JSON.parse(localStorage.getItem(LS_UI) || '{}'); } catch (e) { return {}; } })());
 
   // ---------- 状态 ----------
@@ -64,7 +64,7 @@
     let h = `<p class="sys-intro">字体只有 <b>${T.fonts.length} 种</b>，文字样式只有 <b>${T.type.length} 种</b>。新模块写文字时套用某个样式，不再单独写字号。每个样式可以直接改，样张即时变。</p><h2 class="sys-h2">字体</h2>`;
     T.fonts.forEach((f, i) => {
       h += `<div class="sys-font"><div class="k">${esc(f.label)} <span class="sys-mono">font-${esc(f.id)}</span>${mod(`fonts.${i}`)}<small>${esc(f.use)}</small></div>
-        <div class="s" style="font-family:var(--t-font-${f.id})">info2act 每日 AI 要点 · The quick brown fox 0123456789<small>${esc(f.stack.join(', '))} · ${esc(f.from || '')}</small></div></div>`;
+        <div class="s" style="font-family:var(--t-font-${esc(f.id)})">info2act 每日 AI 要点 · The quick brown fox 0123456789<small>${esc(f.stack.join(', '))} · ${esc(f.from || '')}</small></div></div>`;
     });
     h += `<h2 class="sys-h2">文字样式<small>类名 .t-样式名</small></h2><p class="sys-sub">字号只能取字号阶梯里的值：${T.sizes.join(' / ')}。</p>`;
     T.type.forEach((t, i) => {
@@ -82,11 +82,11 @@
   function renderSpace() {
     let h = `<p class="sys-intro">间距 <b>${T.space.length} 档</b>，圆角 <b>${T.radius.length} 种</b>，容器宽度 <b>${T.containers.length} 种</b>。内边距、间隔、外边距都从这几档里取。</p>`;
     h += `<h2 class="sys-h2">间距${mod('space')}</h2><div class="sys-ladder">`;
-    T.space.forEach((s, i) => { h += `<div class="sys-step"><div class="v">${s}</div><div><div class="bar" style="width:${s * 4}px"></div></div><div class="n sys-mono">--t-space-${i + 1}</div></div>`; });
+    T.space.forEach((s, i) => { h += `<div class="sys-step"><div class="v">${Number(s)}</div><div><div class="bar" style="width:${Number(s) * 4}px"></div></div><div class="n sys-mono">--t-space-${i + 1}</div></div>`; });
     h += `</div><div class="sys-row">${listEdit('space', T.space)}</div><h2 class="sys-h2">圆角</h2><div class="sys-radii">`;
-    T.radius.forEach((r, i) => { h += `<div class="sys-radius"><div class="box" style="border-radius:${Math.min(r.v, 999)}px"></div><div><b class="sys-mono">${esc(r.id)}</b> ${num(`radius.${i}.v`, r.v, 1, 60)}${mod(`radius.${i}`)}<small>${esc(r.use)}</small></div></div>`; });
+    T.radius.forEach((r, i) => { h += `<div class="sys-radius"><div class="box" style="border-radius:${Math.min(Number(r.v) || 0, 999)}px"></div><div><b class="sys-mono">${esc(r.id)}</b> ${num(`radius.${i}.v`, r.v, 1, 60)}${mod(`radius.${i}`)}<small>${esc(r.use)}</small></div></div>`; });
     h += `</div><h2 class="sys-h2">容器宽度</h2><p class="sys-sub">条长按 1440 视口比例。</p>`;
-    T.containers.forEach((c, i) => { h += `<div class="sys-wbar"><div class="v">${c.v}</div><div><div class="bar" style="width:${c.v / 1440 * 100}%"></div></div><div class="f"><b class="sys-mono">${esc(c.id)}</b> ${num(`containers.${i}.v`, c.v, 8, 72)} ${esc(c.use)}${mod(`containers.${i}`)}</div></div>`; });
+    T.containers.forEach((c, i) => { h += `<div class="sys-wbar"><div class="v">${Number(c.v)}</div><div><div class="bar" style="width:${Number(c.v) / 1440 * 100}%"></div></div><div class="f"><b class="sys-mono">${esc(c.id)}</b> ${num(`containers.${i}.v`, c.v, 8, 72)} ${esc(c.use)}${mod(`containers.${i}`)}</div></div>`; });
     return h;
   }
 
@@ -116,9 +116,11 @@
   function shellHtml(L) {
     const W = L.vw || 1440, H = L.vh || 900;
     return `<div class="sys-canvas" style="aspect-ratio:${W}/${H}">${(L.regions || []).map(r => {
+      r = Object.assign({}, r, { w: Number(r.w) || 0, h: Number(r.h) || 0 });
       const tip = `${r.label} · ${r.w}×${r.h}${r.note ? ' · ' + r.note : ''}`;
       const inner = r.h <= 60 ? `<b>${esc(r.label)} <i style="display:inline">${r.w}×${r.h}</i></b>` : r.w <= 96 ? `<b>${esc(r.label)}</b><i>${r.w}</i>` : `<b>${esc(r.label)}</b><i>${r.w}×${r.h}${r.note ? ' · ' + esc(r.note) : ''}</i>`;
-      return `<div class="sys-rg ${esc(r.tone || '')}" style="left:${r.x / W * 100}%;top:${r.y / H * 100}%;width:${r.w / W * 100}%;height:${r.h / H * 100}%" title="${esc(tip)}">${inner}</div>`;
+      const n = v => Number(v) || 0;
+      return `<div class="sys-rg ${esc(r.tone || '')}" style="left:${n(r.x) / W * 100}%;top:${n(r.y) / H * 100}%;width:${n(r.w) / W * 100}%;height:${n(r.h) / H * 100}%" title="${esc(tip)}">${inner}</div>`;
     }).join('')}</div>`;
   }
   function renderLayout() {
@@ -202,18 +204,21 @@
   function toast(t) { const el = $('#sys-toast'); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => { el.hidden = true; }, 2600); }
 
   async function save() {
-    const body = { kind: 'system', page: 'system', files: J.files, template: T, custom: J.custom, feedback: J.feedback,
+    // 只送用户产出；rev 让服务端发现「页面打开期间文件被改过」并拒绝覆盖
+    const body = { kind: 'system', page: 'system', rev: REV, template: T, custom: J.custom, feedback: J.feedback,
       template_css: window.TemplateCSS.build(T), exported: new Date().toISOString().slice(0, 19) };
     try {
       const r = await fetch('/api/lab/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const j = await r.json(); if (!j.ok) throw new Error(j.error || r.status);
+      if (j.rev) REV = j.rev;
+      if (j.warnings && j.warnings.length) console.warn('保存附加步骤：', j.warnings);
       SAVED = snapshot(); BASE = clone(T); status(); render();
       toast('已保存 · 回对话说一声即可');
     } catch (e) {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([JSON.stringify(Object.assign({}, J, body), null, 1)], { type: 'application/json' }));
       a.download = 'system.tokens.json'; a.click();
-      toast('服务没连上，已下载 system.tokens.json：' + e.message);
+      toast((String(e.message).includes('被改过') ? '' : '保存没成功，') + e.message + '（改动已下载为 system.tokens.json）');
     }
   }
 
@@ -251,12 +256,13 @@
   $('#sys-mode').addEventListener('click', () => { S.dark = !S.dark; saveUi(); setMode(); });
 
   async function boot() {
-    try { J = await (await fetch('system.tokens.json', { cache: 'no-store' })).json(); }
+    try { const r = await fetch('system.tokens.json', { cache: 'no-store' }); REV = r.headers.get('X-Lab-Rev'); J = await r.json(); }
     catch (e) { $('#sys-main').innerHTML = '<p style="padding:32px">读不到 system.tokens.json。请用工作台服务打开：python3 ~/.claude/skills/forge-design-lab/scripts/serve.py &lt;仓库&gt;</p>'; return; }
     if (!J.template || !J.template.colors) { $('#sys-main').innerHTML = '<p style="padding:32px">还没有模板。由 Agent 按 references/system-pack.md 从现有代码提炼初稿写进 template 字段。</p>'; return; }
     J.custom = J.custom || []; J.feedback = J.feedback || [];
     T = J.template; BASE = clone(T); SAVED = snapshot();
     try { REPO = (await (await fetch('/api/lab/status')).json()).repo || ''; } catch (e) { /* file:// */ }
+    if (!REV) { try { REV = (await (await fetch('/api/lab/system-rev', { cache: 'no-store' })).json()).rev; } catch (e) { /* 旧服务 */ } }
     $('#sys-repo').textContent = `${J.repoName || ''} · 模板 ${T.version || ''}`;
     setMode(); regen(); render(); status();
   }

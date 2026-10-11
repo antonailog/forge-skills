@@ -118,6 +118,8 @@ Mode A 详见"## 三层架构"往下的完整流程。
   ├── Phase 1: 控制台[console] + 网络[network]
   ├── Phase 2: 交互[functional] + 数据驱动[data-driven] + SSE[streaming] + URL状态[url-state] + 懒加载[async-content]
   ├── Phase 3: 视觉[visual] + 响应式[responsive]
+  │     └── 有设计页面包时加跑：零件库守门 check_system.py（新增越界算 fail）、
+  │         实现比对 compare_impl.mjs（tokens.json 有 implCheck 时；骨架与实现误差 > 2px 算 fail）
   └── Phase 4: 可访问性[accessibility]
   │
 第6步 智能分析 + Bug 报告

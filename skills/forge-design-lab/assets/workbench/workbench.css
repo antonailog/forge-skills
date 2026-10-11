@@ -11,7 +11,7 @@ html,body{margin:0;height:100%;background:#E6E4DE;font:13px/1.5 Inter,-apple-sys
 #wb-stage:not(.follow) #wb-wrap{margin:32px auto 40px}
 #wb-scaler{transform-origin:0 0}
 #frame{position:relative;overflow:hidden}
-#wb-stage:not(.follow) #frame{box-shadow:0 10px 34px rgba(0,0,0,.16);border:1px solid #CFCBC1}
+#wb-stage:not(.follow) #frame{box-shadow:0 0 0 1px #CFCBC1,0 10px 34px rgba(0,0,0,.16)} /* 描边用阴影不用 border：border-box 下 border 会把骨架内容压窄 2px，比例就不真了 */
 
 /* ---------- 视图块（面板头部，替代原顶部工具条） ---------- */
 #wb-view{border-top:1px solid #EEECE6;background:#F5F4F0}

@@ -194,3 +194,19 @@ body { background: var(--background); color: var(--foreground); font: 14px/1.6 I
 .ctl2 label { white-space: nowrap; }
 .ctl2 select, .ctl2 input { max-width: 112px; }
 .sys-btable td:first-child { width: 340px; }
+
+/* ---- 布局：顶栏可换行，主体占满剩余高度（不再用 calc 写死 53px） ---- */
+body { display: flex; flex-direction: column; height: 100vh; }
+#sys-wrap { flex: 1; min-height: 0; height: auto; }
+.sys-shells { grid-template-columns: repeat(auto-fit, minmax(min(460px, 100%), 1fr)); }
+.sys-tcolors { grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr)); }
+@media (max-width: 860px) {
+  #sys-top { flex-wrap: wrap; height: auto; padding: 8px 16px; gap: 6px 12px; }
+  #sys-tabs { order: 3; flex-basis: 100%; }
+  .sys-title span { display: none; }
+  #sys-main { padding: 16px 16px 64px; }
+  .sys-trow, .sys-font { grid-template-columns: 1fr; gap: 8px; }
+  .sys-wbar { grid-template-columns: 48px 1fr; }
+  .sys-wbar .f { grid-column: 1 / -1; }
+  #sys-drawer { display: none; }
+}

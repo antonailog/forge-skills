@@ -16,7 +16,8 @@
   --product-css 另用项目自己的 Tailwind 编译一份 product.css，零件库页面用它按真像素渲染
 
 不覆盖的东西（重跑安全）:
-  edits（用户在页面上改了、还没同步进代码的值）、decisions（定为标准/归并/废弃）、feedback、layouts（手写的版面骨架）
+  template、custom（用户的模板与定制）、feedback、layouts（手写的版面骨架），以及旧版字段 edits、decisions。
+  页面保存同样不动这些以外的字段：服务端只替换请求里带了的用户产出（见 serve.py merge_system）。
 输出: docs/assets/visuals/system/system.tokens.json，并把页面模板同步到同目录与 _workbench/
 """
 import argparse
@@ -87,36 +88,62 @@ def preceding_comment(text, pos):
     return ""
 
 
+DARK_SEL = re.compile(r"\.dark\b|\[data-(?:theme|mode)\s*=\s*[\"']?dark[\"']?\s*\]")
+
+
+def blank_comments(text):
+    """注释换成等长空白：注释里的 { } 和被注释掉的变量都不再参与解析，行号保持不变。"""
+    return re.sub(r"/\*.*?\*/", lambda m: re.sub(r"[^\n]", " ", m.group(0)), text, flags=re.S)
+
+
+def media_spans(clean):
+    """[(start, end, prelude)]：每个 @media 块在文本里的范围，用于判断一条规则处在什么媒体条件下。"""
+    out = []
+    for m in re.finditer(r"@media([^{]*)\{", clean):
+        depth, j = 0, m.end() - 1
+        while j < len(clean):
+            if clean[j] == "{":
+                depth += 1
+            elif clean[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        out.append((m.end(), j, m.group(1)))
+    return out
+
+
 def parse_vars(path):
-    """返回 {scope: {mode: {name: (value, line, note)}}}；scope=root 或选择器名（.admin-scope）。"""
+    """返回 {scope: {mode: {name: (value, line, note)}}}；scope=root 或作用域选择器（.admin-scope）。
+    暗色识别：选择器里有 .dark / [data-theme=dark]（含 :root.dark、html.dark、.dark .x），或处在 prefers-color-scheme: dark 媒体块里。
+    其他媒体块里的 :root 只是覆写（如移动端高度），已有主值时不取。"""
     text = AT.read(path)
+    clean = blank_comments(text)
+    spans = media_spans(clean)
     out = collections.defaultdict(lambda: {"light": {}, "dark": {}})
-    # 逐个声明块扫描，保留原文位置算行号
-    for m in re.finditer(r"([^{};]+)\{([^{}]*)\}", text):
-        sel = " ".join(m.group(1).split())
-        sel = re.sub(r"^.*\*/\s*", "", sel)   # 去掉选择器前面的注释残片
-        body_start = m.start(2)
+    for m in re.finditer(r"([^{};]+)\{([^{}]*)\}", clean):
         body = m.group(2)
         if not re.search(r"--[\w-]+\s*:", body):
             continue
-        is_dark = bool(re.search(r"(^|\s)\.dark\b", sel))
-        if ":root" in sel or sel in ("html", ".dark"):
-            scope = "root"
-        else:
-            scope = re.sub(r"^\.dark\s+", "", sel)
-        # 媒体查询里的 :root 只是覆写（如移动端高度），不当作主值
-        ctx = text[max(0, m.start() - 200):m.start()]
-        in_media = ctx.count("@media") > ctx.count("}") and ":root" in sel
-        for vm in re.finditer(r"(--[\w-]+)\s*:\s*([^;]+);", body):
-            name, val = vm.group(1), " ".join(vm.group(2).split())
-            if re.match(r"--tw-", name):
+        media = " ".join(pre for st, en, pre in spans if st <= m.start() < en)
+        dark_media = bool(re.search(r"prefers-color-scheme\s*:\s*dark", media))
+        other_media = bool(media) and not dark_media
+        for sel in (x.strip() for x in " ".join(m.group(1).split()).split(",")):
+            if not sel or sel.startswith("@"):
                 continue
-            pos = body_start + vm.start()
-            line = text.count("\n", 0, pos) + 1
+            is_dark = dark_media or bool(DARK_SEL.search(sel))
+            base = DARK_SEL.sub("", sel).replace(":root", "").replace("html", "")
+            base = re.sub(r"\.light\b|\[data-(?:theme|mode)\s*=\s*[\"']?light[\"']?\s*\]", "", base).strip()   # 显式亮色主题选择器等同 root
+            scope = "root" if not base or base in ("body",) else base
             mode = "dark" if is_dark else "light"
-            if in_media and name in out[scope][mode]:
-                continue
-            out[scope][mode].setdefault(name, (val, line, preceding_comment(text, pos)))
+            for vm in re.finditer(r"(--[\w-]+)\s*:\s*([^;]+);", body):
+                name, val = vm.group(1), " ".join(vm.group(2).split())
+                if name.startswith("--tw-"):
+                    continue
+                pos = m.start(2) + vm.start()
+                if other_media and name in out[scope][mode]:
+                    continue
+                out[scope][mode].setdefault(name, (val, text.count("\n", 0, pos) + 1, preceding_comment(text, pos)))
     return out
 
 
@@ -220,10 +247,15 @@ def classify_button(toks):
     base = {re.sub(r"^(?:[a-z-]+:)+", "", t) for t in toks if not re.match(r"^(?:hover|focus|focus-visible|disabled|active|group-hover|dark|aria-[\w-]+):", t)}
     bgs = [t for t in base if t.startswith("bg-")]
     texts = [t for t in base if t.startswith("text-") and not SIZE_TEXT.match(t)]
-    solid_brand = any(re.match(r"bg-(primary|\[var\(--brand\)\]|\[#c65a1e\]|brand)(?![\w-])", t, re.I) for t in bgs)
+    def strong(t):   # bg-primary 或不透明度 ≥ 70 的 bg-primary/90 算实心；/10 这类浅底不算
+        m = re.match(r"bg-(primary|\[var\(--brand\)\]|\[#c65a1e\]|brand)(?:/(\d+))?(?![\w-])", t, re.I)
+        return bool(m) and (m.group(2) is None or int(m.group(2)) >= 70)
+    solid_brand = any(strong(t) for t in bgs)
     solid_ink = any(re.search(r"bg-(foreground|\[var\(--foreground\)\]|\[var\(--floating-btn-bg\)\])", t) for t in bgs)
-    overlay = any(re.search(r"bg-(white|black)/", t) for t in bgs) or "text-white" in base
-    has_border = "border" in base
+    # 浮层只认半透明黑白底；「品牌底 + 白字」是实心按钮，不能因为白字就判成浮层
+    overlay = any(re.search(r"bg-(white|black)/", t) for t in bgs) or ("text-white" in base and not bgs)
+    has_border = any(re.fullmatch(r"border(-\d+|-[trblxy](-\d+)?)?", t) for t in base) or \
+        any(re.match(r"border-(primary|brand|\[var\(--brand)", t) for t in base)
     brand_text = any(re.search(r"text-(primary|\[var\(--brand\)\]|\[#c65a1e\]|brand|destructive)", t, re.I) for t in texts)
     pill = "rounded-full" in base
     has_px = any(re.match(r"px-|p-", t) for t in base)
@@ -400,8 +432,20 @@ def hardcoded_colors(repo, src, palette):
             for v, n in cnt.most_common()]
 
 
+WEIGHT_WORDS = {"thin": 100, "extralight": 200, "light": 300, "normal": 400, "regular": 400, "medium": 500,
+                "semibold": 600, "bold": 700, "extrabold": 800, "black": 900}
+
+
+def weight_of(v):
+    v = (v or "400").strip().lower()
+    if v.isdigit():
+        return int(v)
+    return WEIGHT_WORDS.get(v, 400)   # var(--w)、bolder 之类按 400 记，不让一个写法让整次抽取崩掉
+
+
 def text_roles(css_path, tw_fonts_list):
-    t = AT.read(css_path)
+    t = blank_comments(AT.read(css_path))
+    raw = AT.read(css_path)
     roles = []
     for m in re.finditer(r"\.([\w-]+)\s*\{([^{}]*)\}", t):
         body = m.group(2)
@@ -413,12 +457,13 @@ def text_roles(css_path, tw_fonts_list):
         fam = g("font-family") or ""
         fm = re.search(r"fontFamily\.([\w-]+)", fam)
         note = ""
-        cm = re.search(r"/\*(.*?)\*/", body, re.S)
+        cm = re.search(r"/\*(.*?)\*/", raw[m.start(2):m.end(2)], re.S)   # 注释从原文取，解析用去注释的文本
         if cm:
             note = " ".join(cm.group(1).split())[:120]
         roles.append({"id": m.group(1), "family": fm.group(1) if fm else fam,
                       "size": AT.num(re.sub(r"px$", "", g("font-size") or "0")),
-                      "lh": AT.num(g("line-height") or "0"), "weight": int(g("font-weight") or 400),
+                      "lh": AT.num(g("line-height") or "0") if re.fullmatch(r"[\d.]+", g("line-height") or "") else 0,
+                      "weight": weight_of(g("font-weight")),
                       "color": (re.search(r"var\((--[\w-]+)\)", g("color") or "") or [None, None])[1],
                       "line": t.count("\n", 0, m.start()) + 1, "note": note})
     return roles

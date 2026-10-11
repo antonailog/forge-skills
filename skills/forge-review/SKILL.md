@@ -143,6 +143,11 @@ git diff origin/<基础分支>
 - 是否有 `dangerouslySetInnerHTML` 或 `v-html` 使用了未清洗的数据？
 - 长文本/图片/空状态是否有兜底处理？
 
+#### 10. 设计值越界（项目有零件库时）
+**条件**：仓库里存在 `docs/assets/visuals/system/system.tokens.json`。没有就跳过本项。
+**运行**：`python3 ~/.claude/skills/forge-design-lab/scripts/check_system.py <repo> --base <基础分支>`（只查本分支新增行，历史遗留不追究）。
+**处理**：报告里给出「改用 var(--x)」的（写死的值与模板颜色同值）按 AUTO-FIX 直接替换；其余越界按 ASK——要么改用模板值，要么由用户确认登记为定制（forge-design-lab 零件库「定制」），再在行尾写 `design: <定制 id>`。不准为了过检查随手加豁免注释。
+
 ---
 
 ## 第4步：修复优先原则

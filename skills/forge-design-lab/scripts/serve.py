@@ -20,11 +20,17 @@
   这一存就会把新增节点抹掉——而且直写成功了，你只会看到「已保存」。
   所以服务端按 id 合并：值/结局/反馈取页面的，结构取磁盘的，并把「你没见过的节点」回给页面。
 
-安全边界: 只绑 127.0.0.1；只允许写 spec 里 files.{json,js,css} 三个路径，且必须落在仓库根内。
+安全边界:
+  · 只绑 127.0.0.1；Host 头必须是 127.0.0.1 / localhost（挡 DNS rebinding）。
+  · 静态读取按 realpath 判定必须落在仓库根内，不出任何以 . 开头的路径（.env、.git、.forge）。
+  · POST 只收 Content-Type: application/json，Origin 必须缺省或是本服务自己（挡任意网页跨站写仓库）。
+  · 页面包保存只写 spec 里 files.{json,js,css}；零件库保存只写固定路径的 system.tokens.json 与 template.css。
+  · 先校验再落盘；落盘之后的附加步骤出错只记 warnings，不把请求报成失败。
 """
 import argparse
 import datetime
 import hashlib
+import html
 import json
 import os
 import signal
@@ -127,64 +133,104 @@ def write_receipt(repo, report):
             report.setdefault("warnings", []).append(f"回执写不进去（文件已保存）：{exc}")
 
 
+SYSTEM_JSON = os.path.join("docs", "assets", "visuals", "system", "system.tokens.json")
+SYSTEM_CSS = os.path.join("docs", "assets", "visuals", "system", "template.css")
+
+
+def system_rev(repo):
+    """零件库 json 的内容指纹。页面加载时拿到它，保存时带回来；不一致说明页面打开期间磁盘被改过。"""
+    try:
+        with open(os.path.join(repo, SYSTEM_JSON), "rb") as fh:
+            return hashlib.sha1(fh.read()).hexdigest()[:12]
+    except OSError:
+        return None
+
+
+def _validate_system(inc):
+    errs = []
+    t = inc.get("template")
+    if t is not None and not (isinstance(t, dict) and isinstance(t.get("colors"), list) and t["colors"]):
+        errs.append("template 必须是带 colors 的对象")
+    for k, typ in (("custom", list), ("feedback", list), ("edits", dict), ("decisions", dict)):
+        v = inc.get(k)
+        if v is not None and not isinstance(v, typ):
+            errs.append(f"{k} 类型不对")
+    for k in ("custom", "feedback"):
+        if isinstance(inc.get(k), list) and not all(isinstance(x, dict) for x in inc[k]):
+            errs.append(f"{k} 的每一项必须是对象")
+    if isinstance(inc.get("decisions"), dict) and not all(isinstance(v, dict) for v in inc["decisions"].values()):
+        errs.append("decisions 的值必须是对象")
+    if inc.get("template_css") is not None and not isinstance(inc.get("template_css"), str):
+        errs.append("template_css 必须是字符串")
+    return errs
+
+
+class StaleSave(ValueError):
+    pass
+
+
 def merge_system(repo, incoming):
-    """零件库（kind=system）：抽取出来的数据以磁盘为准，只收用户的三样产出——edits、decisions、feedback。"""
-    rel = (incoming.get("files") or {}).get("json") or os.path.join("docs", "assets", "visuals", "system", "system.tokens.json")
-    spath = os.path.join(repo, rel)
-    if not os.path.abspath(spath).startswith(os.path.abspath(repo) + os.sep) or not os.path.exists(spath):
-        raise ValueError(f"磁盘上没有 {rel}")
+    """零件库（kind=system）。路径固定，不信请求里的 files。
+    抽取字段以磁盘为准；用户产出（template、custom、feedback，以及旧版的 edits、decisions）只在请求里带了才替换，
+    没带的保留磁盘值。页面带 rev 来，磁盘在页面打开期间被改过就拒绝（409），不静默覆盖。"""
+    spath = os.path.join(repo, SYSTEM_JSON)
+    if not os.path.exists(spath):
+        raise ValueError(f"磁盘上没有 {SYSTEM_JSON}")
+    errs = _validate_system(incoming)
+    if errs:
+        raise ValueError("；".join(errs))
+    cur = system_rev(repo)
+    if incoming.get("rev") and incoming["rev"] != cur:
+        raise StaleSave("页面打开期间零件库文件被改过（可能是 Agent 刚更新了模板或抽取）。刷新页面后再改；你这次的改动已另存为下载文件。")
     with open(spath, encoding="utf-8") as fh:
         disk = json.load(fh)
-    old_e, old_d = disk.get("edits") or {}, disk.get("decisions") or {}
-    new_e, new_d = incoming.get("edits") or {}, incoming.get("decisions") or {}
-    edit_changes = {k: {"from": old_e.get(k), "to": new_e.get(k)} for k in set(old_e) | set(new_e) if old_e.get(k) != new_e.get(k)}
-    dec_changes = {k: {"from": old_d.get(k), "to": new_d.get(k)} for k in set(old_d) | set(new_d) if old_d.get(k) != new_d.get(k)}
-    old_fb = disk.get("feedback") or []
-    in_fb = incoming.get("feedback") or []
-    seen = {(f.get("at"), f.get("t")) for f in old_fb}
-    new_fb = [f for f in in_fb if (f.get("at"), f.get("t")) not in seen]
-    disk["edits"], disk["decisions"], disk["feedback"] = new_e, new_d, in_fb
-    tpl_changes, cust_changes = [], []
-    if isinstance(incoming.get("template"), dict) and incoming["template"].get("colors"):
-        old_t = disk.get("template") or {}
-        new_t = incoming["template"]
+    report = {"page": "system", "kind": "system", "files": [SYSTEM_JSON], "template_changes": [], "custom_changes": [],
+              "new_feedback": [], "removed_feedback": 0, "warnings": []}
+    if "feedback" in incoming:
+        old_fb = disk.get("feedback") or []
+        seen = {(f.get("at"), f.get("t")) for f in old_fb}
+        report["new_feedback"] = [f for f in incoming["feedback"] if (f.get("at"), f.get("t")) not in seen]
+        report["removed_feedback"] = max(0, len(old_fb) + len(report["new_feedback"]) - len(incoming["feedback"]))
+        disk["feedback"] = incoming["feedback"]
+    for k in ("edits", "decisions"):
+        if k in incoming:
+            disk[k] = incoming[k]
+    tpl_ok = False
+    if incoming.get("template") is not None:
+        old_t, new_t = disk.get("template") or {}, incoming["template"]
         for k in sorted(set(old_t) | set(new_t)):
             a, b = old_t.get(k), new_t.get(k)
             if isinstance(a, list) and isinstance(b, list) and len(a) == len(b) and all(isinstance(x, dict) for x in a + b):
                 for x, y in zip(a, b):
                     if x != y:
-                        key = y.get("name") or y.get("id")
-                        tpl_changes.append({"part": k, "item": key,
-                                            "fields": {f: [x.get(f), y.get(f)] for f in set(x) | set(y) if x.get(f) != y.get(f)}})
+                        report["template_changes"].append({"part": k, "item": y.get("name") or y.get("id"),
+                                                           "fields": {f: [x.get(f), y.get(f)] for f in set(x) | set(y) if x.get(f) != y.get(f)}})
             elif a != b:
-                tpl_changes.append({"part": k, "from": a, "to": b})
-        disk["template"] = new_t
-    if isinstance(incoming.get("custom"), list):
+                report["template_changes"].append({"part": k, "from": a, "to": b})
+        disk["template"], tpl_ok = new_t, True
+    if incoming.get("custom") is not None:
         old_c = {c.get("id"): c for c in disk.get("custom") or []}
         for c in incoming["custom"]:
             o = old_c.get(c.get("id")) or {}
             if o.get("status") != c.get("status") or (o.get("note") or "") != (c.get("note") or ""):
-                cust_changes.append({"id": c.get("id"), "name": c.get("name"), "status": [o.get("status"), c.get("status")], "note": c.get("note") or ""})
+                report["custom_changes"].append({"id": c.get("id"), "name": c.get("name"), "status": [o.get("status"), c.get("status")], "note": c.get("note") or ""})
         disk["custom"] = incoming["custom"]
-    css = incoming.get("template_css")
-    css_rel = (disk.get("files") or {}).get("template_css")
-    if css and css_rel:
-        cp = os.path.join(repo, css_rel)
-        if os.path.abspath(cp).startswith(os.path.abspath(repo) + os.sep):
-            with open(cp, "w", encoding="utf-8") as fh:
-                fh.write(css)
     disk["exported"] = incoming.get("exported") or datetime.datetime.now().isoformat(timespec="seconds")
     with open(spath, "w", encoding="utf-8") as fh:
         json.dump(disk, fh, ensure_ascii=False, indent=1)
-    counts = {}
-    for v in new_d.values():
-        counts[v.get("r") or "（只有备注）"] = counts.get(v.get("r") or "（只有备注）", 0) + 1
-    report = {"at": disk["exported"], "repo": repo, "page": "system", "kind": "system", "files": [rel],
-              "template_changes": tpl_changes, "custom_changes": cust_changes,
-              "edit_changes": edit_changes, "decision_changes": dec_changes, "decisions": counts,
-              "pending_edits": len(new_e), "new_feedback": new_fb,
-              "removed_feedback": len(old_fb) + len(new_fb) - len(in_fb)}
-    write_receipt(repo, report)
+    # ↑ 提交点。之后任何失败只记 warnings，不能把已落盘的保存报成失败（踩坑 #20）
+    try:
+        if tpl_ok and incoming.get("template_css"):
+            with open(os.path.join(repo, SYSTEM_CSS), "w", encoding="utf-8") as fh:
+                fh.write(incoming["template_css"])
+            report["files"].append(SYSTEM_CSS)
+    except OSError as exc:
+        report["warnings"].append(f"template.css 没写进去（json 已保存，跑 build_template.js 补）：{exc}")
+    report.update({"at": disk["exported"], "repo": repo, "rev": system_rev(repo)})
+    try:
+        write_receipt(repo, report)
+    except Exception as exc:  # noqa: BLE001
+        report["warnings"].append(f"回执没写进去：{exc}")
     return report
 
 
@@ -196,7 +242,7 @@ def merge_and_write(repo, incoming):
     if not rel:
         raise ValueError("spec 里没有 files.json")
     spath = os.path.join(repo, rel)
-    if not os.path.abspath(spath).startswith(os.path.abspath(repo) + os.sep):
+    if not os.path.realpath(spath).startswith(os.path.realpath(repo) + os.sep):
         raise ValueError("越界路径")
     if not os.path.exists(spath):
         raise ValueError(f"磁盘上没有 {rel}")
@@ -243,7 +289,7 @@ def merge_and_write(repo, incoming):
     for k, text in (("json", json.dumps(disk, ensure_ascii=False, indent=1)),
                     ("js", BT.build_js(disk)), ("css", BT.build_css(disk))):
         p = os.path.join(repo, disk["files"][k])
-        if not os.path.abspath(p).startswith(os.path.abspath(repo) + os.sep):
+        if not os.path.realpath(p).startswith(os.path.realpath(repo) + os.sep):
             raise ValueError("越界路径：" + disk["files"][k])
         os.makedirs(os.path.dirname(p), exist_ok=True)
         with open(p, "w", encoding="utf-8") as fh:
@@ -280,9 +326,11 @@ def make_handler(repo):
             if "/api/lab/save" in (a[0] if a else ""):
                 sys.stderr.write("[save] %s\n" % (a[0],))
 
-        def _send(self, code, body: bytes, ctype="application/json; charset=utf-8"):
+        def _send(self, code, body: bytes, ctype="application/json; charset=utf-8", extra=None):
             self.send_response(code)
             self.send_header("Content-Type", ctype)
+            for k, v in (extra or {}).items():
+                self.send_header(k, v)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
@@ -291,7 +339,13 @@ def make_handler(repo):
         def _json(self, code, obj):
             self._send(code, json.dumps(obj, ensure_ascii=False).encode("utf-8"))
 
+        def _host_ok(self):
+            host = (self.headers.get("Host") or "").rsplit(":", 1)[0].strip("[]")
+            return host in ("127.0.0.1", "localhost")
+
         def do_GET(self):
+            if not self._host_ok():
+                return self._send(403, b"forbidden host", "text/plain; charset=utf-8")
             path = unquote(urlparse(self.path).path)
             if path == "/api/lab/status":
                 packs = find_packs(repo)
@@ -300,19 +354,38 @@ def make_handler(repo):
                                         "revs": {p["page"]: p["rev"] for p in packs}})
             if path == "/api/lab/packs":
                 return self._json(200, {"repo": repo, "packs": find_packs(repo)})
+            if path == "/api/lab/system-rev":
+                return self._json(200, {"rev": system_rev(repo)})
             if path in ("/", "/index.html"):
                 return self._send(200, gallery(repo).encode("utf-8"), MIME[".html"])
-            p = os.path.normpath(os.path.join(repo, path.lstrip("/")))
-            if not p.startswith(repo) or not os.path.isfile(p):
+            parts = [x for x in path.split("/") if x]
+            if any(x.startswith(".") for x in parts):          # .env / .git / .forge / ..
+                return self._send(404, b"not found", "text/plain; charset=utf-8")
+            root = os.path.realpath(repo)
+            p = os.path.realpath(os.path.join(root, *parts)) if parts else root
+            if not p.startswith(root + os.sep) or not os.path.isfile(p):
                 return self._send(404, b"not found", "text/plain; charset=utf-8")
             ctype = MIME.get(os.path.splitext(p)[1], "application/octet-stream")
             with open(p, "rb") as fh:
-                return self._send(200, fh.read(), ctype)
+                data = fh.read()
+            extra = {}
+            if p == os.path.realpath(os.path.join(root, SYSTEM_JSON)):
+                # 版本指纹与这次读到的字节同源：页面拿数据和拿指纹是同一次请求，中间不会被插入改动
+                extra["X-Lab-Rev"] = hashlib.sha1(data).hexdigest()[:12]
+            return self._send(200, data, ctype, extra)
 
         def do_POST(self):
             path = unquote(urlparse(self.path).path)
             if path != "/api/lab/save":
                 return self._json(404, {"ok": False, "error": "unknown endpoint"})
+            if not self._host_ok():
+                return self._json(403, {"ok": False, "error": "forbidden host"})
+            origin = self.headers.get("Origin")
+            port = self.server.server_address[1]
+            if origin and origin not in (f"http://127.0.0.1:{port}", f"http://localhost:{port}"):
+                return self._json(403, {"ok": False, "error": "跨站请求被拒"})
+            if (self.headers.get("Content-Type") or "").split(";")[0].strip().lower() != "application/json":
+                return self._json(415, {"ok": False, "error": "只收 application/json"})
             n = int(self.headers.get("Content-Length") or 0)
             if n <= 0 or n > 32 * 1024 * 1024:
                 return self._json(400, {"ok": False, "error": "bad body size"})
@@ -320,6 +393,8 @@ def make_handler(repo):
                 incoming = json.loads(self.rfile.read(n).decode("utf-8"))
                 report = merge_and_write(repo, incoming)
                 return self._json(200, {"ok": True, **report})
+            except StaleSave as e:
+                return self._json(409, {"ok": False, "stale": True, "error": str(e)})
             except Exception as e:  # noqa: BLE001 — 回给页面显示
                 return self._json(400, {"ok": False, "error": str(e)})
     return H
@@ -328,8 +403,8 @@ def make_handler(repo):
 def gallery(repo):
     packs = find_packs(repo)
     rows = "".join(
-        f'<li><a href="{p["html"][0] if p["html"] else "#"}"><b>{p["title"]}</b>'
-        f'<span>{p["page"]} · {p.get("version") or ""} · {p["nodes"]} 节点 · {p["questions"]} 判断题'
+        f'<li><a href="{html.escape(p["html"][0]) if p["html"] else "#"}"><b>{html.escape(str(p["title"]))}</b>'
+        f'<span>{html.escape(p["page"])} · {html.escape(str(p.get("version") or ""))} · {p["nodes"]} 节点 · {p["questions"]} 判断题'
         f' · {p["feedback"]} 反馈</span></a></li>' for p in packs)
     return f"""<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <title>设计工作台 · {os.path.basename(repo)}</title><style>
