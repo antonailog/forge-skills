@@ -2,7 +2,7 @@
 name: forge-status
 description: |
   并行会话巡检：扫 .forge/active.md，按硬信号（worktree 是否存在、分支是否已合并）判僵尸，一次确认批量清理并联动 backlog；不用时间戳启发式。
-  触发方式：用户说"forge 状态"、"看下谁在跑"、"清理 worktree"、"forge-status"；forge-bugfix 启动时只读巡检。
+  触发方式：用户说"forge 状态"、"看下谁在跑"、"清理 worktree"、"删掉没用的 worktree"、"forge-status"；forge-bugfix 启动时只读巡检。删除 worktree 目录只在用户明确要求时按安全流程（列清单确认 → 停服务 → -z 打包并核对文件数 → 删除）执行。
 allowed-tools:
   - Bash
   - Read
@@ -185,13 +185,35 @@ C) 先不清 — 只报告，暂不改文件
 - 如果判定为"已合并" → backlog 状态改 `resolved`，剪切到"🗄️ 已处理"对应月份，清空"领取会话"字段
 - 如果判定为"已删除"（worktree 不存在且分支未合并）→ backlog 状态改回 `pending`，清空"领取会话"字段（视为本次放弃，下次可重新领取）
 
+## 删除 worktree 目录（仅用户明确要求时）
+
+用户说"删掉没用的 worktree / 清理 worktree 目录"时才走这一节；只说"清理 worktree"按上面的记录清理处理。删除不可逆，每一步不通过就停。
+
+1. **列清单给用户确认**：`git worktree list --porcelain` 逐个判定——分支是否已并入 `origin/main`（`git cherry origin/main <分支>` 有 `+` 即有独有提交）、未提交文件数、被忽略但有价值的文件（评测数据、`.forge/` 派活记录、QA 截图等）、是否有 dev server（`lsof` 查 cwd）。分三类呈现：可直接删 / 备份后删目录、保留分支 / 不动。用户确认后才执行。
+2. **先停服务**：有 `.devserver.json` 的，在该目录跑项目自己的 `npm run dev:stop`；本地后端可能连着生产库。
+3. **备份并核对**（中文路径必须用 `-z`：不加时 git 会把路径转义，tar 找不到文件却只报错不退出，打出空包）：
+
+   ```bash
+   git -C "$WT" -c core.quotePath=false ls-files -z --others --exclude-standard > /tmp/wt.list     # 未跟踪
+   git -C "$WT" -c core.quotePath=false ls-files -z --others -i --exclude-standard >> /tmp/wt.list # 被忽略（按需过滤 node_modules 等）
+   want=$(tr -cd '\0' < /tmp/wt.list | wc -c | tr -d ' ')
+   (cd "$WT" && tar --null -T /tmp/wt.list -czf "$BACKUP/$NAME.tgz") || exit 1
+   got=$(tar tzf "$BACKUP/$NAME.tgz" | grep -vc '/$')
+   [ "$got" -eq "$want" ] || { echo "备份文件数 $got ≠ $want，停止"; exit 1; }
+   git -C "$WT" diff HEAD --binary > "$BACKUP/$NAME.diff"   # 已跟踪文件的改动
+   ```
+
+   有独有提交的分支另存 `git format-patch origin/main..<分支> -o "$BACKUP/$NAME-commits"`。
+4. **删除**：核对通过才 `git worktree remove --force`；已合并的分支 `git branch -d`，有独有提交的**保留分支**；最后 `git worktree prune`。
+5. **写备份说明**：在备份目录的 README 里逐行记分支、原路径、备份了什么、怎么恢复。
+
 ## 铁律
 
 1. **不得基于时间戳判定僵尸**。只认 worktree 存在性 + 分支合并状态。
 2. **清理前必须让用户确认**（除非处于只读巡检模式）。
 3. **批量清理只在用户选 A) 时执行**，模糊回复默认走 B) 逐条确认。
 4. **backlog.md 和 active.md 必须联动**，不能只清 active 留 backlog 挂着"领取会话"。
-5. **不主动删 worktree 目录或分支**。这是 forge-bugfix P7 的职责，/forge-status 只改文档记录。
+5. **不主动删 worktree 目录或分支**。默认只改文档记录；用户明确要求删目录时，只能按「删除 worktree 目录」一节执行，备份文件数核对不通过不得删除（2026-10-12 曾因中文路径转义打出空包仍强删，丢了 4 个未提交文件）。
 6. **Dev server 巡检不得参与僵尸判定**。进程存在不代表任务活跃，进程不存在也不代表任务废弃。
 
 ## 典型使用场景
