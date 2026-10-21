@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai/code)
 [![Skills](https://img.shields.io/badge/Skills-14%2B1-blue)]()
-[![Release](https://img.shields.io/github/v/release/yike-gunshi/forge-skills?label=Release&color=green)](https://github.com/yike-gunshi/forge-skills/releases)
+[![Release](https://img.shields.io/github/v/release/antonailog/forge-skills?label=Release&color=green)](https://github.com/antonailog/forge-skills/releases)
 
 [这是什么](#这是什么) · [快速开始](#快速开始) · [Skill 清单](#skill-清单) · [关键机制](#关键机制) · [安装](#安装) · [设计哲学](#设计哲学) · [文档导航](#文档导航)
 
@@ -287,7 +287,7 @@ forge-fupan 产出账本条目（learnings.jsonl，含置信度）
 
 ```bash
 # 克隆到本地
-git clone https://github.com/yike-gunshi/forge-skills.git
+git clone https://github.com/antonailog/forge-skills.git
 
 # 运行安装脚本（默认同时安装到 Claude Code 和 Codex 可发现目录）
 cd forge-skills
@@ -411,6 +411,6 @@ Forge 融合了以下框架的精华：
 
 <div align="center">
 
-MIT License &copy; [yike-gunshi](https://github.com/yike-gunshi)
+MIT License &copy; [antonailog](https://github.com/antonailog)
 
 </div>
