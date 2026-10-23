@@ -10,7 +10,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-Skill-blueviolet)](https://claude.ai/code)
 [![Skills](https://img.shields.io/badge/Skills-14%2B1-blue)]()
-[![Release](https://img.shields.io/github/v/release/yike-gunshi/forge-skills?label=Release&color=green)](https://github.com/yike-gunshi/forge-skills/releases)
+[![Release](https://img.shields.io/github/v/release/antonailog/forge-skills?label=Release&color=green)](https://github.com/antonailog/forge-skills/releases)
 
 [这是什么](#这是什么) · [快速开始](#快速开始) · [Skill 清单](#skill-清单) · [关键机制](#关键机制) · [安装](#安装) · [设计哲学](#设计哲学) · [文档导航](#文档导航)
 
@@ -40,6 +40,10 @@ Forge 是一套覆盖**从头脑风暴到发布复盘完整开发链路**的 Cla
 ---
 
 ## 系统全景
+
+<p align="center"><img src="docs/diagrams/forge-ring.jpg" alt="Forge 线路图：7 段 13 站，另有贯穿全程的 3 站" width="720"></p>
+
+<p align="center"><img src="docs/diagrams/forge-architecture.jpg" alt="Forge 架构：分层与文档交接" width="720"></p>
 
 ```
 用户有想法
@@ -189,6 +193,21 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | forge-feature-doc | `/forge-feature-doc` | 需求设计文档：每个功能一份给人看的设计文档（待拍板置顶、先图后字、只写当前设计、末尾关键改动），配出图脚本和上线前检查；forge 各阶段收尾时同步，review / ship 当门禁 |
 | forge-fupan | `/forge-fupan` | 复盘 v3：Workbench 门禁（独立会话页确认知识点和深度）→ 调研产出复盘文档；账本（learnings.jsonl）作副产出，开工回放 + 复发检测 |
 
+### 每个 Skill 怎么运转
+
+每个 Skill 一张结构图：阶段、门禁、回退和产出。点图进 Skill 目录，看说明和完整的 SKILL.md。
+
+<table>
+<tr><td width="50%" valign="top"><a href="skills/forge-brainstorm/"><img src="docs/diagrams/forge-brainstorm.jpg" alt="forge-brainstorm 结构图"></a><br><a href="skills/forge-brainstorm/"><b>forge-brainstorm</b></a> · 头脑风暴：先挑战前提，再给 2—3 个方案</td><td width="50%" valign="top"><a href="skills/forge-prd/"><img src="docs/diagrams/forge-prd.jpg" alt="forge-prd 结构图"></a><br><a href="skills/forge-prd/"><b>forge-prd</b></a> · 诊断问题、改 PRD、出 Feature Spec</td></tr>
+<tr><td width="50%" valign="top"><a href="skills/forge-feature-doc/"><img src="docs/diagrams/forge-feature-doc.jpg" alt="forge-feature-doc 结构图"></a><br><a href="skills/forge-feature-doc/"><b>forge-feature-doc</b></a> · 每个功能一份给人看的设计文档</td><td width="50%" valign="top"><a href="skills/forge-design/"><img src="docs/diagrams/forge-design.jpg" alt="forge-design 结构图"></a><br><a href="skills/forge-design/"><b>forge-design</b></a> · 管 DESIGN.md 和设计规则库</td></tr>
+<tr><td width="50%" valign="top"><a href="skills/forge-design-lab/"><img src="docs/diagrams/forge-design-lab.jpg" alt="forge-design-lab 结构图"></a><br><a href="skills/forge-design-lab/"><b>forge-design-lab</b></a> · 在真 token 的骨架上定布局和密度</td><td width="50%" valign="top"><a href="skills/forge-design-impl/"><img src="docs/diagrams/forge-design-impl.jpg" alt="forge-design-impl 结构图"></a><br><a href="skills/forge-design-impl/"><b>forge-design-impl</b></a> · 把设计文档落成 CSS</td></tr>
+<tr><td width="50%" valign="top"><a href="skills/forge-dev/"><img src="docs/diagrams/forge-dev.jpg" alt="forge-dev 结构图"></a><br><a href="skills/forge-dev/"><b>forge-dev</b></a> · 开发调度：子 Skill 各开上下文</td><td width="50%" valign="top"><a href="skills/forge-eng/"><img src="docs/diagrams/forge-eng.jpg" alt="forge-eng 结构图"></a><br><a href="skills/forge-eng/"><b>forge-eng</b></a> · 工程实现：worktree 隔离、分级 TDD</td></tr>
+<tr><td width="50%" valign="top"><a href="skills/forge-qa/"><img src="docs/diagrams/forge-qa.jpg" alt="forge-qa 结构图"></a><br><a href="skills/forge-qa/"><b>forge-qa</b></a> · 只测不修的验收</td><td width="50%" valign="top"><a href="skills/forge-review/"><img src="docs/diagrams/forge-review.jpg" alt="forge-review 结构图"></a><br><a href="skills/forge-review/"><b>forge-review</b></a> · 上线前的结构性审查</td></tr>
+<tr><td width="50%" valign="top"><a href="skills/forge-ship/"><img src="docs/diagrams/forge-ship.jpg" alt="forge-ship 结构图"></a><br><a href="skills/forge-ship/"><b>forge-ship</b></a> · 建 PR、合并、同步主分支</td><td width="50%" valign="top"><a href="skills/forge-doc-release/"><img src="docs/diagrams/forge-doc-release.jpg" alt="forge-doc-release 结构图"></a><br><a href="skills/forge-doc-release/"><b>forge-doc-release</b></a> · 发布后同步 README、CHANGELOG</td></tr>
+<tr><td width="50%" valign="top"><a href="skills/forge-fupan/"><img src="docs/diagrams/forge-fupan.jpg" alt="forge-fupan 结构图"></a><br><a href="skills/forge-fupan/"><b>forge-fupan</b></a> · 复盘工作台，产出复盘文档和知识图</td><td width="50%" valign="top"><a href="skills/forge-bugfix/"><img src="docs/diagrams/forge-bugfix.jpg" alt="forge-bugfix 结构图"></a><br><a href="skills/forge-bugfix/"><b>forge-bugfix</b></a> · 一次修一个：先根因，再写代码</td></tr>
+<tr><td width="50%" valign="top"><a href="skills/forge-status/"><img src="docs/diagrams/forge-status.jpg" alt="forge-status 结构图"></a><br><a href="skills/forge-status/"><b>forge-status</b></a> · 并行会话巡检与清理</td><td width="50%" valign="top"><a href="skills/forge-doc-policy/"><img src="docs/diagrams/forge-doc-policy.jpg" alt="forge-doc-policy 结构图"></a><br><a href="skills/forge-doc-policy/"><b>forge-doc-policy</b></a> · 文档放哪、怎么标生命周期</td></tr>
+</table>
+
 ### 总入口
 
 ```
@@ -268,7 +287,7 @@ forge-fupan 产出账本条目（learnings.jsonl，含置信度）
 
 ```bash
 # 克隆到本地
-git clone https://github.com/yike-gunshi/forge-skills.git
+git clone https://github.com/antonailog/forge-skills.git
 
 # 运行安装脚本（默认同时安装到 Claude Code 和 Codex 可发现目录）
 cd forge-skills
@@ -392,6 +411,6 @@ Forge 融合了以下框架的精华：
 
 <div align="center">
 
-MIT License &copy; [yike-gunshi](https://github.com/yike-gunshi)
+MIT License &copy; [antonailog](https://github.com/antonailog)
 
 </div>

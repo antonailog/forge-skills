@@ -15,6 +15,8 @@ import tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 LAB = os.path.abspath(os.path.join(HERE, "..", "..", "..", "skills", "forge-design-lab"))
 S = os.path.join(LAB, "scripts")
+sys.path.insert(0, S)
+import _design_studio as DS  # noqa: E402  零件库生成器等前端母本在 design-studio（web/lab/）
 RESULTS = []
 
 
@@ -160,7 +162,7 @@ def main():
         code, _ = run(["node", os.path.join(S, "build_template.js"), root, "--check"])
         check("--check 一致时 0", code == 0)
         gen = lambda T: subprocess.run(["node", "-e", "const {build}=require(process.argv[1]);process.stdout.write(build(JSON.parse(process.argv[2])))",
-                                        os.path.join(LAB, "assets", "system", "template-css.js"), json.dumps(T)], capture_output=True, text=True).stdout
+                                        os.path.join(DS.asset("system"), "template-css.js"), json.dumps(T)], capture_output=True, text=True).stdout
         g2 = gen({"colors": [{"name": "--x", "light": "#fff;}body{display:none", "dark": "#000"}], "type": [{"id": "a", "font": "sans", "size": 14, "lh": 1.5, "weight": 400}],
                   "radius": [{"id": "sm", "v": 4}], "buttons": [{"id": "ink", "h": 32, "px": 8, "size": 13, "weight": 500, "radius": "sm", "bg": "--foreground", "fg": "--card", "border": "", "hover": "darken"}]})
         check("模板值里的 ; } 被清掉，写不坏整份样式（坏样本）", "}body{" not in g2 and "display:none" not in g2, g2[:200])
