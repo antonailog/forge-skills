@@ -1,0 +1,9 @@
+$ git worktree list
+
+项目根目录
+  [main]
+
+.worktrees/pomodoro-timer
+  [eng/pomodoro-timer-2026-10-23]
+
+（一个会话正在这里做验收）
