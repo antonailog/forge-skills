@@ -1,0 +1,11 @@
+$ /forge
+
+当前项目状态：
+  forge-demo-pomodoro | main | 有文档入口与索引、PRD 与变更日志、
+  Feature 登记表（pomodoro-timer：PRD 已完成，设计/工程/QA 待处理）、
+  需求设计文档；没有 DESIGN.md / ENGINEERING.md / QA.md；工作区干净，还没有代码
+
+产品当前事实和 Feature Spec 就绪，但还没有设计文档。建议：
+A) /forge-dev — 启动开发调度（会自动触发设计）（推荐）
+B) /forge-design — 单独做设计规划
+C) 其他 — 告诉我你想做什么
