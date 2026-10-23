@@ -22,7 +22,7 @@ Claude 和用户交替推进（图中上下两条线）：区域、模块、状�
 
 ## 其他
 
-- 前提：Python 3 和 Node；验收脚本和实现比对要 Playwright，没有时只做静态校验，请用户自己打开页面看控制台
+- 前提：Python 3 和 Node；运行时（工作台服务、token 工具、引擎母本）在独立工具 [design-studio](https://github.com/antonailog/design-studio)，没装时脚本会提示 `git clone https://github.com/antonailog/design-studio.git ~/.design-studio`；验收脚本和实现比对要 Playwright，没有时只做静态校验，请用户自己打开页面看控制台
 - 注意：先起 serve.py（只绑 127.0.0.1），保存才能直写仓库；用 file:// 打开时退回选目录或下载，容易存错仓库，主仓库和 worktree 都有 docs/
 - 注意：站点级 token（品牌色、字体族、字号阶梯）在工作台里只读，只能标「提议改动」，另走全站审查
 

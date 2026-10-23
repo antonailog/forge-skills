@@ -42,6 +42,8 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 
 脚本都在本 skill 的 `scripts/`，用 `python3` / `node` 直接跑；`{lab}` 指本 skill 目录（`~/.claude/skills/forge-design-lab`）。
 
+**运行时在 design-studio**（独立工具，一个「在页面上做调整」的本机服务；工作台是它的骨架模式）：`serve.py`、`build_tokens.py`、`adapt_tokens.py` 是转调它的薄壳，命令和行为不变；引擎、零件库页面、页面包模板的母本在它的 `web/lab/`，`scaffold_pack.py`、`extract_system.py`、`build_template.js` 从那里同步。找的顺序：环境变量 `DESIGN_STUDIO_HOME` → `~/.design-studio` → `~/design-studio`。脚本报「找不到 design-studio」时，按它打印的命令装上（`git clone … ~/.design-studio`），或者用 `DESIGN_STUDIO_HOME` 指到已有的目录。
+
 | 脚本 | 什么时候 | 用法 | 失败降级 |
 |---|---|---|---|
 | `serve.py` | 每个仓库一次，之后常驻 | `python3 {lab}/scripts/serve.py <repo> [--status\|--stop]` | 端口默认 4577，占用则递增；只绑 127.0.0.1 |
@@ -51,7 +53,7 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 | `scaffold_pack.py` | S2，线框确认后建骨架壳 | `python3 {lab}/scripts/scaffold_pack.py <repo> <tokens.json> [--adapt <adapt.json>] [--sample <json>]` | 同时把引擎母本同步到 `docs/assets/visuals/_workbench/` |
 | `verify_pack.mjs` | S3 交付前；S4 每次重建后 | `node {lab}/scripts/verify_pack.mjs <html> --repo <repo> [--shots <dir>] [--strict-literals] [--json <out>]` | 没有 Playwright 就只跑 `build_tokens.py --check`，让用户人工开页面报控制台 |
 | `extract_system.py` | S0，抽现状（对账用）；产品样式改过后刷新 | `python3 {lab}/scripts/extract_system.py <repo> --product-css` | worktree 没有 node_modules 就软链主仓库的 |
-| `build_template.js` | 改了 json 的 template 段之后 | `node {lab}/scripts/build_template.js <repo> [--check]` | 与页面同一个生成器（`assets/system/template-css.js`），不手改 template.css |
+| `build_template.js` | 改了 json 的 template 段之后 | `node {lab}/scripts/build_template.js <repo> [--check]` | 与页面同一个生成器（design-studio 的 `web/lab/system/template-css.js`），不手改 template.css |
 | `compare_impl.mjs` | 实现完成后（forge-qa 视觉维度调用）；用户问「实现和设计稿对不对得上」 | `node {lab}/scripts/compare_impl.mjs <骨架 html> [--app URL] [--json out] [--shots dir]` | 读 tokens.json 的 `implCheck`；没配就写「未配置」，不当通过 |
 | `check_system.py` | forge-review / forge-qa 收尾；用户问「有没有越界」 | `python3 {lab}/scripts/check_system.py <repo> [--base origin/main] [--all]` | 默认只查新增行；`--all` 看遗留规模，不作门禁 |
 | `render_design_table.py` | S5 | `python3 {lab}/scripts/render_design_table.py <repo> <tokens.json> --design docs/DESIGN.md --heading "## 模块 28"` | DESIGN.md 里找不到模块标题就只打印区块，提示先走 forge-design |
@@ -158,6 +160,7 @@ forge-design 第三步遇到页面/组件/布局决策时转到本 skill：输�
 | 情况 | 处理 |
 |---|---|
 | 项目没有 `:root` 变量，只有 tailwind theme | 适配脚本读 `theme.extend`；仍无则列候选让用户指认站点色与字体角色 |
+| 找不到 design-studio | 脚本会打印安装命令；照着装，或用 `DESIGN_STUDIO_HOME` 指到已有目录，再重跑。不要自己改回旧的 serve.py |
 | Playwright 不可用 | 只做 `build_tokens.py --check` 静态校验，请用户打开页面并报告控制台是否有红字 |
 | 浏览器不支持 File System Access | 起 `serve.py` 走服务模式；不得已才用下载兜底，从 `~/Downloads` 取最新一份 |
 | 用户把文件存到了另一个 checkout（主仓库 vs worktree） | 用 `merge_saved.py` 从那个路径合并回来，再清掉误写的目录；根治办法是改用服务模式，服务绑定哪个仓库页面上就显示哪个 |

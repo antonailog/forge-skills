@@ -209,6 +209,20 @@ status_for_dir() {
   done
 }
 
+# forge-design-lab 的运行时在独立工具 design-studio：检测一下，没有就提示怎么装（不自动下载、不算安装失败）
+check_design_studio() {
+  local d
+  for d in "${DESIGN_STUDIO_HOME:-}" "$HOME/.design-studio" "$HOME/design-studio" "$SCRIPT_DIR/../../工具/design-studio"; do
+    if [ -n "$d" ] && [ -f "$d/design_studio.py" ]; then
+      echo "design-studio: $d"
+      return 0
+    fi
+  done
+  echo "NOTE: forge-design-lab needs design-studio (its workbench server and token tools). Not found."
+  echo "      Install: git clone https://github.com/antonailog/design-studio.git ~/.design-studio"
+  echo "      Or point DESIGN_STUDIO_HOME to an existing checkout."
+}
+
 parse_args "$@"
 validate_sources
 
@@ -220,6 +234,7 @@ case "$ACTION" in
     echo ""
     echo "Installed $(( ${#SKILLS[@]} + 1 )) forge skills for target: $TARGET"
     echo "Restart Codex / Claude Code, or open a new session, to refresh skill discovery."
+    check_design_studio
     ;;
   uninstall)
     for dir in $(target_dirs); do
@@ -230,5 +245,6 @@ case "$ACTION" in
     for dir in $(target_dirs); do
       status_for_dir "$dir"
     done
+    check_design_studio
     ;;
 esac
