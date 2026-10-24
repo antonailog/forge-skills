@@ -51,6 +51,7 @@ function staticCheck(jsonRel) {
   const out = ((r.stdout || '') + (r.stderr || '')).trim();
   if (r.status === 0) pass('K4-static', 'build_tokens.py --check：js/css 与 json 同源', out.split('\n').slice(-1)[0]);
   else if (r.status === 2) fail('K4-static', 'js/css 与 json 不同源（用户保存后未重建，或有人手改了生成文件）', out);
+  else if (r.status === 69) fail('K4-static', '缺 design-studio，build_tokens 跑不了（装上再验）', out);
   else fail('K4-static', 'tokens.json 校验失败', out);
 }
 

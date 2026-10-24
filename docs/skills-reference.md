@@ -68,7 +68,7 @@ last_updated: 2026-07-04
 **怎么工作**：适配（读项目 :root 变量 / tailwind / 实际用量出阶梯）→ 线框确认（json 的 layout 自动画）→ 骨架（组件 CSS 只写 var()）→ 七层审查（结构/层级/排版/色彩/间距与形状/状态与动效/一致性，每层一个问题，判断题挂在元素上）→ 橙色「保存」直写仓库三文件 → Agent 读 json、校验重建、逐条回反馈、拿不准的出 A/B/C → 生成 DESIGN.md token 表交实现。
 **规矩**：用户保存的值不替他改；生成文件不手改；备选只取站点阶梯值；站点级 token 只读可提议；Image 2 退为气质判断。
 **产出**：`docs/assets/visuals/<page>/`（tokens.json / tokens.js / skeleton.html / meta）+ 前端 `<page>.tokens.css` + DESIGN.md 模块内 token 区块。
-**附属**：scripts/ adapt_tokens · build_tokens · scaffold_pack · verify_pack（Playwright）· render_design_table；assets/ 引擎母本 workbench.js/css + 页面包模板；references/ 字段全表、七层方法论、引擎接口、坑清单、范例。
+**附属**：scripts/ adapt_tokens · build_tokens · scaffold_pack · verify_pack（Playwright）· render_design_table；引擎母本 workbench.js/css、零件库页面和页面包模板在独立工具 design-studio 的 `web/lab/`（serve / build_tokens / adapt_tokens 是转调它的薄壳）；references/ 字段全表、七层方法论、引擎接口、坑清单、范例。
 
 ## 5. forge-design-impl — 设计实现
 

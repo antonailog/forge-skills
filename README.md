@@ -306,7 +306,9 @@ cd forge-skills
 ./install.sh --dry-run        # 只打印动作，不改文件
 ```
 
-安装方式是 **symlink 而非复制**：`skills/` 目录是唯一真源，`git pull` 后所有会话立即用上新版本，不会产生漂移的副本。skill 清单自动发现（`skills/` 下含 SKILL.md 的目录），新增 skill 无需改安装脚本。
+安装方式是 **symlink 而非复制**：`skills/` 目录是唯一真源，`git pull` 后所有会话立即用上新版本，不会产生漂移的副本。
+
+**forge-design-lab 另需 [design-studio](https://github.com/antonailog/design-studio)**（工作台服务和 token 工具在那里）：`git clone https://github.com/antonailog/design-studio.git ~/.design-studio`，`install.sh` 会检测并提示。它是独立仓库，要单独 `git pull` 更新。skill 清单自动发现（`skills/` 下含 SKILL.md 的目录），新增 skill 无需改安装脚本。
 
 ---
 
