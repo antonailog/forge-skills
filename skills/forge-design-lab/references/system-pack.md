@@ -17,7 +17,7 @@
 | `system.tokens.json` | 抽取脚本 + Agent 写模板初稿 + 用户保存 | 唯一数据源，进 git |
 | `template.css` | `build_template.js` 或页面保存 | 模板生成的样式：颜色变量、`--t-*`、`.t-<文字样式>`、`.t-btn-<按钮>`；勿手改 |
 | `product.css` | `extract_system.py --product-css` | 产品现有样式，供页面外壳与对账；勿手改 |
-| `system.html`，`_workbench/system.js` `system.css` `template-css.js` | 从 skill `assets/system/` 同步 | 页面与生成器 |
+| `system.html`，`_workbench/system.js` `system.css` `template-css.js` | 从 design-studio 的 `web/lab/system/` 同步 | 页面与生成器 |
 
 ## template 字段
 

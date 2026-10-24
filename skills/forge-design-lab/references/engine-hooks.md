@@ -1,6 +1,6 @@
 # 引擎接口：页面包 HTML 要写什么
 
-引擎是 `assets/workbench/workbench.js` + `workbench.css`，复制到项目 `docs/assets/visuals/_workbench/`（`scaffold_pack.py` 会做）。页面 HTML 只负责四件事：`<link>` 前端那份 `.tokens.css`、`<script>` 加载 `.tokens.js`、`#frame` 里的骨架片段与组件 CSS、`WB.init({hooks})`。
+引擎是 design-studio 里的 `web/lab/workbench/workbench.js` + `workbench.css`（母本，skill 不再自带；`scripts/_design_studio.py` 负责找到 design-studio），复制到项目 `docs/assets/visuals/_workbench/`（`scaffold_pack.py` 会做）。改引擎改母本，不改项目里的副本。页面 HTML 只负责四件事：`<link>` 前端那份 `.tokens.css`、`<script>` 加载 `.tokens.js`、`#frame` 里的骨架片段与组件 CSS、`WB.init({hooks})`。
 
 ## 目录
 

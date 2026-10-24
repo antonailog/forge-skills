@@ -36,7 +36,8 @@ sys.path.insert(0, HERE)
 import adapt_tokens as AT  # noqa: E402
 
 PACK_REL = os.path.join("docs", "assets", "visuals", "system")
-LAB_ASSETS = os.path.join(os.path.dirname(HERE), "assets", "system")
+import _design_studio as DS  # noqa: E402
+LAB_ASSETS = DS.asset("system")   # 零件库页面的母本在 design-studio 的 web/lab/system/
 
 # 家族：按变量名前缀/全名归组；顺序就是页面上的顺序
 FAMILIES = [

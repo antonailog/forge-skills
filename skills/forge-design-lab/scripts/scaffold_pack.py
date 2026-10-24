@@ -6,7 +6,7 @@
                            [--out <html 路径>] [--date YYYY-MM-DD] [--engine-src <dir>] [--template <file>] [--force]
 
 做什么:
-  1. 把引擎母本（默认本 skill assets/workbench/）同步到 <repo>/docs/assets/visuals/_workbench/（整文件覆盖，有差异会提示）
+  1. 把引擎母本（默认 design-studio 的 web/lab/workbench/）同步到 <repo>/docs/assets/visuals/_workbench/（整文件覆盖，有差异会提示）
   2. 按模板生成 docs/assets/visuals/<page>/<date>-skeleton-<version>.html：
      引擎与 tokens.css 的相对路径、站点变量复刻（来自 adapt.json 或 spec.foundation）、Google Fonts 链接、
      各层 .lvl 容器、状态显隐规则、样例数据占位、WB.init hooks 模板
@@ -23,6 +23,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.dirname(HERE)
+sys.path.insert(0, HERE)
+import _design_studio as DS  # noqa: E402  引擎和页面包模板的母本在 design-studio 的 web/lab/
 
 
 def rel(target, start_dir):
@@ -62,10 +64,12 @@ def main():
     ap.add_argument("--sample")
     ap.add_argument("--out")
     ap.add_argument("--date", default=datetime.date.today().isoformat())
-    ap.add_argument("--engine-src", default=os.path.join(SKILL, "assets", "workbench"))
-    ap.add_argument("--template", default=os.path.join(SKILL, "assets", "page-pack-template.html"))
+    ap.add_argument("--engine-src", help="引擎母本目录，默认 design-studio 的 web/lab/workbench")
+    ap.add_argument("--template", help="页面包模板，默认 design-studio 的 web/lab/page-pack-template.html")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args()
+    a.engine_src = a.engine_src or DS.asset("workbench")          # 解析完再找 design-studio：--help 和显式给了路径时不要求装它
+    a.template = a.template or DS.asset("page-pack-template.html")
     repo = os.path.abspath(a.repo)
     spath = a.spec if os.path.isabs(a.spec) else os.path.join(repo, a.spec)
     spec = json.load(open(spath, encoding="utf-8"))
@@ -91,7 +95,7 @@ def main():
     readme = os.path.join(eng_dst, "README.md")
     if not os.path.exists(readme):
         open(readme, "w", encoding="utf-8").write(
-            "# 设计工作台引擎（项目副本）\n\n母本在 forge-design-lab skill 的 `assets/workbench/`；由 `scaffold_pack.py` 同步，不要在这里改。\n"
+            "# 设计工作台引擎（项目副本）\n\n母本在 design-studio 的 `web/lab/workbench/`；由 forge-design-lab 的 `scaffold_pack.py` 同步，不要在这里改。\n"
             "页面包 = `docs/assets/visuals/<page>/`：`<page>.tokens.json`（决策树）→ `<page>.tokens.js`（本页加载）+ 前端 `<page>.tokens.css`（组件 import）；"
             "`<date>-skeleton-<ver>.html` 只含骨架、组件 CSS（只写 var()）、样例、hooks。\n")
 
@@ -158,7 +162,7 @@ def main():
         "page": spec["page"], "version": spec["version"], "created": a.date, "status": "scaffold",
         "single_source": {"spec": spec["files"]["json"], "js": spec["files"]["js"], "css": spec["files"]["css"],
                           "guarantee": "本页 <link> 的就是前端 import 的 css；组件 CSS 只写 var(" + prefix + "-*)；verify_pack.mjs 做同源与字面值检查"},
-        "engine": rel(eng_dst, repo) + "（母本：forge-design-lab/assets/workbench）",
+        "engine": rel(eng_dst, repo) + "（母本：design-studio/web/lab/workbench）",
         "sample_content": "占位" if sample == "{}" else "来自 " + a.sample,
         "next": ["S2 线框确认：打开页面切「线框」层", "S3 在 @lab:component 段写组件 CSS、在 .lvl 里写骨架、补七层节点", "node verify_pack.mjs 零错误后交用户"],
     }
