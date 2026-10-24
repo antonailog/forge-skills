@@ -212,9 +212,16 @@ status_for_dir() {
 # forge-design-lab 的运行时在独立工具 design-studio：检测一下，没有就提示怎么装（不自动下载、不算安装失败）
 check_design_studio() {
   local d
+  if [ -n "${DESIGN_STUDIO_HOME:-}" ] && [ ! -f "$DESIGN_STUDIO_HOME/studio/lab_mode.py" ]; then
+    echo "NOTE: DESIGN_STUDIO_HOME=$DESIGN_STUDIO_HOME is not a design-studio with lab mode (old version? run git pull there)."
+    return 0
+  fi
   for d in "${DESIGN_STUDIO_HOME:-}" "$HOME/.design-studio" "$HOME/design-studio" "$SCRIPT_DIR/../../工具/design-studio"; do
-    if [ -n "$d" ] && [ -f "$d/design_studio.py" ]; then
+    if [ -n "$d" ] && [ -f "$d/studio/lab_mode.py" ]; then
       echo "design-studio: $d"
+      return 0
+    elif [ -n "$d" ] && [ -f "$d/design_studio.py" ]; then
+      echo "NOTE: design-studio at $d is too old for forge-design-lab (no lab mode). Update: cd \"$d\" && git pull"
       return 0
     fi
   done

@@ -9,7 +9,7 @@
 ## [Unreleased]
 
 ### Changed
-- **forge-design-lab 的运行时搬进独立工具 design-studio**：工作台服务（`serve.py`）、`build_tokens.py`、`adapt_tokens.py` 的本体，以及引擎、零件库页面、页面包模板的母本，都搬到 design-studio（`design_studio.py lab`、`studio/lab/`、`web/lab/`）。skill 里同名脚本变成转调它的薄壳，命令、端口、接口、回执、生成物都不变；`assets/` 删除。design-studio 同时是一个页面模式的编辑器（改已经做出来的页面），两种模式共用一个本机服务。验证：design-studio 的骨架模式回归在 forge-demo-pomodoro、info2action 的页面包上和旧 serve.py 逐条一致；本仓库 evals 零件库回归 74/74、实现比对回归 8/8，`verify_pack.mjs` PASS 14，均与改动前相同。需要先装 design-studio（`install.sh` 会检测并提示）。
+- **forge-design-lab 的运行时搬进独立工具 design-studio**：工作台服务（`serve.py`）、`build_tokens.py`、`adapt_tokens.py` 的本体，以及引擎、零件库页面、页面包模板的母本，都搬到 design-studio（`design_studio.py lab`、`studio/lab/`、`web/lab/`）。skill 里同名脚本变成转调它的薄壳，命令、端口、`/api/lab/*` 接口和保存回执、tokens 三件生成物都不变（`scaffold_pack.py` 写进 meta.json 的 `engine` 字段和 `_workbench/README.md` 的说明文字改成指向 design-studio）；`assets/` 删除。脚本按 `DESIGN_STUDIO_HOME`（设了就只认它）→ `~/.design-studio` → `~/design-studio` → 工作区布局找带骨架模式的 design-studio，找不到或版本太旧时打印安装 / 更新命令并以退出码 69 退出（`verify_pack` 报「缺 design-studio」）。design-studio 同时是一个页面模式的编辑器（改已经做出来的页面），两种模式共用一个本机服务。验证：design-studio 的骨架模式回归在 forge-demo-pomodoro、info2action 的页面包上和旧 serve.py 逐条一致；本仓库 evals 零件库回归 74/74、实现比对回归 8/8，`verify_pack.mjs` PASS 14，均与改动前相同。需要先装 design-studio（`install.sh` 会检测并提示）。
 
 ### Added
 - **forge-feature-doc**（新 skill，完整档，经 /skill-build S0–S5）：每个功能一份给人看的需求设计文档 `docs/modules/<功能>.md`——待拍板置顶、按类型取舍 12 部分、先图后字、只写当前设计、末尾关键改动 ≤15 条。4 个脚本（scaffold / render-diagrams / annotate / check）、文档模板 + 6 个示意图模板、4 份 references。设计文档 `docs/forge-feature-doc-设计文档.md`，评测报告 `docs/forge-feature-doc-评测报告.md`（触发 v2：train 10/10、test 6/6；精选留出样本三位盲评 3 : 0 选用 skill 的版本，正文 2,428 字 vs 对照组 5,732 字）。

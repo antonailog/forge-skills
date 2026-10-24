@@ -42,7 +42,7 @@ description: 在真实 token、真实像素的 HTML 骨架上做页面与组件�
 
 脚本都在本 skill 的 `scripts/`，用 `python3` / `node` 直接跑；`{lab}` 指本 skill 目录（`~/.claude/skills/forge-design-lab`）。
 
-**运行时在 design-studio**（独立工具，一个「在页面上做调整」的本机服务；工作台是它的骨架模式）：`serve.py`、`build_tokens.py`、`adapt_tokens.py` 是转调它的薄壳，命令和行为不变；引擎、零件库页面、页面包模板的母本在它的 `web/lab/`，`scaffold_pack.py`、`extract_system.py`、`build_template.js` 从那里同步。找的顺序：环境变量 `DESIGN_STUDIO_HOME` → `~/.design-studio` → `~/design-studio`。脚本报「找不到 design-studio」时，按它打印的命令装上（`git clone … ~/.design-studio`），或者用 `DESIGN_STUDIO_HOME` 指到已有的目录。
+**运行时在 design-studio**（独立工具，一个「在页面上做调整」的本机服务；工作台是它的骨架模式）：`serve.py`、`build_tokens.py`、`adapt_tokens.py` 是转调它的薄壳，命令和行为不变；引擎、零件库页面、页面包模板的母本在它的 `web/lab/`，`scaffold_pack.py`、`extract_system.py`、`build_template.js` 从那里同步。找的顺序：环境变量 `DESIGN_STUDIO_HOME`（设了就只认它）→ `~/.design-studio` → `~/design-studio` → forge-skills 仓库往上两级的 `工具/design-studio`（作者的工作区布局）。脚本报「找不到 design-studio」或「版本太旧」时（退出码 69），按它打印的命令装上（`git clone … ~/.design-studio`）或 `git pull`，或者用 `DESIGN_STUDIO_HOME` 指到已有的目录。
 
 | 脚本 | 什么时候 | 用法 | 失败降级 |
 |---|---|---|---|
