@@ -14,7 +14,7 @@ No,Category,Issue,Platform,Description,Do,Don't,Code Example Good,Code Example B
 13,Animation,Transform Performance,Web,Some CSS properties trigger expensive repaints,Use transform and opacity for animations,Animate width/height/top/left properties,transform: translateY(),top: 10px animation,Medium
 14,Animation,Easing Functions,All,Linear motion feels robotic,Use ease-out for entering ease-in for exiting,Use linear for UI transitions,ease-out,linear,Low
 15,Layout,Z-Index Management,Web,Stacking context conflicts cause hidden elements,Define z-index scale system (10 20 30 50),Use arbitrary large z-index values,z-10 z-20 z-50,z-[9999],High
-16,Layout,Overflow Hidden,Web,Hidden overflow can clip important content,Test all content fits within containers,Blindly apply overflow-hidden,overflow-auto with scroll,overflow-hidden truncating content,Medium
+16,Layout,Overflow Hidden,Web,Hidden overflow can clip important content,Test all content fits within containers; let core content grow or wrap,Blindly apply overflow-hidden; put core content in a fixed-height scroll box,Content grows with its container; scroll only secondary panels,overflow-hidden truncating content,Medium
 17,Layout,Fixed Positioning,Web,Fixed elements can overlap or be inaccessible,Account for safe areas and other fixed elements,Stack multiple fixed elements carelessly,Fixed nav + fixed bottom with gap,Multiple overlapping fixed elements,Medium
 18,Layout,Stacking Context,Web,New stacking contexts reset z-index,Understand what creates new stacking context,Expect z-index to work across contexts,Parent with z-index isolates children,z-index: 9999 not working,Medium
 19,Layout,Content Jumping,Web,Layout shift when content loads is jarring,Reserve space for async content,Let images/content push layout around,aspect-ratio or fixed height,No dimensions on images,High
@@ -77,12 +77,12 @@ No,Category,Issue,Platform,Description,Do,Don't,Code Example Good,Code Example B
 76,Typography,Contrast Readability,All,Body text needs good contrast,Use darker text on light backgrounds,Gray text on gray background,text-gray-900 on white,text-gray-400 on gray-100,High
 77,Typography,Heading Clarity,All,Headings should stand out from body,Clear size/weight difference,Headings similar to body text,Bold + larger size,Same size as body,Medium
 78,Feedback,Loading Indicators,All,Show system status during waits,Show spinner/skeleton for operations > 300ms,No feedback during loading,Skeleton or spinner,Frozen UI,High
-79,Feedback,Empty States,All,Guide users when no content exists,Show helpful message and action,Blank empty screens,No items yet. Create one!,Empty white space,Medium
+79,Feedback,Empty States,All,Guide users when no content exists,Tools and apps: one-line next step plus an action. Fixed-data showcase pages going live: hide the section when there is no data,Blank empty screens in tools; placeholder text like TBD on a live showcase page,No items yet. Create one! (tool) / section omitted (showcase),Empty white space,Medium
 80,Feedback,Error Recovery,All,Help users recover from errors,Provide clear next steps,Error without recovery path,Try again button + help link,Error message only,Medium
 81,Feedback,Progress Indicators,All,Show progress for multi-step processes,Step indicators or progress bar,No indication of progress,Step 2 of 4 indicator,No step information,Medium
 82,Feedback,Toast Notifications,All,Transient messages for non-critical info,Auto-dismiss after 3-5 seconds,Toasts that never disappear,Auto-dismiss toast,Persistent toast,Medium
 83,Feedback,Confirmation Messages,All,Confirm successful actions,Brief success message,Silent success,Saved successfully toast,No confirmation,Medium
-84,Content,Truncation,All,Handle long content gracefully,Truncate with ellipsis and expand option,Overflow or broken layout,line-clamp-2 with expand,Overflow or cut off,Medium
+84,Content,Truncation,All,Handle long content gracefully,Truncate secondary text such as list titles with ellipsis; show core content in full,Overflow or broken layout; hide core content behind an expand button,line-clamp-2 on list titles; article body shown in full,Overflow or cut off,Medium
 85,Content,Date Formatting,All,Use locale-appropriate date formats,Use relative or locale-aware dates,Ambiguous date formats,2 hours ago or locale format,01/02/03,Low
 86,Content,Number Formatting,All,Format large numbers for readability,Use thousand separators or abbreviations,Long unformatted numbers,"1.2K or 1,234",1234567,Low
 87,Content,Placeholder Content,All,Show realistic placeholders during dev,Use realistic sample data,Lorem ipsum everywhere,Real sample content,Lorem ipsum,Low

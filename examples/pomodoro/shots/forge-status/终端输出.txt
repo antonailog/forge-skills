@@ -1,0 +1,21 @@
+$ /forge-status
+
+📋 并行工作线巡检结果
+（按 git worktree 逐条判定；只用硬信号：worktree 是否存在、分支是否已合并）
+
+主工作区（基准，不参与判定）：
+  - main                            项目根目录
+
+✅ 活跃（保留）：
+  - eng/pomodoro-timer-2026-10-23   .worktrees/pomodoro-timer
+      worktree 存在 + 分支未合并到 main
+      未提交：docs/qa-screenshots/、scripts/qa/（QA 截图和脚本，清理会丢）
+
+🗑️ 疑似僵尸（建议清理）：
+  （无）
+
+🖥️ Dev server 附加巡检（只读）
+- 静态网页服务：Python -m http.server  cwd=.worktrees/pomodoro-timer
+- 无头浏览器：正在运行，cwd=.worktrees/pomodoro-timer
+
+清理确认：没有疑似僵尸，先不清，不改任何文件。
