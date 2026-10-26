@@ -32,7 +32,7 @@ description: |
 ```
 
 全程中文。关键技术决策需用户确认后再实现。
-> 提问格式与批量策略见 ~/.claude/skills/_shared/interaction-protocol.md。
+> 执行与交互边界见 ~/.claude/skills/_shared/interaction-protocol.md。
 
 ## 工程原则
 
@@ -127,7 +127,7 @@ description: |
 
 ## 第3步：四章工程审查
 
-章节顺序：架构 → 代码质量 → 测试 → 性能。每章结束**停止**，发现的问题按 interaction-protocol 的批量策略（≤3 个逐个问，>3 个同类批量一次问）通过 AskUserQuestion 确认后，才进入下一章：
+章节顺序：架构 → 代码质量 → 测试 → 性能。每章结束**停止**，发现的问题按 interaction-protocol「问题怎么问」通过 AskUserQuestion 确认后，才进入下一章：
 - **架构**：系统设计与组件边界、耦合、数据流瓶颈、单点故障、安全边界，对每个新代码路径描述一个真实生产故障场景
 - **代码质量**：模块结构、DRY 违反、错误处理缺口、技术债热点、已有 ASCII 图的时效性
 - **测试**：为所有新 UX / 数据流 / 代码路径 / 分支逻辑画图逐一确认测试覆盖；产出测试矩阵写入工程文档供 `/forge-qa` 使用
@@ -222,7 +222,7 @@ worktree 建好后：① 若项目需要运行应用 → 遵守项目统一 dev 
 
 ### TODOS 更新
 
-潜在 TODO 按 interaction-protocol 的批量策略提问：≤3 个逐个确认，>3 个同类整理后一次批量确认。
+潜在 TODO 按 interaction-protocol「问题怎么问」提问：相互独立的合在一次里问，后题依赖前题时再逐个问。
 
 ### 需求设计文档
 

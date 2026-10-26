@@ -91,6 +91,7 @@ def create_task(payload, root=None):
         "session": payload.get("session") or "",
         "source_thread": payload.get("source_thread") or "",
         "active": bool(payload.get("active", True)),
+        "title": payload.get("title") or "",
         "summary": payload.get("summary") or "",
         "user_questions": list(payload.get("user_questions") or []),
         "expression_issue_quotes": [

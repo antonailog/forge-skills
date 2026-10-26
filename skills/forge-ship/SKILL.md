@@ -48,7 +48,7 @@ git remote -v
 - B) 只同步本地 main
 - C) 停止
 
-> 提问格式与批量策略见 ~/.claude/skills/_shared/interaction-protocol.md。
+> 执行与交互边界见 ~/.claude/skills/_shared/interaction-protocol.md。
 
 ## 第0步：确定 Ship 模式和基础分支
 

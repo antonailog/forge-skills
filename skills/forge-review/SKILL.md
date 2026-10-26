@@ -32,7 +32,7 @@ echo "当前分支: $_BRANCH"
 
 ---
 
-> 提问格式与批量策略见 `~/.claude/skills/_shared/interaction-protocol.md`。
+> 执行与交互边界见 `~/.claude/skills/_shared/interaction-protocol.md`。
 
 ---
 
@@ -167,7 +167,7 @@ git diff origin/<基础分支>
 - 修复 HTML 转义问题
 
 ### 需要确认（ASK）
-需要判断或有真实权衡的问题，**批量放入一次 AskUserQuestion**（≤3个时可单独提问）：
+需要判断或有真实权衡的问题，**批量放入一次 AskUserQuestion**：
 
 ```
 我已自动修复了 5 个问题。2 个需要你的判断：

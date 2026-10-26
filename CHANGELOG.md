@@ -9,6 +9,10 @@
 ## [Unreleased]
 
 ### Changed
+- **_shared/interaction-protocol.md 重写为「Forge 执行与交互协议」**：先判定请求终点，按情况决定自行处理还是提问，相互独立的问题合并问，工作量与验证按影响选择，完成标准区分技术验证、人工验收和发布授权；各 Skill 正文写明的停顿点照 Skill 执行。各 Skill 的一行引用改为「执行与交互边界见…」，forge-eng、forge-review 去掉旧的「≤3 个逐个问」。
+- **forge-dev 调度状态文件统一为 `.forge/dev-state.json`**（编排细则原写 `state.json`）。
+- **forge-fupan 复盘会话加 `title`**：Workbench 列表和会话页优先显示标题、摘要另起一行；账本条数统一为 2-3 条，复发 ≥2 提醒、≥3 当场固化。
+- **forge-prd**：prd-details 的场景要求和 SKILL.md 的异常态门禁写成同一条。
 - **forge-design-lab 的运行时搬进独立工具 design-studio**：工作台服务（`serve.py`）、`build_tokens.py`、`adapt_tokens.py` 的本体，以及引擎、零件库页面、页面包模板的母本，都搬到 design-studio（`design_studio.py lab`、`studio/lab/`、`web/lab/`）。skill 里同名脚本变成转调它的薄壳，命令、端口、`/api/lab/*` 接口和保存回执、tokens 三件生成物都不变（`scaffold_pack.py` 写进 meta.json 的 `engine` 字段和 `_workbench/README.md` 的说明文字改成指向 design-studio）；`assets/` 删除。脚本按 `DESIGN_STUDIO_HOME`（设了就只认它）→ `~/.design-studio` → `~/design-studio` → 工作区布局找带骨架模式的 design-studio，找不到或版本太旧时打印安装 / 更新命令并以退出码 69 退出（`verify_pack` 报「缺 design-studio」）。design-studio 同时是一个页面模式的编辑器（改已经做出来的页面），两种模式共用一个本机服务。验证：design-studio 的骨架模式回归在 forge-demo-pomodoro、info2action 的页面包上和旧 serve.py 逐条一致；本仓库 evals 零件库回归 74/74、实现比对回归 8/8，`verify_pack.mjs` PASS 14，均与改动前相同。需要先装 design-studio（`install.sh` 会检测并提示）。
 
 ### Added

@@ -203,6 +203,14 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
+.session-summary {
+  margin: 8px 0 0;
+  max-width: 68ch;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .queue-project {
   color: var(--color-text-muted);
 }

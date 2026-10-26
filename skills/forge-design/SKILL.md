@@ -77,7 +77,7 @@ description: |
 
 ---
 
-> 提问格式与批量策略见 `~/.claude/skills/_shared/interaction-protocol.md`。设计选项附视觉效果描述。
+> 执行与交互边界见 `~/.claude/skills/_shared/interaction-protocol.md`。设计选项附视觉效果描述。
 
 ---
 

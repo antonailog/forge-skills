@@ -153,6 +153,7 @@ D) 其他 — 告诉我你想做什么
 | `/forge-prd` | PRD 管理 | 需要正式需求文档时 |
 | `/forge-dev` | 开发调度 | 从需求到交付；`--full` 一路到发布（原 forge-deliver 已并入） |
 | `/forge-design` | 设计规划 | 需要 UI/UX 设计时 |
+| `/forge-design-lab` | 设计工作台 | 在真 token 骨架上定比例、密度、留白；全站设计零件库 |
 | `/forge-design-impl` | 设计实现 | 将设计文档转为代码 |
 | `/forge-feature-doc` | 需求设计文档 | 每个功能一份给人看的设计文档：新建、各阶段同步、出图、上线前检查 |
 | `/forge-eng` | 工程实现 | 写代码（含 TDD + Worktree） |

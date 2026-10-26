@@ -240,7 +240,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 
 | 文件 | 内容 |
 |------|------|
-| `interaction-protocol.md` | AskUserQuestion 提问格式 + 全体系统一批量策略（≤3 单独问，>3 同类批量） |
+| `interaction-protocol.md` | 执行与交互边界：先判定请求终点、自行处理还是提问、问题怎么问、工作量与验证、完成标准；Skill 正文写明的停顿点照 Skill 执行 |
 | `feature-status-protocol.md` | `.features/` 状态标记（⏳🔄✅❌⏸️）+ 通用操作规则 |
 | `current-doc-loading.md` | 当前文档加载契约（真相源优先，changelog/archive 按需） |
 | `visual-decision-layer.md` | 视觉决策层：结构问题优先 Mermaid，气质判断用 Image 2，验收只认真实截图 + CSS 断言；复盘默认不配图 |
