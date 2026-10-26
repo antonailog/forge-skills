@@ -303,7 +303,7 @@ CREATE TABLE [table_name] (
 ## 四章工程审查细则（骨架第3步）
 
 章节顺序：架构 → 代码质量 → 测试 → 性能。
-每章结束**停止**，发现的问题按 interaction-protocol 的批量策略通过 AskUserQuestion 确认后再进入下一章。
+每章结束**停止**，发现的问题按 interaction-protocol「问题怎么问」通过 AskUserQuestion 确认后再进入下一章。
 
 ### 第1章：架构审查
 
