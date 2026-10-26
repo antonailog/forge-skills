@@ -223,6 +223,8 @@ description: |
 
 **门禁不变**：Feature Spec 需用户确认后才可进开发；每个功能点至少 3 种异常态
 （空态/错误态/降级态，涉本地存储加陈旧态），异常态的 Then 必须写明确 UI 行为。
+「明确 UI 行为」不等于配一句提示：数据固定的展示页（博客、作品集、文档站），空态的 Then 写「整节不出」即可；
+错误态写读者下一步能做什么，不写开发者报错。依据见 `~/.claude/skills/forge-design/references/defensive-design.md`。
 
 **交给用户前先跑四点自审**（Superpowers v5 Spec Self-Review，约 30 秒抓 4-5 个问题）：
 1. 占位符扫描——还有 TBD/TODO/含糊需求吗？有就先补
