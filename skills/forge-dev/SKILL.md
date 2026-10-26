@@ -113,7 +113,7 @@ description: |
 
 ## 状态管理
 
-每阶段结束写检查点（state.json + patch），--resume 从断点恢复。
+每阶段结束写检查点（dev-state.json + patch），--resume 从断点恢复。
 操作细则必读 [references/orchestration-details.md](references/orchestration-details.md)。
 
 ## 第-1步：Brainstorm 感知
@@ -245,7 +245,7 @@ description: |
 | 新功能（全栈） | forge-design → forge-eng → forge-qa | 完整流程 |
 | Bug 修复 | forge-eng → forge-qa | 工程+验证 |
 
-**跳过条件：** `type == "backend"` 时跳过 forge-design，在 state.json 中标记为 `skipped`。
+**跳过条件：** `type == "backend"` 时跳过 forge-design，在 dev-state.json 中标记为 `skipped`。
 
 ### 视觉决策传递（UI/前端任务）
 

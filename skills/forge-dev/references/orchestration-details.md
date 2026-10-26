@@ -1,6 +1,6 @@
 # forge-dev · 编排细则手册
 
-> 由 SKILL.md 骨架按需加载。含：state.json 状态管理与 --resume 恢复、前置检测脚本、第-1步问法文案、第1步灰区识别表、第2步 RESEARCH.md 模板、第3步执行计划展示模板、--auto 模式细则、汇总交付报告格式、验收操作清单、Feature 状态管理操作、第4步 Wave 调度机制。
+> 由 SKILL.md 骨架按需加载。含：dev-state.json 状态管理与 --resume 恢复、前置检测脚本、第-1步问法文案、第1步灰区识别表、第2步 RESEARCH.md 模板、第3步执行计划展示模板、--auto 模式细则、汇总交付报告格式、验收操作清单、Feature 状态管理操作、第4步 Wave 调度机制。
 
 ## 状态管理
 
@@ -10,7 +10,7 @@
 
 ```
 .forge/
-├── state.json                    # 调度状态（持久化）
+├── dev-state.json                # 调度状态（持久化）
 ├── visual-decision.md            # UI/设计相关任务的视觉决策索引（可选）
 ├── checkpoints/
 │   ├── design-done.patch         # 设计阶段完成后的代码状态
@@ -19,7 +19,7 @@
 └── delivery-report.md            # 最终交付报告
 ```
 
-### state.json 格式
+### dev-state.json 格式
 
 ```json
 {
@@ -39,7 +39,7 @@
 }
 ```
 
-**每次进入新阶段时：** 更新状态为 `in_progress`，写入 state.json。
+**每次进入新阶段时：** 更新状态为 `in_progress`，写入 dev-state.json。
 **每次完成一个阶段时：** 更新状态为 `done`，保存检查点（自动模式）。
 
 ### 检查点保存
@@ -247,7 +247,7 @@ PRD 版本：vX.Y
 +================================================================+
 ```
 
-写入 `.forge/delivery-report.md`，更新 state.json 所有阶段标记为 `done`。
+写入 `.forge/delivery-report.md`，更新 dev-state.json 所有阶段标记为 `done`。
 
 ### 验收操作清单（必须产出）
 
@@ -308,9 +308,9 @@ E) /forge — 不确定，让 Forge 帮我判断
 
 forge-dev 作为调度器，承担三重职责：
 
-#### 1. 管理自身状态（state.json + status.md）
+#### 1. 管理自身状态（dev-state.json + status.md）
 
-state.json 用于调度器内部的阶段跟踪（discussion/research/dispatch 等）。
+dev-state.json 用于调度器内部的阶段跟踪（discussion/research/dispatch 等）。
 同时通过 `.features/{feature-id}/status.md` 暴露全局可见的 Pipeline 状态。
 
 #### 2. 孤儿检测（启动时）

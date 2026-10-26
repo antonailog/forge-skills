@@ -269,7 +269,7 @@ function SessionList({ tasks }) {
       {tasks.map((task) => (
         <a className="queue-row" key={task.id} href={`/session/${encodeURIComponent(task.id)}`}>
           <StatusPill status={task.status} active={task.active} />
-          <span className="queue-title">{task.summary || task.project || task.id}</span>
+          <span className="queue-title">{task.title || task.summary || task.project || task.id}</span>
           <span className="queue-project">{task.project}</span>
           <span className="mono">{formatDate(task.created_at)}</span>
         </a>
@@ -333,7 +333,8 @@ function SessionPage({ taskId }) {
         <div className="section-heading">
           <div>
             <p className="eyebrow">复盘会话 {task.id}</p>
-            <h1>{task.summary || '待确认复盘'}</h1>
+            <h1>{task.title || task.summary || '待确认复盘'}</h1>
+            {task.title && task.summary && <p className="session-summary">{task.summary}</p>}
           </div>
           <StatusPill status={task.status} active={task.active} />
         </div>
