@@ -1,0 +1,226 @@
+{
+ "review": {
+  "knowledge": {
+   "layers": [
+    {"name": "需求", "decide": "做什么、不做什么、怎样算做完", "chosen": "单页静态网页；场景 + 验收检查表"},
+    {"name": "设计", "decide": "长什么样、各种屏幕怎么排", "chosen": "「纸面安静」；真尺寸骨架上定，横屏矮窗口换小字号"},
+    {"name": "实现", "decide": "代码怎么分、谁来写", "chosen": "计时规则 + 页面接线两个脚本，零依赖，Codex 写"},
+    {"name": "验收", "decide": "怎么证明做对了", "chosen": "单测、假时钟浏览器验收、骨架比对；后台到点交给人"},
+    {"name": "发布", "decide": "合并前查什么、发到哪", "chosen": "上线前审查，合并请求合进主分支，不部署"},
+    {"name": "维护", "decide": "发现问题怎么修", "chosen": "先复现、做实验找根因，修前修后同一把尺子"}
+   ],
+   "entries": [
+    {
+     "id": "S1",
+     "group": "专题",
+     "kind": "架构",
+     "title": "用 AI 做一个小项目的完整流程",
+     "sourceLabel": "你说想学",
+     "source": "你说「项目做完了，复盘一下：这次哪些做法值得带走，我下次该怎么跟 AI 说。」这次从一句想法走到合进主分支，中间每一步交了什么、你在哪拍板，就是最值得带走的部分。",
+     "basis": null,
+     "layers": ["需求", "设计", "实现", "验收", "发布", "维护"],
+     "step": null,
+     "what": "**结论：每一步都交出一份能检查的东西，下一步照着它干。** 前面写得越清楚，后面 AI 越少猜。\n\n| 步骤 | 交出什么 | 你要拍的板 | 这次的例子 |\n| --- | --- | --- | --- |\n| 定需求 | 需求讨论 → PRD → 带验收检查表的规格 | 选方案、定不做什么 | 选单页静态网页，不要账号、云同步、统计图表 |\n| 定外观 | 设计规范 + 真尺寸骨架 | 选风格、看骨架上的取舍 | 「纸面安静」；横屏只在矮窗口换小字号 |\n| 写代码 | 工程文档 → 小任务 → 代码和测试 | 确认技术方案、加不加依赖 | 不加依赖，两个普通脚本，Codex 写 |\n| 验收 | 验收手册：逐项结论和证据 | 剩下的问题接不接受 | 按钮颜色过渡默认接受（后来又改） |\n| 审查发布 | 审查摘要、合并请求 | 修不修、合不合、部不部署 | 合进主分支，不部署 |\n| 修 bug | 复现、实验、修前修后对照 | 根因和修法 | 换阶段那一刻让过渡立即走完 |\n\n这次值得带走的三个做法：**先写规格再写代码**、**写的和验的分开**、**每一步都要证据**（测试输出、截图、对照图），不收「已经好了」四个字。两处可以做得更好：发布时文档和代码放进同一个合并请求；合并请求上加自动检查。",
+     "judge": "- 每一步交回来，先看有没有能判对错的产物（检查表、测试、截图）；只有「做完了」的不算\n- 写代码的和验收的是不是两个人（或两个 AI）；是同一个时，期望值容易照着实现写\n- 看清哪些是 AI 按默认替你定的（待拍板、「你不回就按此」），你在乎的当场回",
+     "say": "按规格驱动开发帮我做一个小网页：先需求访谈写规格和验收检查表，再在真尺寸上定设计，然后另一个 AI 写代码、你来验收，审查后开合并请求，文档和代码一起合",
+     "verify": "- 仓库里能找到每一步的产物：需求讨论、PRD、规格、设计规范、工程文档、验收手册\n- 规格里每条检查项，在验收手册里都有「通过 / 部分验证」和证据\n- 合并请求页面写清了测试情况，以及没测到的东西",
+     "reading": "[Best practices for Claude Code](https://code.claude.com/docs/en/best-practices)（Anthropic 官方，看「Brainstorm with Claude first」和「Give Claude a check to run」两节）· [Spec Kit](https://github.com/github/spec-kit)（GitHub 开源，看 README 里「规格 → 计划 → 任务 → 实现」这条流程）"
+    },
+    {
+     "id": "K1",
+     "group": "盲区",
+     "kind": "知识点",
+     "title": "浏览器给网页的限制：后台会放慢、先点过才出声",
+     "sourceLabel": "盲区来源",
+     "source": "你要「到点有提醒」，写规格时 AI 反驳「后台标签页里做不到分秒不差」；验收时你又问「到点提醒在后台到底准不准」，结果只测到了页面在眼前的情况——说明你原以为网页在后台也一样准（被纠正）。",
+     "basis": null,
+     "layers": ["需求", "验收"],
+     "step": "b7",
+     "what": "**结论：网页不是独立的程序，浏览器为了省电会管住它。** 这次碰到三条：\n\n| 限制 | 浏览器怎么做 | 对番茄钟的影响 | 这次怎么应对 |\n| --- | --- | --- | --- |\n| 后台计时限速 | 标签页在后台时，定时器最快每秒检查一次；隐藏久了，Chrome 改成每分钟检查一次 | 到点那一刻可能没人「醒着」去响铃 | 存「几点结束」而不是「还剩几秒」，醒来马上补算；推断最多晚一分钟左右 |\n| 自动播放限制 | 用户在页面上操作之前，网页的声音处于暂停状态 | 一次没点过就到点，响不了 | 第一次点「开始」时解锁声音，没点过就只靠标题交替 |\n| 手机锁屏 | 锁屏后网页可能被挂起 | 锁屏期间不保证提醒 | 解锁回到页面时立即补上计数和切段 |\n\n要后台也准时，得靠操作系统帮忙：桌面通知或可安装应用（见延伸）。",
+     "judge": "- AI 说「准时」时追问一句：页面在后台、前台在用别的软件时也准吗\n- 看计时存的是「结束时刻」还是「剩余秒数」：存结束时刻才不怕后台被放慢\n- 验收报告里「后台到点」是实测还是推断，要写清楚",
+     "say": "到点提醒要考虑后台计时限速和自动播放限制：计时按结束时刻算，第一次点击时解锁声音，验收时把标签页放到后台实测晚了多久",
+     "verify": "- 自己测一次：点「开始」后切到别的软件，到点时看表，记下晚了几秒\n- 打开页面一个按钮都不点，等到点：应该没声音，但标签页标题在交替\n- 问 AI：「后台这一项是实测还是推断？」",
+     "reading": "[Heavy throttling of chained JS timers beginning in Chrome 88](https://developer.chrome.com/blog/timer-throttling-in-chrome-88)（Chrome 官方博客，看三档限速各在什么条件下生效）· [Autoplay policy in Chrome](https://developer.chrome.com/blog/autoplay)（Chrome 官方，看 Web Audio 一节）· [Page Visibility API](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API)（MDN，看后台标签页的定时器限速）"
+    },
+    {
+     "id": "K2",
+     "group": "盲区",
+     "kind": "知识点",
+     "title": "验收标准要能判对错",
+     "sourceLabel": "盲区来源",
+     "source": "需求方设定里写的是「到点有提醒」，没说怎样算合格；讨论阶段的独立审查者指出「到点提醒是核心却没定合格标准」，写规格时又把「准时」改成「后台必须响、记录晚了多久」（没想到）。",
+     "basis": null,
+     "layers": ["需求"],
+     "step": "b2",
+     "what": "**结论：一条需求要能让别人判「过」或「不过」，AI 才知道什么时候算做完。** 这次几条需求前后的样子：\n\n| 原来的说法 | 问题在哪 | 改成能判对错的 |\n| --- | --- | --- |\n| 到点有提醒 | 怎样算提醒到了？后台也算吗？ | 页面在后台走完一段，铃声必须响，记下晚了多久 |\n| 刷新不丢记录 | 浏览器自己重新加载算不算？ | 刷新、关掉重开、浏览器重载，完成数都不丢 |\n| 简洁、安静，不要花哨动效 | 什么算花哨？ | 不出现持续循环的动画，不弹任何权限框 |\n| 手机上也能看 | 横屏算不算？ | 竖屏一屏看全，没有横向滚动 |\n\n常用写法叫 **Given/When/Then**：在什么情况下（Given）、做了什么（When）、应该看到什么（Then）。整张清单就是这次的「完成的定义」。",
+     "judge": "- 拿一条标准问自己：两个人看同一个结果，会不会一个说过、一个说不过？会，就还不够具体\n- 带「准时、好看、快、安静」这类形容词的，换成看得见或量得到的东西\n- 量不到的（比如后台晚多少），写清怎么测、谁来测",
+     "say": "把每条需求写成 Given/When/Then，再列一张完成的定义：每条写清怎么算通过；到点提醒写明后台必须响、晚多少以内算合格",
+     "verify": "- 规格里每条检查项都回答得了「看哪里、看到什么算过」\n- 验收报告每一项后面是「通过 / 不通过 / 部分验证」加证据，不是「基本可以」\n- 抽一条自己照着做一遍，看结果和写的一样不一样",
+     "reading": "[GivenWhenThen](https://martinfowler.com/bliki/GivenWhenThen.html)（Martin Fowler，一页讲清三段写法和来历）· [The Scrum Guide](https://scrumguides.org/scrum-guide.html)（Scrum 官方，看 Definition of Done 一段）"
+    },
+    {
+     "id": "K3",
+     "group": "盲区",
+     "kind": "知识点",
+     "title": "测试全过不等于做对：测试本身也要审",
+     "sourceLabel": "盲区来源",
+     "source": "你说「QA 过了，上线前帮我审一遍代码」，审查却从测试里找出一条把错误行为写成「应当如此」的用例：系统时间往回调后暂停，剩余时间会比一整段还长（没想到）。",
+     "basis": null,
+     "layers": ["验收"],
+     "step": "b5",
+     "what": "**结论：测试只检查代码是不是照「测试里写的期望」在跑；期望本身写错了，测试照样全绿。** 这次四道关卡各管什么：\n\n| 检查 | 能证明什么 | 证明不了什么 | 这次 |\n| --- | --- | --- | --- |\n| 测试全过 | 代码符合测试里写的期望 | 期望对不对 | 过了 |\n| 把实现换成空壳 | 测试真的在检查，不是空跑 | 期望对不对 | 过了 |\n| 把规则故意改坏（变异测试） | 改坏的地方测试会报警 | 期望本身写错的地方 | 过了 |\n| 拿规格逐条对照测试（审查） | 期望值和规格一致 | — | 这一关才抓到 |\n\n测试里那个「正确答案」叫**测试预言**，它要从规格来，不能从实现抄。这次测试和实现都出自同一个 Codex，期望值就跟着实现走了。",
+     "judge": "- 写测试和写代码的是不是同一个 AI；是的话，期望值更容易照着实现写\n- 测试名对不对得上规格里的场景\n- 覆盖率高不代表测试好，看有没有人对照规格审过期望值",
+     "say": "单测的期望值按规格写，不从实现抄；跑一遍变异测试；审查时把测试本身当审查对象，逐条对照规格看测试预言对不对",
+     "verify": "- 让 AI 列出「每条测试对应规格哪一条」，对不上的就可疑\n- 挑一条边界情况（比如时间往回调），问「规格怎么说、测试怎么写」\n- 变异测试里没被抓到的改动，要有解释",
+     "reading": "[What is mutation testing?](https://stryker-mutator.io/docs/)（Stryker，看开头一段：改坏代码，看测试会不会失败）· [What to look for in a code review](https://google.github.io/eng-practices/review/reviewer/looking-for.html)（Google 工程实践，看 Tests 一节）· [TestCoverage](https://martinfowler.com/bliki/TestCoverage.html)（Martin Fowler，覆盖率高不代表测试好）"
+    },
+    {
+     "id": "K4",
+     "group": "盲区",
+     "kind": "知识点",
+     "title": "待拍板和默认值：不回就是同意",
+     "sourceLabel": "盲区来源",
+     "source": "按钮颜色过渡在需求设计文档的待拍板里写着默认「接受现状」，你没回，工程、验收两步都按默认放行；发布后你又说「设计里写的是直接切换。修一下。」（被动接受）",
+     "basis": null,
+     "layers": ["设计", "验收"],
+     "step": "b11",
+     "what": "**结论：AI 把拿不准的事放进「待拍板」，并写「你不回就按此」——沉默就是同意。** 这一条在这次走了四步：\n\n| 哪一步 | 这条怎么处理 |\n| --- | --- |\n| 设计实现 | 按钮悬停的颜色过渡，在切阶段时也生效了，和设计「直接切换」不一致 |\n| 工程 | 记成技术债，放进待拍板，默认接受现状 |\n| 验收 | 唯一不过的一项，按默认接受，不阻塞发布 |\n| 发布后 | 你反馈要直接换，开分支修了一整轮 |\n\n待拍板的用处是让你早拍板：验收前回一句「不接受」，修一次就够，不用另开一轮。把决定记下来、写清状态（提议中、已采纳、被推翻），是业内常用的决策记录做法。",
+     "judge": "- 每次交付先扫一眼「待拍板 / 默认按此」，这些都是 AI 替你做的决定\n- 默认值和设计文档写的不一样时，要么改设计文档、要么改代码，不能两边都不动\n- 你在乎的当场回，不在乎的才让它按默认",
+     "say": "把这次所有「你不回就按默认」的待拍板列在最前面，标出哪条和设计文档不一致；我逐条回，没回的不要当成同意",
+     "verify": "- 交付总结里有一节专门列「按默认处理的」\n- 每条默认值后面写着它和哪份文档的哪条规定有出入\n- 发布前问 AI：「还有哪些待拍板没人回？」",
+     "reading": "[Architecture Decision Record](https://martinfowler.com/bliki/ArchitectureDecisionRecord.html)（Martin Fowler，看一条决定该写哪几项、状态怎么标）"
+    },
+    {
+     "id": "K5",
+     "group": "盲区",
+     "kind": "工具",
+     "title": "合并请求上的自动检查",
+     "sourceLabel": "盲区来源",
+     "source": "你说「审完了，发布吧：开合并请求、合进 main」，没提合并前要过什么检查；三个合并请求都是 AI 自己开、自己合，仓库没有任何自动检查，合并请求上只能写「无远程检查」（没想到）。",
+     "basis": null,
+     "layers": ["发布"],
+     "step": "b9",
+     "what": "**结论：合并请求是「看过再合」的地方，自动检查是在这里自动跑测试的机器人。**\n\n| 东西 | 做什么 | 这次有没有 |\n| --- | --- | --- |\n| 合并请求 | 把一个分支的改动提出来，讨论、审查后合进主分支 | 有，三个 |\n| 持续集成（GitHub Actions） | 每次开合并请求或推送时自动跑测试，结果显示在合并请求页上 | 没有 |\n| 保护分支 | 规定主分支必须检查通过、有人批准才能合 | 没有 |\n\n这个项目的单测一条命令就能跑完、不装依赖，配一个自动检查成本很低。",
+     "judge": "- 合并请求页面上有没有检查结果；只有「本机跑过」的说法，就等于没有\n- 合并按钮是不是谁都能直接点；重要的仓库应该设成检查通过才能合\n- 自动检查跑的命令，和项目说明里写的验证命令是不是同一条",
+     "say": "给这个仓库加持续集成：用 GitHub Actions 在每个合并请求上跑单测，再把主分支设成必需状态检查通过才能合并",
+     "verify": "- 新开一个合并请求，页面上出现检查项并显示通过\n- 故意让一条测试失败，合并按钮变成不能点\n- 仓库设置里主分支勾了「合并前必须通过状态检查」",
+     "reading": "[Continuous integration](https://docs.github.com/en/actions/get-started/continuous-integration)（GitHub 官方，看 CI 怎么把测试结果报到合并请求上）· [About protected branches](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches)（GitHub 官方，看「合并前必须通过状态检查」「合并前必须有人批准」两节）"
+    },
+    {
+     "id": "E1",
+     "group": "延伸",
+     "kind": "工具",
+     "title": "部署到 GitHub Pages：给番茄钟一个网址",
+     "sourceLabel": "为什么推荐给你",
+     "source": "这次停在合进主分支，没有在线地址，同事要用得先下载再双击打开；需求里说过「以后可能挂到 GitHub Pages」，这是顺着往下的下一步。",
+     "basis": null,
+     "layers": ["发布"],
+     "step": null,
+     "what": "**结论：GitHub Pages 把仓库里的 HTML、CSS、JS 直接发成网站。** 番茄钟是纯静态网页、不请求任何外部网址，正好合适。\n\n| 要定的事 | 这次的情况 |\n| --- | --- |\n| 从哪个分支、哪个目录发 | main 分支根目录就有 index.html |\n| 要不要构建步骤 | 不要，原样发 |\n| 访问地址 | 默认挂在 GitHub 给的网址下 |\n| 本机记录 | 浏览器按网址分开存记录，换成在线地址后，之前本地打开时存的完成数不会带过去 |",
+     "judge": "- 发完先用手机打开一次，看能不能用\n- 页面有没有请求外部网址（这个项目约定一个都不请求）\n- 地址换了，本机记录不互通，要提前告诉同事",
+     "say": "把番茄钟用 GitHub Pages 从 main 分支根目录发布，发完给我网址，手机和电脑各打开一次，确认能用、零外部请求",
+     "verify": "- 浏览器打开网址，能开始、暂停、跳过\n- 手机打开，竖屏一屏看全\n- 仓库首页 README 的「怎么打开」改成了在线地址",
+     "reading": "[What is GitHub Pages?](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)（GitHub 官方，第一段：从仓库直接发布静态文件）· [Window: localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)（MDN，看记录按来源分开存）"
+    },
+    {
+     "id": "E2",
+     "group": "延伸",
+     "kind": "选型",
+     "title": "后台也要准时：桌面通知",
+     "sourceLabel": "为什么推荐给你",
+     "source": "需求设计文档的待拍板第一条还开着：后台铃声可能晚响，要不要加桌面通知「先量再定」；讨论时方案 B 就带系统通知，因为要弹权限框没选。量完后台晚多少，这就是下一个要拍的板。",
+     "basis": null,
+     "layers": ["需求", "实现"],
+     "step": "b7",
+     "what": "**结论：桌面通知由操作系统弹出，切到别的软件也看得见；代价是第一次要你点「允许」。**\n\n| 方式 | 后台能不能叫到人 | 代价 |\n| --- | --- | --- |\n| 现在：提示音 + 标题交替 | 页面被放慢时可能晚响 | 无 |\n| 桌面通知 | 系统弹窗，切到别的软件也看得见 | 要弹一次权限框；通知由页面里的代码发出，页面被放慢时发出的时刻也会跟着晚，要实测 |\n| 可安装应用（PWA） | 可以在后台做事、发通知 | 多一层安装和离线缓存，超出「越简单越好」 |",
+     "judge": "- 先量后台晚多少：晚几秒不影响使用，就不加\n- 权限框只能在你点了按钮之后弹，不能一打开页面就弹\n- 加了通知，仍要守住「不要账号、不要统计」的边界",
+     "say": "后台到点我量了晚 X 秒，不够用：按待拍板第一条加桌面通知，只在我点「开始」时请求一次权限，不同意也照常计时，先给我方案",
+     "verify": "- 第一次点「开始」时才弹权限框\n- 拒绝权限后，番茄钟照常能用\n- 页面在后台时到点，看系统通知弹出的时刻和结束时刻差多少",
+     "reading": "[Notifications API](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API)（MDN，看授权要在用户点击时请求）· [Progressive web apps](https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps)（MDN，看可安装、后台运行的能力）"
+    }
+   ]
+  },
+  "glossary": {
+   "modules": [
+    {
+     "id": "req",
+     "area": "需求",
+     "name": "番茄钟需求",
+     "say": "按规格驱动开发做一个纯静态网页：每块功能写成 Given/When/Then，列一张完成的定义；先比较纯静态网页和可安装应用（PWA）再定",
+     "words": [
+      {"term": "规格驱动开发", "kind": "做法", "side": "mine", "what": "先写清做什么、怎样算做完，再让 AI 按规格写代码", "src": "speckit", "new": true, "step": "b1", "kref": "S1", "icon": "FileText"},
+      {"term": "Given/When/Then", "kind": "做法", "side": "mine", "what": "按「情况、动作、结果」写场景，每条都能判对错", "src": "fowler_gwt", "new": true, "step": "b2", "kref": "K2", "icon": "ListChecks"},
+      {"term": "完成的定义", "kind": "效果", "side": "base", "what": "事先写好怎样才算做完，验收照着判过或不过", "src": "scrum_dod", "new": true, "step": "b2", "kref": "K2", "icon": "ClipboardCheck"},
+      {"term": "纯静态网页", "kind": "选型", "side": "mine", "what": "没有后端，双击 HTML 就能用，能直接挂静态托管", "src": "gh_pages", "new": true, "step": "b1", "kref": null, "icon": "si:html5"},
+      {"term": "可安装应用（PWA）", "kind": "选型", "side": "talked", "what": "能安装、离线、后台发通知，比单页网页重一层", "src": "mdn_pwa", "new": true, "step": "b1", "kref": "E2", "icon": "Smartphone"}
+     ]
+    },
+    {
+     "id": "design",
+     "area": "设计",
+     "name": "页面外观",
+     "say": "按设计 token 在真尺寸骨架上排：倒计时用等宽数字，响应式断点按宽度和高度各一档，尊重减少动态效果",
+     "words": [
+      {"term": "设计 token", "kind": "做法", "side": "mine", "what": "颜色、字号、间距都起名字统一引用，改一处全站跟着变", "src": "dtcg", "new": true, "step": "b3", "kref": null, "icon": "Palette"},
+      {"term": "真尺寸骨架", "kind": "做法", "side": "mine", "what": "在真实像素上排版，比例、密度、横屏放不放得下当场看见", "src": "nng_fidelity", "new": true, "step": "b3", "kref": null, "icon": "Ruler"},
+      {"term": "等宽数字", "kind": "效果", "side": "mine", "what": "每位数字一样宽，倒计时走秒时不左右跳", "src": "mdn_tabular", "new": true, "step": "b3", "kref": null, "icon": "Hash"},
+      {"term": "响应式断点", "kind": "做法", "side": "mine", "what": "按窗口宽度、高度切字号和布局，手机横屏也放得下", "src": "mdn_mq", "new": true, "step": "b3", "kref": null, "icon": "Smartphone"},
+      {"term": "减少动态效果", "kind": "效果", "side": "mine", "what": "系统开了这个设置时，页面去掉过渡动画", "src": "mdn_reduced", "new": true, "step": "b3", "kref": null, "icon": "ZapOff"}
+     ]
+    },
+    {
+     "id": "web",
+     "area": "前端",
+     "name": "计时页面",
+     "say": "做纯前端计时页面：记录存 localStorage，提示音用 Web Audio 合成；按后台计时限速和自动播放限制来设计，计时按结束时刻算，要后台准时再考虑桌面通知",
+     "words": [
+      {"term": "localStorage", "kind": "选型", "side": "mine", "what": "记录只存在这台电脑的这个浏览器里，刷新不丢", "src": "mdn_localstorage", "new": true, "step": "b4", "kref": null, "icon": "Save"},
+      {"term": "Web Audio", "kind": "选型", "side": "mine", "what": "用代码现场合成提示音，不用放音频文件", "src": "mdn_webaudio", "new": true, "step": "b4", "kref": "K1", "icon": "Volume2"},
+      {"term": "后台计时限速", "kind": "效果", "side": "mine", "what": "后台标签页的定时器会被放慢，最慢一分钟才检查一次", "src": "chrome_throttle", "new": true, "step": "b7", "kref": "K1", "icon": "Hourglass"},
+      {"term": "自动播放限制", "kind": "效果", "side": "mine", "what": "用户在页面上操作之前，网页不能出声", "src": "chrome_autoplay", "new": true, "step": "b4", "kref": "K1", "icon": "Hand"},
+      {"term": "桌面通知", "kind": "选型", "side": "talked", "what": "系统弹窗提醒，切到别的软件也看得见，要先授权", "src": "mdn_notifications", "new": true, "step": "b7", "kref": "E2", "icon": "BellRing"}
+     ]
+    },
+    {
+     "id": "test",
+     "area": "测试",
+     "name": "验收",
+     "say": "用 Node 内置测试运行器写规则单测，期望值按规格写（测试预言）、再跑变异测试；浏览器验收用假时钟快进，最后做跨浏览器测试",
+     "words": [
+      {"term": "Node 内置测试运行器", "kind": "选型", "side": "mine", "what": "Node 自带的单测工具，零依赖，一条命令跑完", "src": "node_test", "new": true, "step": "b4", "kref": null, "icon": "si:nodedotjs"},
+      {"term": "假时钟", "kind": "做法", "side": "mine", "what": "把浏览器里的时间快进，一段专注几秒测完", "src": "pw_clock", "new": true, "step": "b7", "kref": null, "icon": "Timer"},
+      {"term": "变异测试", "kind": "做法", "side": "mine", "what": "故意改坏代码，看测试抓不抓得住", "src": "stryker", "new": true, "step": "b5", "kref": "K3", "icon": "FlaskConical"},
+      {"term": "测试预言", "kind": "做法", "side": "base", "what": "测试里的「正确答案」，要从规格来，不从实现抄", "src": "test_oracle", "new": true, "step": "b5", "kref": "K3", "icon": "Target"},
+      {"term": "跨浏览器测试", "kind": "做法", "side": "base", "what": "Chromium、WebKit、Firefox 各跑一遍同一套测试", "src": "pw_browsers", "new": true, "step": "b7", "kref": "K1", "icon": "Monitor"}
+     ]
+    },
+    {
+     "id": "ship",
+     "area": "发布",
+     "name": "合并发布",
+     "say": "开合并请求前跑持续集成，文档和版本记录一起进合并请求；并行的活各开一个 git worktree；合完用 GitHub Pages 发布",
+     "words": [
+      {"term": "合并请求", "kind": "做法", "side": "mine", "what": "把一个分支的改动提出来，审过再合进主分支", "src": "gh_pr", "new": true, "step": "b8", "kref": null, "icon": "GitPullRequest"},
+      {"term": "持续集成", "kind": "做法", "side": "base", "what": "每个合并请求自动跑测试，结果显示在页面上", "src": "gh_ci", "new": true, "step": "b9", "kref": "K5", "icon": "si:githubactions"},
+      {"term": "GitHub Pages", "kind": "选型", "side": "talked", "what": "把仓库里的静态网页直接发成网站", "src": "gh_pages", "new": true, "step": null, "kref": "E1", "icon": "si:github"},
+      {"term": "git worktree", "kind": "做法", "side": "mine", "what": "同一个仓库开几个工作副本，几条线并行互不干扰", "src": "git_worktree", "new": true, "step": "b11", "kref": null, "icon": "GitBranch"},
+      {"term": "版本记录", "kind": "效果", "side": "mine", "what": "每个版本写用户能感受到的变化，写给人看", "src": "keepachangelog", "new": true, "step": "b10", "kref": null, "icon": "History"}
+     ]
+    },
+    {
+     "id": "method",
+     "area": "工作方法",
+     "name": "和 AI 协作",
+     "say": "先做需求访谈再动手；代码交给 Codex 写、你来验，写的和验的分开；关键规格派人做对抗性审查；修 bug 先做根因分析",
+     "words": [
+      {"term": "需求访谈", "kind": "做法", "side": "mine", "what": "让 AI 一次问一个问题，问到能写出规格为止", "src": "cc_bp_interview", "new": true, "step": "b1", "kref": "S1", "icon": "MessageSquare"},
+      {"term": "对抗性审查", "kind": "做法", "side": "mine", "what": "另派一个审查者专挑毛病，抓第一轮没想到的盲区", "src": "cc_bp_check", "new": true, "step": "b1", "kref": null, "icon": "SearchCheck"},
+      {"term": "写的和验的分开", "kind": "做法", "side": "mine", "what": "一个 AI 写代码，另一个验收，不轻信对方的汇报", "src": "cc_bp_check", "new": true, "step": "b6", "kref": "S1", "icon": "Users"},
+      {"term": "Codex", "kind": "选型", "side": "mine", "what": "在本机命令行里读、改、跑代码的 AI，按任务书干活", "src": "codex_cli", "new": true, "step": "b6", "kref": null, "icon": "Bot"},
+      {"term": "根因分析", "kind": "做法", "side": "mine", "what": "连问几个为什么，找到能根治的原因再改", "src": "five_whys", "new": true, "step": "b11", "kref": null, "icon": "Microscope"}
+     ]
+    }
+   ]
+  }
+ }
+}

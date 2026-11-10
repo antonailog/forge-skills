@@ -1,0 +1,348 @@
+{
+ "review": {
+  "task": "用 AI 从零做一个小网页工具",
+  "path": ["b1", "b2", "b3", "b4", "b5", "b6", "b7", "b8", "b9", "b10", "b11"],
+  "bench": [
+   {
+    "id": "b1",
+    "step": "需求访谈与范围",
+    "eval": "一致",
+    "gapLine": "先一问一答访谈、比三个方案、请独立审查者挑刺，再定做什么和不做什么，和业内「先采访再写规格」一致",
+    "mineKw": ["头脑风暴", "三个方案", "对抗性审查", "不做清单"],
+    "baseKw": ["需求访谈", "规格驱动开发", "范围界定"],
+    "dims": [
+     {"dim": "谁来挑刺", "mine": ["另派一个审查者专挑毛病"], "base": ["没参与的人或新会话审查规格"], "same": true},
+     {"dim": "追问的口径", "mine": ["按创业产品问：谁在痛、愿不愿付费"], "base": ["按使用场景问：谁用、什么时候用、做到什么程度"], "same": false}
+    ],
+    "why": "需求方只给了一句话，到点怎么提醒、刷新怎么算、跳过算不算完成都没说",
+    "cost": "追问话术偏创业公司，对「自己和同事用的小工具」显得用力过猛",
+    "say": "我想做一个番茄钟网页，按规格驱动开发来：先做需求访谈，一次问一个问题，问到能写出规格为止；范围界定写清必须有和不做的，给我两三个方案和推荐，再派一个没参与讨论的审查者挑刺",
+    "keywords": [
+     {"term": "需求访谈", "what": "让 AI 一次问一个问题，问到能写出规格为止", "side": "mine", "src": "cc_bp_interview"},
+     {"term": "规格驱动开发", "what": "先写清做什么和为什么，再转成计划、任务、代码", "side": "mine", "src": "speckit"},
+     {"term": "对抗性审查", "what": "另派一个审查者专挑毛病，抓第一轮谁都没想到的盲区", "side": "mine", "src": "cc_bp_check"}
+    ],
+    "evidence": [
+     "你的原话：「我有个想法，想做一个番茄钟网页，专心工作 25 分钟、休息 5 分钟，能看到今天完成了几个。帮我想想。」",
+     "AI 给了三个方案：A 单页静态网页、B 可安装的离线应用、C 直接用现成的免注册番茄钟，推荐 A",
+     "审查者挑出三条：到点提醒没定合格标准、标题规则没进决策表、浏览器自己会重新加载页面；第三条推翻了原来的刷新规则（D3）"
+    ],
+    "sources": ["cc_bp_interview", "speckit", "cc_bp_check"],
+    "axes": {"x": ["直接用现成的", "自己做"], "y": ["功能少", "功能多"]},
+    "landscape": [
+     {"name": "方案 C：现成的 Pomofocus", "x": 12, "y": 72, "src": "pomofocus"},
+     {"name": "方案 B：可安装应用", "x": 80, "y": 78, "src": "mdn_pwa"},
+     {"name": "本次：方案 A 单页静态网页", "x": 85, "y": 22, "chosen": true}
+    ]
+   },
+   {
+    "id": "b2",
+    "step": "规格与验收标准",
+    "eval": "一致",
+    "gapLine": "每块功能写成 Given/When/Then 场景和验收检查表；到点提醒的合格线是独立审查挑出来才补上的",
+    "mineKw": ["Feature Spec", "Given/When/Then", "验收检查表", "异常态表"],
+    "baseKw": ["行为规格", "Given/When/Then", "完成的定义"],
+    "dims": [
+     {"dim": "到点提醒怎么算合格", "mine": ["一开始没定", "审查后改成「后台必须响、记录晚了多久」"], "base": ["写规格时就给出能判对错的合格线"], "same": false},
+     {"dim": "每块功能的写法", "mine": ["场景 + 异常态 + 检查表"], "base": ["Given/When/Then 场景 + 完成的定义"], "same": true}
+    ],
+    "why": "写规格时 AI 反驳了「准时」：后台标签页里做不到分秒不差，验收不能写「准时」",
+    "cost": "后台晚多少没有合格线，验收只能给「部分验证」",
+    "say": "把每块功能写成 Given/When/Then 的行为规格，再列一张完成的定义：每条都写清怎么算通过；到点提醒写明后台必须响、晚多少以内算合格",
+    "keywords": [
+     {"term": "Given/When/Then", "what": "按「在什么情况下、做了什么、应该看到什么」写场景", "side": "mine", "src": "fowler_gwt"},
+     {"term": "完成的定义", "what": "事先写好怎样才算做完，每条都能判过或不过", "side": "base", "src": "scrum_dod"}
+    ],
+    "evidence": [
+     "你的原话：「按刚才讨论的结论，写 PRD 和 Feature Spec。」",
+     "写规格时的反驳：「到点有提醒」在后台标签页里做不到分秒不差，改成「后台必须响、并记录晚了多久」",
+     "自审查出一句「无过渡动画以外的动效」意思含糊，改成「不出现持续循环的动画」"
+    ],
+    "sources": ["fowler_gwt", "scrum_dod", "ghblog_sdd"]
+   },
+   {
+    "id": "b3",
+    "step": "界面在真实尺寸上定",
+    "eval": "一致",
+    "gapLine": "布局和比例放到真像素的骨架上定，实测出手机横屏放不下，和业内「高保真原型 + 多屏检查」一致",
+    "mineKw": ["设计工作台", "真尺寸骨架", "设计 token", "气质稿"],
+    "baseKw": ["高保真原型", "设计 token", "响应式断点"],
+    "dims": [
+     {"dim": "效果图的用途", "mine": ["生图只判断气质，不判断比例"], "base": ["高保真原型看细节和真实交互"], "same": false},
+     {"dim": "断点按什么切", "mine": ["宽度和高度各一档"], "base": ["宽度、高度、横竖屏都可以做条件"], "same": true}
+    ],
+    "why": "需求方要「简洁、安静」，比例和密度要看见才能判断",
+    "cost": "工作台引擎自己的样式一度把线框弄乱，要手动补一行；新项目没有现成样式，站点颜色只能先手填",
+    "say": "做设计时给我高保真原型：用设计 token 和真实文案在真尺寸上排，手机竖屏、横屏、桌面都量一遍，响应式断点按宽度和高度各定一档",
+    "keywords": [
+     {"term": "设计 token", "what": "颜色、字号、间距都起名字统一引用，改一处全站跟着变", "side": "mine", "src": "dtcg"},
+     {"term": "高保真原型", "what": "看起来像真软件的原型，能判断细节、可读性和交互", "side": "base", "src": "nng_fidelity"},
+     {"term": "响应式断点", "what": "按窗口宽度、高度切换字号和布局", "side": "mine", "src": "mdn_mq"},
+     {"term": "等宽数字", "what": "每位数字一样宽，倒计时走秒时不左右跳", "side": "mine", "src": "mdn_tabular"}
+    ],
+    "evidence": [
+     "你的原话：「开始做设计，把这个页面的设计规范定下来。要简洁、安静，不要花哨动效。」",
+     "自带资料库给番茄钟的默认方案是深底红绿配色、网络字体，没有照抄",
+     "工作台在手机横屏下实测：宽度不触发手机字号，高度又放不下桌面大字，「专注」被顶出屏幕；三档里选了只在矮窗口换小字号（D6）"
+    ],
+    "sources": ["dtcg", "nng_fidelity", "mdn_mq", "mdn_tabular"]
+   },
+   {
+    "id": "b4",
+    "step": "先写技术方案再写代码",
+    "eval": "一致",
+    "gapLine": "先写技术调研和工程文档、拆成小任务再动手，和规格驱动开发的「计划 → 任务 → 实现」一致",
+    "mineKw": ["技术调研", "工程文档", "任务拆分", "规则和页面分两层"],
+    "baseKw": ["技术方案", "任务拆分", "Spec Kit"],
+    "dims": [
+     {"dim": "依赖", "mine": ["Node 自带测试工具", "提示音现场合成"], "base": ["常见做法是装测试框架、放音频文件"], "same": false}
+    ],
+    "why": "需求方要「越简单越好」，规格里不许加依赖、不许请求外部网址",
+    "cost": "Skill 给的测试框架选项里没有 Node 自带的那个，要另外定",
+    "say": "动手前先出技术方案和任务拆分：列出坑点（后台计时、出声限制、存储不可用、跨零点），说明代码怎么分层、怎么测、加不加依赖，我看过再开工",
+    "keywords": [
+     {"term": "Spec Kit", "what": "GitHub 开源的规格驱动工具：规格 → 计划 → 任务 → 实现", "side": "base", "src": "speckit"},
+     {"term": "Node 内置测试运行器", "what": "Node 自带的单测工具，零依赖，一条命令跑完", "side": "mine", "src": "node_test"},
+     {"term": "Web Audio", "what": "用代码现场合成提示音，不用放音频文件", "side": "mine", "src": "mdn_webaudio"},
+     {"term": "localStorage", "what": "记录只存在这台电脑的这个浏览器里，刷新不丢", "side": "mine", "src": "mdn_localstorage"}
+    ],
+    "evidence": [
+     "你的原话：「设计定了，开始开发吧。」",
+     "工程上没定的四件事全部采用推荐：提示音现场合成、两个普通脚本（本地双击能打开）、Node 自带测试工具、系统自带 Python 预览（D7）",
+     "调研列出的坑：后台计时被放慢、网页出声要先有用户操作、本机存储可能整个不可用、跨零点、系统时间回调、手机横屏放不下"
+    ],
+    "sources": ["speckit", "node_test", "mdn_webaudio", "mdn_localstorage"]
+   },
+   {
+    "id": "b5",
+    "step": "测试先行与测试质量",
+    "eval": "待改进",
+    "gapLine": "先写测试，还用改坏规则检查过测试；但测试和实现出自同一个 Codex，一条把错误行为当成期望的用例到审查才发现",
+    "mineKw": ["测试先行", "空壳检查", "手工改坏规则", "Node 内置测试运行器"],
+    "baseKw": ["变异测试", "测试预言", "审查测试本身"],
+    "dims": [
+     {"dim": "期望值从哪来", "mine": ["写实现的 Codex 自己写测试"], "base": ["期望值按规格独立核对", "审查时专门看测试对不对"], "same": false},
+     {"dim": "测试能不能抓错", "mine": ["手工把规则逐处改坏"], "base": ["变异测试工具自动改代码看测试会不会失败"], "same": false}
+    ],
+    "why": "任务书要求严格先写测试，Claude 还用空壳和改坏规则两种办法检查过测试，并按规格另写了一份检查",
+    "cost": "改坏规则只能证明测试会报警，证明不了期望值本身对；系统时间往回调后暂停那一条，测试把「剩余时间比一整段还长」写成了应当如此",
+    "say": "写测试时期望值一律按规格写，不从实现抄；跑一遍变异测试看测试抓不抓得住改坏的代码；审查时把测试本身当审查对象，逐条对照规格看测试预言对不对",
+    "keywords": [
+     {"term": "变异测试", "what": "故意改坏代码，看测试会不会失败；不失败说明测试有漏洞", "side": "mine", "src": "stryker"},
+     {"term": "测试预言", "what": "测试里的「正确答案」，要从规格来，不能从实现抄", "side": "base", "src": "test_oracle"},
+     {"term": "测试覆盖率", "what": "能找出没测到的代码，但数字高不代表测试好", "side": "base", "src": "fowler_coverage"}
+    ],
+    "evidence": [
+     "Claude 把实现换成空壳，每组测试都失败；把关键规则逐处改坏（去掉同一段只算一次、取整方向改反等），每处都有测试报警",
+     "审查发现：原来的单测把这个错误行为写成了「应当如此」",
+     "修复前，往回调时间后暂停再继续，两秒后还是 25:00；修复后是 24:58"
+    ],
+    "sources": ["stryker", "test_oracle", "fowler_coverage", "google_review_tests"]
+   },
+   {
+    "id": "b6",
+    "step": "写的和验的分开",
+    "eval": "一致",
+    "gapLine": "Codex 写、Claude 验，验收再另派子任务，每步都自己重跑、看截图，不轻信对方的汇报",
+    "mineKw": ["Codex 写、Claude 验", "任务书写验收标准", "调度者亲自复核"],
+    "baseKw": ["独立审查", "能判对错的检查", "要证据不要结论"],
+    "dims": [
+     {"dim": "谁写谁验", "mine": ["Codex 写代码", "Claude 验收", "验收另派子任务"], "base": ["没写代码的人来审"], "same": true}
+    ],
+    "why": "示范规矩：写代码交给本机 Codex（D8）",
+    "cost": "Codex 的沙箱里打不开浏览器，前端等于盲写，页面好不好看全靠 Claude 截图把关",
+    "say": "代码交给另一个 AI 写，你来独立审查：任务书里写能判对错的检查，交回后你亲自重跑、看真实页面，要证据不要结论，把命令和输出给我",
+    "keywords": [
+     {"term": "写的和验的分开", "what": "一个 AI 写代码，另一个验收，不轻信对方的汇报", "side": "mine", "src": "cc_bp_check"},
+     {"term": "Codex", "what": "在本机命令行里读、改、跑代码的 AI，按任务书干活", "side": "mine", "src": "codex_cli"}
+    ],
+    "evidence": [
+     "你的原话：「这几个任务派给 Codex 写，你来验收。」",
+     "五份任务都一轮交回、一轮验收通过，没有返工",
+     "调度者不轻信汇报：亲自看分支上的提交和改动范围、读产出的文档、自己重跑单测、打开截图看页面"
+    ],
+    "sources": ["cc_bp_check", "codex_cli"]
+   },
+   {
+    "id": "b7",
+    "step": "真实环境验收",
+    "eval": "待改进",
+    "gapLine": "最难的「页面在后台时到点晚多少」没量到，只有前台实测和推断；Safari、Firefox、真机、试听都留给人，还没做",
+    "mineKw": ["假时钟快进", "前台真实等满一段", "每分钟唤醒模型", "手动验证清单"],
+    "baseKw": ["后台计时限速", "跨浏览器测试", "真机测试"],
+    "dims": [
+     {"dim": "后台到点", "mine": ["无头浏览器转不到后台，只做模型推断"], "base": ["真实浏览器把标签页放后台实测"], "same": false},
+     {"dim": "浏览器覆盖", "mine": ["只测了 Chrome 内核"], "base": ["Chromium、WebKit、Firefox 都跑"], "same": false},
+     {"dim": "手机", "mine": ["模拟手机尺寸"], "base": ["真机锁屏、切出再回来"], "same": false}
+    ],
+    "why": "无头浏览器里的标签页永远「在眼前」；本机 Safari 内核和测试工具版本对不上，Firefox 没装，按规矩不为测试改环境",
+    "cost": "不能说「已验证后台准时提醒」；后台晚多少要等需求方手动量",
+    "say": "验收时单列后台计时限速这一项：用真实浏览器把标签页放到后台走完一段，记下晚了多久；跨浏览器测试至少跑 Chrome、Safari、Firefox，再拿真机测试锁屏；测不了的写成手动清单给我",
+    "keywords": [
+     {"term": "后台计时限速", "what": "后台标签页的定时器会被放慢，最慢一分钟才检查一次", "side": "mine", "src": "chrome_throttle"},
+     {"term": "假时钟", "what": "把浏览器里的时间快进，一段专注几秒测完", "side": "mine", "src": "pw_clock"},
+     {"term": "跨浏览器测试", "what": "同一套测试在 Chromium、WebKit、Firefox 上各跑一遍", "side": "base", "src": "pw_browsers"}
+    ],
+    "evidence": [
+     "你的原话：「功能做完了，帮我验收一下：按需求里的检查表一条条测，到点提醒在后台到底准不准也测一下，有问题列出来，别动代码。」",
+     "前台真实等满 25 分钟：提示音几乎准时、只响一次",
+     "按浏览器对长时间隐藏页面的限速方式做模型：晚了不到一分钟，不重复响、不重复计数——这是推断，不是实测"
+    ],
+    "sources": ["chrome_throttle", "mdn_visibility", "pw_clock", "pw_browsers"]
+   },
+   {
+    "id": "b8",
+    "step": "合并前代码审查",
+    "eval": "一致",
+    "gapLine": "验收全过之后仍做了一次审查，修好两处，修完重跑了单测和浏览器回归",
+    "mineKw": ["上线前审查", "修复前后对照"],
+    "baseKw": ["代码审查", "合并请求"],
+    "dims": [
+     {"dim": "审查看什么", "mine": ["代码和测试的期望值都看"], "base": ["测试是否正确、有用"], "same": true}
+    ],
+    "why": "验收全过不代表没问题",
+    "cost": "审查拿分支和主分支现在的样子直接比，把主分支后来的改动算成了分支删掉的，要换成只看分叉以来的改动",
+    "say": "开合并请求前先做代码审查：看改动有没有违背工程文档的口径、测试的期望值对不对，修完重跑单测和浏览器回归再交给我",
+    "keywords": [
+     {"term": "代码审查", "what": "合并前另一个人看改动，包括测试本身对不对", "side": "mine", "src": "google_review_tests"},
+     {"term": "合并请求", "what": "把一个分支的改动提出来，审过再合进主分支", "side": "mine", "src": "gh_pr"}
+    ],
+    "evidence": [
+     "你的原话：「QA 过了，上线前帮我审一遍代码，有问题直接修。」",
+     "审查摘要：4 个问题、0 个严重，一个自动修、两个确认后修、一个交给文档同步",
+     "页面代码到处包着空的错误捕获：页面结构一旦改坏，按钮会静默失灵、控制台一个错误都没有"
+    ],
+    "sources": ["google_review_tests", "gh_pr"]
+   },
+   {
+    "id": "b9",
+    "step": "合并前自动检查",
+    "eval": "缺失",
+    "gapLine": "仓库没有任何自动检查，三个合并请求都由 AI 自己开、自己合，测试结果都是本机跑的",
+    "mineKw": ["本机跑测试", "无远程检查", "自己开自己合"],
+    "baseKw": ["持续集成", "GitHub Actions", "必需状态检查"],
+    "dims": [
+     {"dim": "测试在哪跑", "mine": ["本机"], "base": ["每个合并请求自动跑"], "same": false},
+     {"dim": "谁放行合并", "mine": ["AI 自己合"], "base": ["保护分支：检查通过、有人批准才能合"], "same": false}
+    ],
+    "why": "示范项目小、只有一个人，需求方设定里也没提",
+    "cost": "换一台电脑、换一个人改代码时，没有东西拦住坏改动；合并请求页上只能写「无远程检查」",
+    "say": "给仓库配持续集成：用 GitHub Actions 在每个合并请求上跑单测和文档检查，主分支设成必需状态检查通过才能合并",
+    "keywords": [
+     {"term": "持续集成", "what": "每个合并请求自动跑测试，结果显示在合并请求页上", "side": "base", "src": "gh_ci"},
+     {"term": "必需状态检查", "what": "主分支规定检查不通过就不能合并", "side": "base", "src": "gh_protected"}
+    ],
+    "evidence": [
+     "你的原话：「审完了，发布吧：开合并请求、合进 main，本地 main 也同步一下。」",
+     "合并前检查：仓库没有配置任何远程自动检查，总结里只能写「无远程检查」，不能写「CI 已通过」",
+     "合并请求是 AI 自己开、自己合的，没有第二个人审批"
+    ],
+    "sources": ["gh_ci", "gh_protected"]
+   },
+   {
+    "id": "b10",
+    "step": "发布时文档一起进",
+    "eval": "待改进",
+    "gapLine": "合并之后才同步 README 和版本记录，多开了一个合并请求",
+    "mineKw": ["合并后再同步文档", "第二个合并请求", "版本记录"],
+    "baseKw": ["文档和代码同一个合并请求", "版本记录"],
+    "dims": [
+     {"dim": "文档什么时候改", "mine": ["合并之后另拉分支改"], "base": ["和代码一起进同一个合并请求"], "same": false}
+    ],
+    "why": "发布那一步一口气合完；文档同步的 Skill 本来设计在合并之前跑，时机对不上",
+    "cost": "「一次发布」实际是两个合并请求；合并后按分支比较什么也看不到，只能改成比较上一个合并请求带进来的内容",
+    "say": "发布前先把 README（这是什么、怎么打开用）和版本记录放进同一个合并请求，文档和代码同一个合并请求一起合",
+    "keywords": [
+     {"term": "版本记录", "what": "每个版本写用户能感受到的变化，写给人看", "side": "mine", "src": "keepachangelog"}
+    ],
+    "evidence": [
+     "你的原话：「合进去了，把文档同步一下：README 写清这是什么、怎么打开用，再补个更新记录。」",
+     "从最新主分支另拉文档分支、开合并请求 #2、再合一次"
+    ],
+    "sources": ["keepachangelog", "gh_pr"]
+   },
+   {
+    "id": "b11",
+    "step": "修 bug：先复现再修",
+    "eval": "一致",
+    "gapLine": "先复现、做实验否掉看似合理的改法，修前修后同一把尺子量，合并主线后再量一次",
+    "mineKw": ["冻结动画时钟复现", "单变量实验", "5 Whys", "修前修后对照"],
+    "baseKw": ["根因分析", "先写失败的测试", "回归测试"],
+    "dims": [
+     {"dim": "修法怎么选", "mine": ["三个实验逐个注入，否掉只改样式的改法"], "base": ["先复现、找到根因再改"], "same": true}
+    ],
+    "why": "验收已经给出根因猜测和建议改法，但没实验证实",
+    "cost": "为一处约 0.1 秒的颜色过渡走了一整轮：复现、三次实验、两轮 Codex、两轮验收、一个合并请求",
+    "say": "修这个 bug：先写一个会失败的测试复现，做根因分析，用实验证实再改；修完回归测试修前修后各跑一次给我看对照",
+    "keywords": [
+     {"term": "根因分析", "what": "连问几个为什么，找到能根治的原因再改", "side": "mine", "src": "five_whys"},
+     {"term": "先写失败的测试", "what": "修之前先写一个能复现问题的测试，修完它变绿", "side": "mine", "src": "cc_bp_prompt"},
+     {"term": "git worktree", "what": "同一个仓库开几个工作副本，修 bug 和主线并行互不干扰", "side": "mine", "src": "git_worktree"}
+    ],
+    "evidence": [
+     "你的原话：「到点切换的时候，开始按钮的颜色是慢慢变过去的，不是一下子换掉。设计里写的是直接切换。修一下。」",
+     "实验：只改样式（验收建议的改法）在鼠标停在按钮上时仍会渐变，被否（D13）",
+     "合并主线时撞上审查新定的错误处理规矩，按新写法重落、重跑同一套回归，全部通过"
+    ],
+    "sources": ["five_whys", "cc_bp_prompt", "git_worktree"]
+   }
+  ],
+  "sources": {
+   "cc_bp_interview": {"title": "Best practices for Claude Code · Brainstorm with Claude first", "publisher": "Anthropic", "url": "https://code.claude.com/docs/en/best-practices#brainstorm-with-claude-first", "note": "不确定要什么时，让 Claude 采访你、问到能写出规格为止，写进 SPEC.md，再新开会话按它实现"},
+   "cc_bp_check": {"title": "Best practices for Claude Code · Give Claude a check to run", "publisher": "Anthropic", "url": "https://code.claude.com/docs/en/best-practices#give-claude-a-check-to-run", "note": "给一个能返回通过或失败的检查；也可以让没写代码的全新子代理来审，并且要证据（命令和输出），只说「测试全过」说明不了什么"},
+   "cc_bp_prompt": {"title": "Best practices for Claude Code · Write a specific prompt", "publisher": "Anthropic", "url": "https://code.claude.com/docs/en/best-practices#write-a-specific-prompt", "note": "好的修 bug 指令：说清症状和位置，先写一个能复现的失败测试，再修"},
+   "speckit": {"title": "Spec Kit", "publisher": "GitHub", "url": "https://github.com/github/spec-kit", "note": "规格驱动开发：先定义做什么、为什么，再把规格转成技术计划、任务和可运行的代码"},
+   "ghblog_sdd": {"title": "Spec-driven development with AI: Get started with a new open source toolkit", "publisher": "The GitHub Blog", "url": "https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/", "note": "规格是代码该怎样表现的契约；含糊的提示会让 AI 去猜大量没说的要求，问题很晚才暴露"},
+   "fowler_gwt": {"title": "GivenWhenThen", "publisher": "Martin Fowler", "url": "https://martinfowler.com/bliki/GivenWhenThen.html", "note": "用「给定起始状态、发生某个行为、期望看到的变化」三段来写场景，出自行为驱动开发"},
+   "scrum_dod": {"title": "The Scrum Guide", "publisher": "Scrum Guides", "url": "https://scrumguides.org/scrum-guide.html", "note": "完成的定义：增量满足产品质量要求时状态的正式描述"},
+   "nng_fidelity": {"title": "UX Prototypes: Low Fidelity vs. High Fidelity", "publisher": "Nielsen Norman Group", "url": "https://www.nngroup.com/articles/ux-prototype-hi-lo-fidelity/", "note": "高保真原型看起来像真软件，适合检验细节、可读性和真实交互；低保真改起来快"},
+   "mdn_mq": {"title": "Using media queries", "publisher": "MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries", "note": "媒体查询除了宽度，也能按高度、横竖屏来切样式"},
+   "dtcg": {"title": "Design Tokens Community Group", "publisher": "W3C", "url": "https://www.designtokens.org/", "note": "W3C 社区组在统一设计 token 的定义和交换格式，让设计决定能跨工具、跨产品共用"},
+   "mdn_tabular": {"title": "font-variant-numeric", "publisher": "MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-numeric", "note": "tabular-nums 让每个数字一样宽，像表格一样对齐"},
+   "mdn_reduced": {"title": "prefers-reduced-motion", "publisher": "MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion", "note": "检测用户是否在设备上打开了「尽量减少非必要动效」的设置"},
+   "node_test": {"title": "Test runner", "publisher": "Node.js", "url": "https://nodejs.org/api/test.html", "note": "node:test 模块用来写 JavaScript 测试，命令行传 --test 就能运行"},
+   "mdn_webaudio": {"title": "Web Audio API", "publisher": "MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API", "note": "声音来源可以是数学算出来的（振荡器），也可以是音频文件"},
+   "mdn_localstorage": {"title": "Window: localStorage property", "publisher": "MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage", "note": "数据跨浏览器会话保存、没有过期时间，按来源分开存；用户禁止网站存数据时会报错"},
+   "stryker": {"title": "What is mutation testing?", "publisher": "Stryker Mutator", "url": "https://stryker-mutator.io/docs/", "note": "变异测试自动往代码里插入小错误，再跑单测；测试失败就算抓住，全过说明测试可能没覆盖到"},
+   "test_oracle": {"title": "Test oracle", "publisher": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Test_oracle", "note": "测试预言是判断某个输入下正确结果的依据；找出正确结果本身就是难题（预言问题）"},
+   "fowler_coverage": {"title": "TestCoverage", "publisher": "Martin Fowler", "url": "https://martinfowler.com/bliki/TestCoverage.html", "note": "覆盖率能找出没测到的代码，但作为「测试有多好」的数字几乎没用，低质量的测试也很容易把覆盖率刷高"},
+   "google_review_tests": {"title": "What to look for in a code review", "publisher": "Google Engineering Practices", "url": "https://google.github.io/eng-practices/review/reviewer/looking-for.html", "note": "审查要确认测试正确、合理、有用：测试不会自己检验自己，要问代码坏了测试会不会失败"},
+   "codex_cli": {"title": "Codex CLI", "publisher": "OpenAI", "url": "https://learn.chatgpt.com/docs/codex/cli", "note": "在终端里检查代码、修改、运行命令，直接对本地仓库读写文件"},
+   "chrome_throttle": {"title": "Heavy throttling of chained JS timers beginning in Chrome 88", "publisher": "Chrome for Developers", "url": "https://developer.chrome.com/blog/timer-throttling-in-chrome-88", "note": "隐藏页面的定时器每秒才检查一次；隐藏超过 5 分钟、且安静了一阵的页面，改成每分钟检查一次"},
+   "mdn_visibility": {"title": "Page Visibility API", "publisher": "MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API", "note": "后台或不活动的标签页里，setTimeout 这类定时器会被限速；页面显示或隐藏时会发 visibilitychange 事件"},
+   "pw_clock": {"title": "Clock", "publisher": "Playwright", "url": "https://playwright.dev/docs/clock", "note": "接管页面里的 Date、setTimeout、setInterval 等时间函数，可以暂停、快进"},
+   "pw_browsers": {"title": "Browsers", "publisher": "Playwright", "url": "https://playwright.dev/docs/browsers", "note": "同一套测试可以在 Chromium、WebKit、Firefox 上运行"},
+   "gh_pr": {"title": "About pull requests", "publisher": "GitHub Docs", "url": "https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests", "note": "合并请求是把改动合进项目的提议，合作者可以先讨论、审查，再合进基础分支"},
+   "gh_ci": {"title": "Continuous integration", "publisher": "GitHub Docs", "url": "https://docs.github.com/en/actions/get-started/continuous-integration", "note": "持续集成在推送等事件上自动构建和测试，结果显示在合并请求里，测试都过才适合审查或合并"},
+   "gh_protected": {"title": "About protected branches", "publisher": "GitHub Docs", "url": "https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches", "note": "保护分支可以要求合并前必须有人批准、必须通过状态检查"},
+   "gh_pages": {"title": "What is GitHub Pages?", "publisher": "GitHub Docs", "url": "https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages", "note": "静态网站托管服务，直接从仓库取 HTML、CSS、JavaScript 文件发布成网站"},
+   "keepachangelog": {"title": "Keep a Changelog", "publisher": "keepachangelog.com", "url": "https://keepachangelog.com/en/1.1.0/", "note": "版本记录是按版本整理的重要变化清单，原则是写给人看，不是给机器看"},
+   "git_worktree": {"title": "git-worktree", "publisher": "Git", "url": "https://git-scm.com/docs/git-worktree", "note": "一个仓库可以挂多个工作目录，同时检出不止一个分支"},
+   "five_whys": {"title": "Five whys", "publisher": "Wikipedia", "url": "https://en.wikipedia.org/wiki/Five_whys", "note": "反复追问「为什么」，用上一个答案引出下一个问题，直到找到能根治的原因；出自丰田"},
+   "pomofocus": {"title": "Pomofocus", "publisher": "Pomofocus", "url": "https://pomofocus.io/", "note": "现成的网页番茄钟，电脑和手机浏览器都能用，另有项目、报表等付费功能"},
+   "mdn_pwa": {"title": "Progressive web apps", "publisher": "MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps", "note": "用网页技术做、能像普通应用一样安装，可以离线和在后台运行"},
+   "mdn_notifications": {"title": "Notifications API", "publisher": "MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API", "note": "通知由操作系统弹出，切到别的标签或应用也看得见；要用户授权，请求授权应放在用户点击时"},
+   "chrome_autoplay": {"title": "Autoplay policy in Chrome", "publisher": "Chrome for Developers", "url": "https://developer.chrome.com/blog/autoplay", "note": "用户操作之前创建的 Web Audio 处于暂停状态，要在用户操作后恢复才能出声"},
+   "fowler_adr": {"title": "Architecture Decision Record", "publisher": "Martin Fowler", "url": "https://martinfowler.com/bliki/ArchitectureDecisionRecord.html", "note": "一条决定一份短文档，写背景、备选、后果；状态分提议中、已采纳、被取代"}
+  },
+  "expression": [
+   {
+    "type": "需求不一致",
+    "title": "待拍板默认接受了，发布后又要改",
+    "quotes": [["10-23 · 发布后", "到点切换的时候，开始按钮的颜色是慢慢变过去的，不是一下子换掉。设计里写的是直接切换。修一下。"]],
+    "effect": "这处偏离在工程、验收两步都写进了待拍板，默认「接受现状」，你没回，就放行发布了（D9）；发布后改口要修，又开分支走了一整轮：复现、三次实验、两轮 Codex、两轮验收、第三个合并请求，合并主线时还和审查改过的同一段代码撞车",
+    "say": "待拍板里那条按钮颜色过渡我不接受：照设计写的直接换色，修好再合并"
+   },
+   {
+    "type": "需求不完整",
+    "title": "说发布时没说要带上文档",
+    "quotes": [
+     ["10-23 · 审查之后", "审完了，发布吧：开合并请求、合进 main，本地 main 也同步一下。"],
+     ["10-23 · 合并之后", "合进去了，把文档同步一下：README 写清这是什么、怎么打开用，再补个更新记录。"]
+    ],
+    "effect": "第一句只说了合并，README 和版本记录没进第一个合并请求；合并后才提，又拉文档分支、开合并请求 #2、再合一次",
+    "say": "发布吧：先把 README（这是什么、怎么打开用）和版本记录补进这个合并请求，审完一起合进 main，本地 main 也同步"
+   }
+  ]
+ }
+}
