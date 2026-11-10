@@ -48,5 +48,5 @@
 | C6 | "界面颜色不对，应该是 #F4F1EA" | forge-bugfix（实现偏离）或 forge-design-impl | 有 DESIGN.md 且值明确 → 属实现偏离走 bugfix；无设计文档 → design 先定值 |
 | C7 | "需求好像不对，用户其实要的是 X" | forge-prd | 产品诊断（需求层）不是 bugfix（实现层） |
 | C8 | "讨论一下这个 bug 怎么修" | forge-bugfix | "讨论一下"是 brainstorm 触发词，但对象是 bug → bugfix 的 P4 方案确认已覆盖讨论 |
-| C9 | "把这次学到的东西记下来" | forge-fupan（账本） | 不是让 AI 写 Memory，是复盘账本条目 |
+| C9 | "把这次学到的东西记下来" | forge-fupan | 不是让 AI 写 Memory，是做一篇复盘（v4 起不写账本） |
 | C10 | "文档乱了，帮我整理 docs 目录" | forge-doc-policy | 不是 doc-release（doc-release 只在发布后对齐文档） |

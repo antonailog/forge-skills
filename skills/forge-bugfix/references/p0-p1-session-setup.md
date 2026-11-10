@@ -165,19 +165,19 @@ fi
 | **已归档已处理区** | **必须** | 历史修复回溯 — 以后遇到类似问题时搜这里 |
 | QA.md (`$DOC_QA`) | 按需 | 已知问题列表 |
 | Memory（MEMORY.md） | **必须** | feedback 类条目 — 历史踩坑 |
-| **learnings 账本**（复盘教训） | **必须** | 用户的个人教训回放 — 能力复利闭环 |
+| learnings 账本（旧版复盘留下的教训） | 按需 | v4 起不再新增，只读回看 |
 | `git log --since="3 days" -- affected-files` | 按需 | 最近变更（回归 Bug 必看）|
 
-#### learnings 账本回放（forge-fupan v2 闭环）
+#### learnings 账本回看（旧版复盘留下的，只读）
 
 ```bash
-_LEDGER="$HOME/claudecode_workspace/记录/复盘/learnings.jsonl"
+_LEDGER="${FUPAN_ROOT:-$HOME/claudecode_workspace/记录/复盘}/learnings.jsonl"
 _PROJ=$(basename "$_ROOT")
 [ -f "$_LEDGER" ] && grep -h "\"project\":\"$_PROJ\"\|\"project\":\"global\"" "$_LEDGER" | tail -30
 ```
 
 从输出中挑 status=active、置信度 ≥7、与本次问题域相关的条目（最多 5 条），
-开工前向用户一行一条复述：`上次教训回放：{key} — {insight}（置信度 N）`。
+开工前向用户一行一条复述：`旧复盘教训：{key} — {insight}（置信度 N）`。
 没有账本文件则静默跳过。
 
 #### Bugfix 历史检索

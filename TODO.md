@@ -59,7 +59,7 @@
   - 状态目录统一 `.forge/`（dev-state.json/checkpoints/visual-decision.md），旧 .do-dev/.deliver 只读迁移
   - forge-deliver 退役归档 `_archive/2026-07-04-forge-deliver-retired/`，install.sh 清单同步，触发词并入 dev
   - 验证：16 链接 ok、全库无悬空引用、注册表不再出现 deliver
-- [x] E2. fupan v2 重设计 ✅ 2026-07-04（细案经用户确认）：
+- [x] E2. fupan v2 重设计 ✅ 2026-07-04（细案经用户确认）：（已被 v4 替代：2026-11 重写为单篇复盘页 + 复盘汇总页，账本停写、Workbench 删除）
   - 主产出改为 learnings.jsonl 账本（append-only/置信度/复发检测，参考 gstack /learn+/retro）
   - 一页纸 ≤60 行 + 每次 1 个深度小课；五章模板/流水账/强制配图/网页勾选门禁全部砍掉
   - 回放钩子接入 bugfix P1 + eng 理解现状（闭环：产条目→开工回放→复盘验复发），端到端实测通过

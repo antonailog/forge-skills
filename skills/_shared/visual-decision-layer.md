@@ -1,6 +1,6 @@
 # Forge 视觉决策层
 
-当任务涉及人类判断、设计气质、页面布局、复杂流程或学习复盘时，先判断是否需要可视化辅助。目标不是多画图，而是更早暴露误解、更快让用户做判断。
+当任务涉及人类判断、设计气质、页面布局或复杂流程时，先判断是否需要可视化辅助。目标不是多画图，而是更早暴露误解、更快让用户做判断。
 
 ## 目录
 
@@ -10,7 +10,6 @@
 - [产物保存约定](#产物保存约定)
 - [Image 2 生成方式](#image-2-生成方式)
 - [Prompt 约束](#prompt-约束)
-- [复盘学习图 Prompt 模板](#复盘学习图-prompt-模板)
 - [UI 视觉稿 Prompt 模板](#ui-视觉稿-prompt-模板)
 - [写入文档的最小格式](#写入文档的最小格式)
 
@@ -20,7 +19,7 @@
 |---|---|---|---|
 | Mermaid / show-widget | 结构化、可复现的图 | 流程、因果链、对比矩阵、状态机、学习地图 | 需要判断真实视觉气质 |
 | forge-design-lab 工作台骨架 | 真 token、真像素、可改可存的 HTML 骨架 | 页面/组件的布局、比例、密度、栏宽、行长、状态清单——凡是要看尺寸才能判断的 | 气质与风格方向（用 Image 2）、最终验收（用真实截图） |
-| Image 2 视觉稿 / 学习图 | 高保真想象图、观感预判、知识记忆辅助 | 品牌气质、风格方向、复盘知识模块 | 比例、密度、栏宽（生图画出来的比例不可信，走工作台）、精确数据图、测试证据 |
+| Image 2 视觉稿 | 高保真想象图、观感预判 | 品牌气质、风格方向 | 比例、密度、栏宽（生图画出来的比例不可信，走工作台）、精确数据图、测试证据 |
 | 真实截图 / Figma 导出 | 最终事实证据 | 实现后验收、设计还原对比、复盘存档 | 前期概念探索 |
 
 ## 触发规则
@@ -30,7 +29,6 @@
 - 用户需要在多个方向之间做判断，且文字难以传达差异。
 - 设计会进入前端实现，且页面/组件/状态会影响实际观感——布局、比例、密度走 forge-design-lab 工作台；气质方向才用 Image 2。
 - 流程超过 5 个节点、方案超过 3 个、或因果链超过 3 层。
-- 复盘中有展开的知识模块，需要生成一张可回看的学习图。
 
 不要生成视觉产物：
 
@@ -47,7 +45,7 @@
 | design | forge-design-lab 工作台门禁；Image 2 气质稿（可选） | 页面/组件/布局决策先在工作台线框确认、骨架逐层审查并保存；DESIGN.md 的 token 表由工作台导出生成。气质方向不明时另出 1-3 张 Image 2 |
 | design-impl / eng | 以 DESIGN.md + 工作台生成的 `<page>.tokens.css` 为真相源，Image 2 作为观感参考 | 组件 import tokens.css、只写 var()；实现后用真实截图对比工作台骨架 |
 | QA | 真实截图 + CSS/行为断言 | Image 2 只帮助解释偏差，不作为 pass/fail |
-| fupan | 默认不配图；用户点名需要时才生成学习图，不生成仪表盘 | 生成时插入对应知识模块标题下方；若图片工具不可用，保存 prompt pack 并标注待生成 |
+| fupan | 不生成图：复盘页里的知识地图、路线图由阅读页按数据画，结果截图由 build.py 存进 shots/ | — |
 
 ## 产物保存约定
 
@@ -55,7 +53,6 @@
 - forge-design-lab 页面包：`docs/assets/visuals/{page}/`（`{page}.tokens.json` / `.tokens.js` / `{日期}-skeleton-{版本}.html` / `.meta.json`）；引擎项目副本 `docs/assets/visuals/_workbench/`；前端 `…/{page}.tokens.css`
 - brainstorm 原始讨论配图：`docs/archive/raw/discussions/{模块名}/assets/`
 - legacy 项目才沿用：`docs/讨论/{模块名}/assets/`
-- 复盘阶段：`~/claudecode_workspace/记录/复盘/{项目名}/assets/`
 - 文件命名：`{YYYY-MM-DD}-{阶段}-{用途}.png`
 - 同目录保存 prompt：`{同名}.prompt.md`
 - 同目录保存元数据：`{同名}.meta.json`
@@ -104,41 +101,6 @@ Image 2 prompt 必须包含：
 - 把 API key、token、内部路径、用户隐私写入 prompt。
 - 把工具型前端画成营销 hero、玻璃拟态大卡片、紫蓝渐变、装饰性圆球。
 - 把 Image 2 当作 QA 通过证据。
-
-## 复盘学习图 Prompt 模板
-
-```text
-Use case: scientific-educational
-Asset type: AI coding retrospective knowledge-module illustration
-Primary request: Create a clean educational knowledge map illustration for one module in an AI coding retrospective.
-
-Topic: {知识点名称}
-
-Core idea to teach:
-{这个知识点最重要的 1-3 个概念}
-
-How it appeared in this session:
-{本次会话中它出现在哪里，用户为什么需要学它}
-
-Key relationships to show:
-{概念 A} -> {概念 B} -> {概念 C}
-{如果适用，列出流程、因果链、层级关系或判断路径}
-
-User takeaway:
-{用户看完这张图应该记住什么、下次应该怎么判断或表达}
-
-Visual style:
-- Educational diagram, not marketing poster
-- Clear hierarchy, readable short Chinese labels, minimal decoration
-- Use simple boxes, arrows, callouts, and small symbolic icons
-- Neutral professional palette, white or light background
-- Keep text short and large enough to read
-- Avoid dense paragraphs; prefer 6-9 short labels
-- No code screenshots, no fake UI, no unrelated people
-- No purple-blue gradients, no decorative blobs, no watermark
-
-Output: A single 16:9 PNG knowledge map suitable for embedding in a Markdown retrospective.
-```
 
 ## UI Prompt 模板
 

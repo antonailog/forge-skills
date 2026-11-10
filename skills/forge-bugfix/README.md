@@ -10,7 +10,7 @@
 
 ![forge-bugfix 结构图](../../docs/diagrams/forge-bugfix.jpg)
 
-P0—P1 每个会话只做一次：巡检并行会话、读 PRD 和 bug 历史、回放教训账本。之后每个 bug 走一轮：用户确认范围后建 BF 报告和独立 worktree，根因和修复方案也要用户确认才动手；forge-qa 自动验收不过就回 P5 重修，连挂 3 次交给用户判断。QA 全过之后，用户在报告里填最终结论，Pass 才合并，Fail 回 P5 只修原 bug。
+P0—P1 每个会话只做一次：巡检并行会话、读 PRD 和 bug 历史。之后每个 bug 走一轮：用户确认范围后建 BF 报告和独立 worktree，根因和修复方案也要用户确认才动手；forge-qa 自动验收不过就回 P5 重修，连挂 3 次交给用户判断。QA 全过之后，用户在报告里填最终结论，Pass 才合并，Fail 回 P5 只修原 bug。
 
 ## 关键设计
 
@@ -26,7 +26,7 @@ P0—P1 每个会话只做一次：巡检并行会话、读 PRD 和 bug 历史�
 forge-bugfix/
 ├── SKILL.md                        铁律、P0—P8 流程总览、结案归档
 ├── references/                     进到哪个阶段读哪本
-│   ├── p0-p1-session-setup.md      会话准备：环境探测、读文档、回放教训
+│   ├── p0-p1-session-setup.md      会话准备：环境探测、读文档
 │   ├── p2-scoping.md               定范围：捞候选、并行判重、建报告
 │   ├── p3-p5-fix-loop.md           修复循环：复现、查根因、最小修复
 │   └── p6-p7-acceptance.md         验收：自动 QA、用户验收、分流
