@@ -42,7 +42,7 @@ python3 $SKILL_DIR/scripts/find_session.py --grep 关键词   # 复盘过去的�
 python3 $SKILL_DIR/scripts/digest.py <jsonl> -o <临时目录>/digest-<会话 id 前 8 位>.md [--until '11-04 12:15']
 ```
 
-只读摘要，不直接读几十 MB 的 JSONL。摘要里有用户原话（U1、U2…，北京时间）、AI 每步做了什么、写过的文件清单。AI 回复是截断的，要看全段加 `--text 2000` 重出，或回 JSONL 里 grep。同时看一眼 `git status` 和最近的提交，交付物要写提交状态。
+只读摘要，不直接读几十 MB 的 JSONL。摘要里有用户原话（U1、U2…，北京时间）、AI 每步做了什么、写过的文件清单。AI 回复是截断的，要看全段加 `--text 2000` 重出，或回 JSONL 里 grep。同时看一眼 `git status` 和最近的提交，用来判断摘要状态和遗留事项。
 
 **复盘范围**：从这件事开始，到用户要求复盘之前。会话末尾如果已经做过一次复盘、或者夹着别的不相干的事，用 `--from` / `--until` 切掉，文件清单里那段写的文件也不算。
 

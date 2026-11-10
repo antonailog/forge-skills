@@ -130,17 +130,6 @@ function Rail({ data }: P) {
   const onLayer = all.filter((e) => !spansAll(e, L) && e.layers.length)
   const outside = all.filter((e) => !e.layers.length && e.kind !== '架构')
   const [sel, setSel] = useState(onLayer.find((e) => e.group === '盲区') ?? all[0])
-  // 关键术语卡片上点「知识地图：xx」：选中那一条并滚到地图
-  useEffect(() => {
-    const go = (e: Event) => {
-      const hit = all.find((x) => x.id === (e as CustomEvent<string>).detail)
-      if (!hit) return
-      setSel(hit)
-      document.getElementById('kmap')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-    window.addEventListener('kmap-go', go)
-    return () => window.removeEventListener('kmap-go', go)
-  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
   // 换一条就从头读：右栏滚回顶部
   const panel = useRef<HTMLDivElement>(null)
   useEffect(() => { panel.current?.scrollTo({ top: 0 }) }, [sel])

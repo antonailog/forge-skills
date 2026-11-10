@@ -275,7 +275,7 @@ def validate(d: dict, icons: dict) -> tuple[list[str], list[str]]:
         E.append(f'摘要状态「{s["status"]}」不在 {sorted(SUMMARY_STATUS)}')
     if str(s.get('title', '')).endswith('复盘'):
         W.append('摘要标题写成了「××复盘」，应是一句结论')
-    need(d['session'], ('title', 'id', 'range', 'commit'), 'session')
+    need(d['session'], ('title', 'id', 'range'), 'session')
     if d['session'].get('range') and not parse_range(str(d['session']['range'])):
         E.append(f'session.range「{d["session"]["range"]}」要写成「2026-11-03 22:25 — 11-04 12:15」')
     stages, decs, goals = items(ov['stages'], '过程回顾'), items(ov['decisions'], '关键决策'), items(ov['goals'], '结果评估')
@@ -427,7 +427,7 @@ def validate(d: dict, icons: dict) -> tuple[list[str], list[str]]:
     for m in items(r['glossary']['modules'], '关键术语 glossary.modules'):
         need(m, ('id', 'area', 'name', 'say'), f'关键术语模块「{m.get("name", "?")}」')
         for w in items(_list(m, 'words', f'关键术语模块「{m.get("name", "?")}」'), f'关键术语模块「{m.get("name", "?")}」的 words'):
-            for k, v in (('src', None), ('step', None), ('kref', None), ('new', False), ('icon', '')):
+            for k, v in (('src', None), ('new', False), ('icon', '')):
                 if w.get(k) is None:
                     w[k] = v
             need(w, ('term', 'what'), f'术语「{w.get("term", "?")}」')
@@ -437,10 +437,6 @@ def validate(d: dict, icons: dict) -> tuple[list[str], list[str]]:
                 E.append(f'术语「{w.get("term")}」的 side「{w.get("side")}」不在 mine/talked/base')
             if w['src'] and _key(w['src']) not in sources:
                 E.append(f'术语「{w.get("term")}」的来源 {w["src"]} 不在 review.sources')
-            if w['kref'] and _key(w['kref']) not in kids:
-                E.append(f'术语「{w.get("term")}」的 kref {w["kref"]} 不是知识条目 id')
-            if w['step'] and _key(w['step']) not in bench_ids:
-                E.append(f'术语「{w.get("term")}」的 step {w["step"]} 不是对标项 id')
             ic = str(w['icon'])
             if icons and ic and not ((ic.startswith('si:') and ic[3:] in brands) or ic in lucide):
                 W.append(f'术语「{w.get("term")}」的图标 {ic} 不在可用名单，会按类别显示通用图标')

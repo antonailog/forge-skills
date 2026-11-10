@@ -21,7 +21,7 @@
 | --- | --- |
 | `root` | 可选。文件路径相对哪个目录，默认工作区根（复盘根的上两级） |
 | `mask` | 可选。要打码的字符串（账号名、内部域名……），嵌进页面的文件内容里替换成 ‹已打码›。IP、邮箱、`password=…` 这类自动打码 |
-| `session` | `{title, id, range, commit}`：title 同摘要标题；id 是会话 id 前 8 位；range `2026-11-03 22:25 — 11-04 12:15`（北京时间，build.py 用结束时间判断文件会后有没有再改）；commit 写提交状态，如「未提交」「已提交 2357c851」 |
+| `session` | `{title, id, range}`：title 同摘要标题；id 是会话 id 前 8 位；range `2026-11-03 22:25 — 11-04 12:15`（北京时间，build.py 用结束时间判断文件会后有没有再改） |
 
 ## 1-总结.json · review.overview
 
@@ -128,7 +128,7 @@
  "glossary": {"modules": [{"id": "data", "area": "数据", "name": "访问统计",
    "say": "做站点访问统计：用服务端日志分析 + 自托管上报，不接第三方……",
    "words": [{"term": "Umami", "kind": "选型", "side": "talked", "what": "开源可自部署、界面现成，要多跑一个数据库",
-     "src": "umami", "new": false, "step": "b1", "kref": "S1", "icon": "si:umami"}]}]}}}
+     "src": "umami", "new": false, "icon": "si:umami"}]}]}}}
 ```
 
 - `layers`：知识地图的骨架，这次工作对象的结构，自上而下 4–7 层；每层 `decide` 要定什么、`chosen` 这次选了什么
@@ -142,4 +142,3 @@
 - `words[].kind`：选型 · 效果 · 做法；`side`：mine（这次最终用的）· talked（会话里出现过但最终没用）· base（会话里没出现、业内常用）；`area` 是领域通用叫法，`name` 是这块在这次工作里的叫法
 - `words[].new`：用 `build.py --known-terms 词1 词2… --self <复盘文件夹> --session <会话 id>` 查，以前的复盘里没出现过的写 true
 - `words[].icon`：品牌词写 `si:<slug>`（react、vuedotjs、umami、baidu、github、docker……，全表在 assets/icons.json 的 brands），其余写 lucide 图标名（Eye、Timer、Lock、Bot、Tag、Rocket、SearchCheck……）；写错会退回类别通用图标
-- `words[].kref` 指向知识条目 id，`step` 指向对标项 id，卡片上会出现跳转
