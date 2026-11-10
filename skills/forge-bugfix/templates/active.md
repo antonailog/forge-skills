@@ -52,7 +52,7 @@
 - session: <sid> / worktree: <相对路径> / 任务: <任务编号> / 域: <单域 或 域1,域2>
 
 写入由 forge-bugfix P3.1.5 / forge-prd 立项 / forge-eng 启动时追加。
-清除由 forge-fupan Phase 5.0 或 /forge-status 负责。
+清除由 forge-fupan 第 9 步收尾或 /forge-status 负责。
 -->
 
 （暂无进行中会话）
@@ -73,6 +73,6 @@
 | 动作 | 由谁触发 | 操作 |
 |---|---|---|
 | 领取任务 | forge-bugfix P2 / forge-prd 立项 / forge-eng 启动 | 追加一行 |
-| 正常结束 | forge-fupan Phase 5 末尾 | 按 session id 删自己 |
+| 正常结束 | forge-fupan 第 9 步收尾 | 按 session id 删自己 |
 | 任务合并 | forge-bugfix P7 合并 worktree 之后 | 不立即清（等复盘或 /forge-status） |
 | 漏清兜底 | /forge-status 扫描 | 基于 worktree 存在性 + 分支 merge 状态报告待清理 |

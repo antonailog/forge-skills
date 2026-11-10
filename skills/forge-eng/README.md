@@ -37,7 +37,7 @@ forge-eng/
 ## 其他
 
 - 前提：git；宿主是 Claude Code 时，每个原子任务由 codex-delegate 派给 Codex 写，Claude 按任务书验收后提交
-- 注意：开工前会回放 forge-fupan 的经验账本，挑和本次相关的几条复述，没有账本就跳过
+- 注意：有旧版 forge-fupan 留下的经验账本时，开工前会挑和本次相关的几条复述；账本已不再新增，没有就跳过
 - 注意：改了规则、文案、交互、阈值、prompt 这类影响效果的东西，要调 forge-feature-doc 更新文档，和代码放进同一个提交
 
 ---

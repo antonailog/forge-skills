@@ -50,7 +50,7 @@ Doc-Driven Dev 体系中使用的关键概念，中英对照。
 | **文档驱动** | Document-Driven | PRD 驱动代码，文档是源代码上游 |
 | **完整性原则** | Completeness Principle | "把湖烧干"，AI 边际成本 ≈ 0 |
 | **方法论继承** | Methodology Inheritance | 从成熟 Skill 完整继承，不压缩成口号 |
-| **复盘闭环** | Retrospective Loop | 做 → 复盘 → 沉淀 → 反哺 Skill |
+| **收工复盘** | Retrospective | 做 → 复盘（对标最佳路径、补知识盲区）→ 按项目和模块回看 |
 | **灰区识别** | Gray Area Identification | Discussion 阶段识别不明确部分 |
 | **四维调研** | Four-dimension Research | 最佳实践 + 架构 + 风险 + 可复用代码 |
 

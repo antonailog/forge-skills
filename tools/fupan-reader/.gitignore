@@ -1,0 +1,4 @@
+node_modules/
+dist/
+# 开发用的复盘数据（含私有文件快照），不进 git
+public/

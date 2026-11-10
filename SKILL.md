@@ -161,7 +161,7 @@ D) 其他 — 告诉我你想做什么
 | `/forge-bugfix` | Bug 修复 | 系统性调试和修复 |
 | `/forge-review` | PR 审查 | 上线前代码审查 |
 | `/forge-ship` | 发布 | 合并+推送+创建 PR |
-| `/forge-fupan` | 复盘 | 教训进账本 + 一页纸 + 复发检测（Workbench 是阅览器） |
+| `/forge-fupan` | 复盘 | 单篇复盘页（对标最佳路径、补知识盲区）+ 按项目归档的复盘汇总页 |
 | `/forge-doc-release` | 发布后文档同步 | ship 之后让文档对齐现实 |
 | `/forge-status` | 并行会话巡检 | 扫 `.forge/active.md`，按硬信号清理僵尸 |
 | `/forge-doc-policy` | 文档治理规范 | 文档放哪的规则源头 + 新项目脚手架 |
@@ -174,4 +174,4 @@ D) 其他 — 告诉我你想做什么
 2. **快速** — 整个流程应该在 10 秒内完成（跑脚本 + 判断 + 展示）
 3. **不强制** — 推荐不是命令，用户可以选"其他"做任何事
 4. **每个 forge-* skill 也有出口建议** — 完成后会推荐下一步，形成链式引导
-5. **视觉决策提示** — 如果当前任务涉及前端设计、人类判断或复盘学习图，推荐链路中优先提示对应 skill 使用 `~/.claude/skills/_shared/visual-decision-layer.md`，但 /forge 本身不生成图片
+5. **视觉决策提示** — 如果当前任务涉及前端设计或人类判断，推荐链路中优先提示对应 skill 使用 `~/.claude/skills/_shared/visual-decision-layer.md`，但 /forge 本身不生成图片

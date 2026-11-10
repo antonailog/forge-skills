@@ -34,7 +34,7 @@ Forge 是一套覆盖**从头脑风暴到发布复盘完整开发链路**的 Cla
 | 反馈后不举一反三 | 报了 3 个 bug，只修 3 个 | 搜索相似模式 → 类似风险清单 → 一并修复 |
 | 设计粗糙，改了又改 | 简单想法直接写 | forge-design 自闭环（竞品 + 美学 + 99 条 UX 规则 + 门控） |
 | AI 长会话质量劣化 | 一个会话干到底 | 上下文工程：调度器精简，子任务独立上下文 |
-| 教训不沉淀，问题复发 | 复盘写完就忘 | forge-fupan 账本 + 开工自动回放 + 复发检测 |
+| 做完就过去，下次照样绕路 | 复盘写完就忘、找不回来 | forge-fupan 按项目和模块归档的复盘汇总页，每篇对标最佳路径、补知识盲区 |
 | 不知道下一步 | 记住所有 skill 名字 | `/forge` 检查状态，推荐下一步 |
 
 ---
@@ -142,7 +142,7 @@ Forge 是一套覆盖**从头脑风暴到发布复盘完整开发链路**的 Cla
 <tr><td width="50%" valign="top"><a href="examples/pomodoro/forge-eng.md"><img src="examples/pomodoro/shots/forge-eng/card.jpg" alt="forge-eng：先写测试、一步一提交地写代码"></a><br><a href="skills/forge-eng/"><b>forge-eng</b></a> · 先写测试、一步一提交地写代码<br><sub>AI 写代码常常一口气改一大片，说「写好了」却没真跑过，出了问题也分不清是哪一步引入的。这个 Skill 先写工程文档、把活拆成一个个小任务，在单独的分支和工作目录里做，核心逻辑先写测试再写代码，每完成一项就拿运行结果当证据才算数，一项一个提交。最后给出一份能跑、有测试、每一步都能追溯的代码。</sub><br><sub><a href="examples/pomodoro/forge-eng.md">这一步的示范记录 →</a></sub></td><td width="50%" valign="top"><a href="examples/pomodoro/forge-qa.md"><img src="examples/pomodoro/shots/forge-qa/card.jpg" alt="forge-qa：逐项带证据的验收"></a><br><a href="skills/forge-qa/"><b>forge-qa</b></a> · 逐项带证据的验收<br><sub>AI 说「测过了」，往往只是看了一眼页面有没有出来，按钮按下去对不对、出错时显示什么都没验。这个 Skill 照需求规格的验收清单先列测试计划，用真实浏览器逐项操作，每一项都要断言具体的数据、文字和样式数值，控制台出现一个报错就算不过，测不了的写清楚交给人手动验。最后给出一份逐项带证据、拿来就能决定能不能上线的验收报告。</sub><br><sub><a href="examples/pomodoro/forge-qa.md">这一步的示范记录 →</a></sub></td></tr>
 <tr><td width="50%" valign="top"><a href="examples/pomodoro/forge-review.md"><img src="examples/pomodoro/shots/forge-review/card.jpg" alt="forge-review：上线前查测试抓不到的问题"></a><br><a href="skills/forge-review/"><b>forge-review</b></a> · 上线前查测试抓不到的问题<br><sub>测试全过不等于能上线：有些问题测试根本测不到，比如测试本身把错误的行为写成了「应该如此」，或者出错被悄悄吞掉、页面什么提示都没有。这个 Skill 在合并前把整个分支和主线的差异读一遍，专门找这类结构性问题（数据安全、并发、AI 输出的信任边界、遗漏的情况等），发现问题直接改，改完重跑验证。最后给出一个查过隐患、可以放心合并的分支。</sub><br><sub><a href="examples/pomodoro/forge-review.md">这一步的示范记录 →</a></sub></td><td width="50%" valign="top"><a href="examples/pomodoro/forge-ship.md"><img src="examples/pomodoro/shots/forge-ship/card.jpg" alt="forge-ship：发布状态说清楚、绝不强推"></a><br><a href="skills/forge-ship/"><b>forge-ship</b></a> · 发布状态说清楚、绝不强推<br><sub>让 AI 发布，最怕它说「已上线」，其实只是提交了代码，或者测试没过就硬推、强行覆盖别人的改动。这个 Skill 先跑测试，不过就不发；开 PR 时写清改了什么、有什么风险、怎么验证；按你的选择只开 PR 或一路合并，绝不强推；汇报时把「已提交、已推送、已合并、已部署」分开说，没部署就明说没部署。最后给出一个说得清、查得到、状态不含糊的发布。</sub><br><sub><a href="examples/pomodoro/forge-ship.md">这一步的示范记录 →</a></sub></td></tr>
 <tr><td width="50%" valign="top"><a href="examples/pomodoro/forge-doc-release.md"><img src="examples/pomodoro/shots/forge-doc-release/card.jpg" alt="forge-doc-release：发布后让文档跟上代码"></a><br><a href="skills/forge-doc-release/"><b>forge-doc-release</b></a> · 发布后让文档跟上代码<br><sub>代码上线了，说明文档还停在上个版本：README 不写怎么用，项目规则文件过时，下次 AI 开工照着旧文档做事。这个 Skill 在发布后把所有项目文档和这次的代码改动逐一对照，更新 README、项目规则和各类设计文档的状态，润色版本记录、清理已完成的待办。最后给出一套和刚上线的版本一致的文档。</sub><br><sub><a href="examples/pomodoro/forge-doc-release.md">这一步的示范记录 →</a></sub></td><td width="50%" valign="top"><a href="examples/pomodoro/forge-bugfix.md"><img src="examples/pomodoro/shots/forge-bugfix/card.jpg" alt="forge-bugfix：一次修一个 bug，先找根因"></a><br><a href="skills/forge-bugfix/"><b>forge-bugfix</b></a> · 一次修一个 bug，先找根因<br><sub>跟 AI 说「这里有问题」，它常跳过找原因直接改，修好一个冒出一个，顺手还改了一堆不相干的东西。这个 Skill 一次只修一个 bug、在单独的分支里修：先复现，再用实验逐个验证猜测、讲清根因，根因和修法你点头才动手；修完让验收 Skill 回归，拿修前修后的对照当证据，你给出最终结论才合并，修的过程中发现的新问题只记下、不顺手改。最后给出一个查清原因、修好、有证据的修复。</sub><br><sub><a href="examples/pomodoro/forge-bugfix.md">这一步的示范记录 →</a></sub></td></tr>
-<tr><td width="50%" valign="top"><a href="examples/pomodoro/forge-fupan.md"><img src="examples/pomodoro/shots/forge-fupan/card.jpg" alt="forge-fupan：只复盘你想学的那几点"></a><br><a href="skills/forge-fupan/"><b>forge-fupan</b></a> · 只复盘你想学的那几点<br><sub>项目做完就过去了，踩过的坑下次照样踩，想复盘又不知道从哪写起，写出来也是一篇没人再看的流水账。这个 Skill 先读完整个过程，列出值得学的知识点和你说得不清楚的原话，放在一个本地网页里让你勾选想学哪几个、学到什么深度，再按你的选择写复盘、画知识图，顺手记下几条教训，下次修 bug 或开发时会自动拿出来提醒。最后给出一份只讲你想学的、能复用的复盘。</sub><br><sub><a href="examples/pomodoro/forge-fupan.md">这一步的示范记录 →</a></sub></td><td width="50%" valign="top"><a href="examples/pomodoro/forge-doc-policy.md"><img src="examples/pomodoro/shots/forge-doc-policy/card.jpg" alt="forge-doc-policy：让每份文档各就各位"></a><br><a href="skills/forge-doc-policy/"><b>forge-doc-policy</b></a> · 让每份文档各就各位<br><sub>让 AI 帮忙做项目，文档常常东一份西一份：同一件事写了好几个版本，过期的方案和现行的混在一起，下次开工 AI 读到旧的就照着做错。这个 Skill 规定每类文档该放哪（一份白名单）、开头要写清状态和类型、过期的归档到哪，新项目用一条命令搭好整套目录和索引。最后给出一个文档各就各位、人和 AI 都知道该看哪一份的项目。</sub><br><sub><a href="examples/pomodoro/forge-doc-policy.md">这一步的示范记录 →</a></sub></td></tr>
+<tr><td width="50%" valign="top"><a href="examples/pomodoro/forge-fupan.md"><img src="examples/pomodoro/shots/forge-fupan/card.jpg" alt="forge-fupan：收工一页复盘，差在哪、补什么"></a><br><a href="skills/forge-fupan/"><b>forge-fupan</b></a> · 收工一页复盘：差在哪、补什么<br><sub>项目做完就过去了，踩过的坑下次照样踩，想复盘又不知道从哪写起，写出来也是一篇没人再看的流水账。这个 Skill 读完这次的会话记录，在对话里问你一次，就写出一页复盘：这次做了什么、每个决定是谁拍的板，对照业内的标准做法看差在哪一步、下次该怎么跟 AI 说，再按这次暴露出的知识盲区补上该学的东西。所有复盘按项目和模块收进一个汇总页，过几周也找得回来。</sub><br><sub><a href="examples/pomodoro/forge-fupan.md">这一步的示范记录 →</a></sub></td><td width="50%" valign="top"><a href="examples/pomodoro/forge-doc-policy.md"><img src="examples/pomodoro/shots/forge-doc-policy/card.jpg" alt="forge-doc-policy：让每份文档各就各位"></a><br><a href="skills/forge-doc-policy/"><b>forge-doc-policy</b></a> · 让每份文档各就各位<br><sub>让 AI 帮忙做项目，文档常常东一份西一份：同一件事写了好几个版本，过期的方案和现行的混在一起，下次开工 AI 读到旧的就照着做错。这个 Skill 规定每类文档该放哪（一份白名单）、开头要写清状态和类型、过期的归档到哪，新项目用一条命令搭好整套目录和索引。最后给出一个文档各就各位、人和 AI 都知道该看哪一份的项目。</sub><br><sub><a href="examples/pomodoro/forge-doc-policy.md">这一步的示范记录 →</a></sub></td></tr>
 <tr><td width="50%" valign="top"><a href="examples/pomodoro/forge-status.md"><img src="examples/pomodoro/shots/forge-status/card.jpg" alt="forge-status：看清并行的几条活谁在用"></a><br><a href="skills/forge-status/"><b>forge-status</b></a> · 看清并行的几条活谁在用<br><sub>同时开好几个 AI 会话干活，过几天就分不清哪个分支还在用、哪个早就合并了可以删，误删一个还会丢掉别人没提交的改动。这个 Skill 只看硬证据：工作目录还在不在、分支有没有合并进主线，据此把每条活分成「在用」和「可以清理」，顺便列出后台在跑的服务，清理前必须你确认。最后给出一张谁在用哪块地盘、哪些能删的清单。</sub><br><sub><a href="examples/pomodoro/forge-status.md">这一步的示范记录 →</a></sub></td><td width="50%"></td></tr>
 </table>
 
@@ -211,7 +211,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步（README/ARCHITECTURE/CHANGELOG 对齐已发布内容） |
 | forge-doc-policy | `/forge-doc-policy` | 文档治理规范（doc-paths.md 真相源白名单 + frontmatter schema + init-project.sh 脚手架） |
 | forge-feature-doc | `/forge-feature-doc` | 需求设计文档：每个功能一份给人看的设计文档（待拍板置顶、先图后字、只写当前设计、末尾关键改动），配出图脚本和上线前检查；forge 各阶段收尾时同步，review / ship 当门禁 |
-| forge-fupan | `/forge-fupan` | 复盘 v3：Workbench 门禁（独立会话页确认知识点和深度）→ 调研产出复盘文档；账本（learnings.jsonl）作副产出，开工回放 + 复发检测 |
+| forge-fupan | `/forge-fupan` | 复盘 v4：读会话日志 → 对话里问一次 → 单篇复盘页（工作总结、对标分析、需求表达、知识地图、关键术语）→ 按项目、模块归进复盘汇总页 |
 
 ### 每个 Skill 怎么运转
 
@@ -224,7 +224,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 <tr><td width="50%" valign="top"><a href="skills/forge-dev/"><img src="docs/diagrams/forge-dev.jpg" alt="forge-dev 结构图"></a><br><a href="skills/forge-dev/"><b>forge-dev</b></a> · 开发调度：子 Skill 各开上下文</td><td width="50%" valign="top"><a href="skills/forge-eng/"><img src="docs/diagrams/forge-eng.jpg" alt="forge-eng 结构图"></a><br><a href="skills/forge-eng/"><b>forge-eng</b></a> · 工程实现：worktree 隔离、分级 TDD</td></tr>
 <tr><td width="50%" valign="top"><a href="skills/forge-qa/"><img src="docs/diagrams/forge-qa.jpg" alt="forge-qa 结构图"></a><br><a href="skills/forge-qa/"><b>forge-qa</b></a> · 只测不修的验收</td><td width="50%" valign="top"><a href="skills/forge-review/"><img src="docs/diagrams/forge-review.jpg" alt="forge-review 结构图"></a><br><a href="skills/forge-review/"><b>forge-review</b></a> · 上线前的结构性审查</td></tr>
 <tr><td width="50%" valign="top"><a href="skills/forge-ship/"><img src="docs/diagrams/forge-ship.jpg" alt="forge-ship 结构图"></a><br><a href="skills/forge-ship/"><b>forge-ship</b></a> · 建 PR、合并、同步主分支</td><td width="50%" valign="top"><a href="skills/forge-doc-release/"><img src="docs/diagrams/forge-doc-release.jpg" alt="forge-doc-release 结构图"></a><br><a href="skills/forge-doc-release/"><b>forge-doc-release</b></a> · 发布后同步 README、CHANGELOG</td></tr>
-<tr><td width="50%" valign="top"><a href="skills/forge-fupan/"><img src="docs/diagrams/forge-fupan.jpg" alt="forge-fupan 结构图"></a><br><a href="skills/forge-fupan/"><b>forge-fupan</b></a> · 复盘工作台，产出复盘文档和知识图</td><td width="50%" valign="top"><a href="skills/forge-bugfix/"><img src="docs/diagrams/forge-bugfix.jpg" alt="forge-bugfix 结构图"></a><br><a href="skills/forge-bugfix/"><b>forge-bugfix</b></a> · 一次修一个：先根因，再写代码</td></tr>
+<tr><td width="50%" valign="top"><a href="skills/forge-fupan/"><img src="docs/diagrams/forge-fupan.jpg" alt="forge-fupan 结构图"></a><br><a href="skills/forge-fupan/"><b>forge-fupan</b></a> · 收工复盘：做了什么、差在哪、补什么</td><td width="50%" valign="top"><a href="skills/forge-bugfix/"><img src="docs/diagrams/forge-bugfix.jpg" alt="forge-bugfix 结构图"></a><br><a href="skills/forge-bugfix/"><b>forge-bugfix</b></a> · 一次修一个：先根因，再写代码</td></tr>
 <tr><td width="50%" valign="top"><a href="skills/forge-status/"><img src="docs/diagrams/forge-status.jpg" alt="forge-status 结构图"></a><br><a href="skills/forge-status/"><b>forge-status</b></a> · 并行会话巡检与清理</td><td width="50%" valign="top"><a href="skills/forge-doc-policy/"><img src="docs/diagrams/forge-doc-policy.jpg" alt="forge-doc-policy 结构图"></a><br><a href="skills/forge-doc-policy/"><b>forge-doc-policy</b></a> · 文档放哪、怎么标生命周期</td></tr>
 </table>
 
@@ -289,17 +289,19 @@ forge-dev（调度器，~30% 上下文）     forge-eng（执行器，100% 全�
 
 同一思路贯穿全体系：每个 SKILL.md 只保留骨架和铁律，阶段细则拆进 `references/` 按需加载（如 forge-bugfix 63KB → 12.6KB 骨架 + 4 份阶段手册）。2026-07-17 对标 Anthropic skill-creator 与 yao-meta-skill 完成两轮整改后，15 个 SKILL.md 总量累计下降 22%（4429→3449 行），最大文件 332 行，全部远离官方 500 行红线；触发路由用 `evals/trigger-cases.md` 回归。
 
-### 复盘闭环（能力复利）
+### 复盘
 
 ```
-forge-fupan 产出账本条目（learnings.jsonl，含置信度）
+收工：forge-fupan 读会话日志 → 对话里问一次 → 写三节（工作总结、工作复盘、知识拓展）
        │
        ▼
-下次开工：forge-bugfix P1 / forge-eng 理解现状 自动回放相关条目
+单篇复盘页：对照业内最佳路径看差在哪，按会话证据补知识盲区
        │
        ▼
-再复盘：检测同类问题复发 → 复发 ≥3 次强制固化为 skill 规则
+复盘汇总页：按项目和模块归档，默认按时间看最近做了什么
 ```
+
+v4 起不再写教训账本；以前的 `learnings.jsonl` 条目只读保留，forge-bugfix / forge-eng 开工时按需回看。
 
 ---
 
@@ -342,7 +344,7 @@ cd forge-skills
 6. **用户保持控制权** — Feature Spec、验收计划、举一反三——关键决策交用户
 7. **举一反三** — 发现问题后搜索相似模式，不仅修单点
 8. **原子化一切** — 每个任务独立 commit，可追溯、可回滚
-9. **复盘闭环** — 教训进账本 → 开工回放 → 复发检测 → 反哺 Skill，下次更好
+9. **收工复盘** — 对照业内最佳路径看差在哪，按会话证据补知识盲区，按项目和模块找得回来
 
 ---
 
@@ -400,10 +402,10 @@ forge-skills/
 │   ├── forge-doc-policy/           ←   文档治理规范 + init 脚手架
 │   ├── forge-feature-doc/          ←   需求设计文档（每功能一份给人看 + 出图 + 上线前检查）
 │   ├── forge-status/               ←   并行会话巡检
-│   └── forge-fupan/                ←   复盘（Workbench 门禁 + 账本副产出）
+│   └── forge-fupan/                ←   复盘（单篇复盘页 + 复盘汇总页）
 │       └── */references/           ←   各 skill 的阶段手册（按需加载）
 ├── tools/
-│   └── fupan-workbench/            ← 复盘工作台应用（复盘流程门禁 + 历史回看，不随 skill 加载）
+│   └── fupan-reader/               ← 复盘阅读页源码（React），构建产物拷进 skills/forge-fupan/assets/
 ├── evals/
 │   └── trigger-cases.md            ← 触发路由回归用例（改 description 后过一遍）
 ├── _archive/                       ← 退役 skill（含 forge-deliver）
@@ -423,7 +425,6 @@ Forge 融合了以下框架的精华：
 | **Superpowers** | Worktree 隔离、TDD 红绿重构、Verification Gate、对抗性审查、Spec 四点自审 |
 | **gstack office-hours** | 6 个强迫性问题、反谄媚规则、Pushback 模板 |
 | **gstack plan-ceo-review** | 梦想状态映射、反转思维、最窄楔子 |
-| **gstack /learn + /retro** | 复盘账本（append-only + 置信度 + 复发检测）思路 |
 | **ui-ux-pro-max** | 99 条 UX 规则、配色/字体搜索引擎 |
 | **design-consultation** | 竞品调研、美学方向探索 |
 | **frontend-design** | 反 AI-slop 方法论 |

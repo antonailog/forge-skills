@@ -2,7 +2,7 @@
 
 所有 Forge skill 共用此处的执行边界。各入口定义任务职责，参考手册提供方法和命令；模板不额外创造审批要求。遵守平台规则，用户当前明确指令与既有授权优先于 skill 默认步骤。
 
-各 Skill 正文写明的停顿点、提问节奏和收尾动作是该 Skill 的设计，照它执行，例如 forge-brainstorm 一次一问、forge-eng 逐章审查、forge-qa 的用户验收关卡、forge-dev 的硬卡点、forge-review 机械问题直接修、forge-fupan 的记忆回流。本协议管 Skill 没写到的情况。
+各 Skill 正文写明的停顿点、提问节奏和收尾动作是该 Skill 的设计，照它执行，例如 forge-brainstorm 一次一问、forge-eng 逐章审查、forge-qa 的用户验收关卡、forge-dev 的硬卡点、forge-review 机械问题直接修、forge-fupan 的启动提问。本协议管 Skill 没写到的情况。
 
 ## 先判定请求的终点
 

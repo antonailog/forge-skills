@@ -112,7 +112,7 @@ description: |
 5. 按需读取相关 `docs/modules/*.md` 或 `docs/ops/*.md`。
 6. 只在需要历史原因时读取 `docs/CHANGELOG.md` 顶部索引和 `ENGINEERING-CHANGELOG.md` 相关段落，不默认扫全文。
 7. 用 Agent(Explore) 扫描项目源码，理解当前架构
-8. **回放 learnings 账本**（forge-fupan v2 闭环）：`grep 本项目名或 global ~/claudecode_workspace/记录/复盘/learnings.jsonl`，挑 status=active、置信度 ≥7、与本次任务相关的条目（≤5 条）向用户一行复述；无账本则跳过
+8. **回看旧复盘教训**（按需，账本 v4 起不再新增）：`grep 本项目名或 global "${FUPAN_ROOT:-$HOME/claudecode_workspace/记录/复盘}/learnings.jsonl"`，挑 status=active、置信度 ≥7、与本次任务相关的条目（≤5 条）向用户一行复述；无账本则跳过
 9. 向用户总结当前工程状态，确认理解是否正确
 
 ---
