@@ -33,3 +33,8 @@ export function SayBlock({ text, children, className }: { text: string; children
 
 /** 内嵌块：卡片里的次级信息 */
 export const inset = 'rounded-lg bg-muted/50 p-4'
+
+/** 用户原话：灰字 + 左侧细线，代替「」 */
+export const QuoteLine = ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  <p className={cn('border-l-2 pl-3 text-muted-foreground', className)}>{children}</p>
+)

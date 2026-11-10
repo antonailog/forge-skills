@@ -39,10 +39,7 @@ export function Deliverables({ data, v, dark, open }: { data: SessionData; v: Va
 
   return (
     <div className="flex flex-col gap-8 typo-body">
-      <div className="flex items-center gap-3">
-        <h3 className={T.h3}>交付物</h3>
-        <Badge className="bg-amber-100 text-sm font-normal text-amber-800 dark:bg-amber-400/15 dark:text-amber-300">{data.session.commit}</Badge>
-      </div>
+      <h3 className={T.h3}>交付物</h3>
 
       {on.results && <Step n={num('results')} id="d-results" title="结果" v={v}>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -89,9 +86,10 @@ export function Deliverables({ data, v, dark, open }: { data: SessionData; v: Va
               </AccordionTrigger>
               <AccordionContent className="flex flex-col gap-4 text-sm">
                 <p>{m.role}</p>
-                <dl className="grid grid-cols-[minmax(0,10em)_minmax(0,1fr)] gap-x-4 gap-y-2 border-y py-3">
+                {/* 术语列按最长的词定宽（上限 20em），术语和说明都不折行，放不下截断、悬停看全文 */}
+                <dl className="grid grid-cols-[fit-content(20em)_minmax(0,1fr)] gap-x-6 gap-y-2 border-y py-3">
                   {m.practices.map(([term, desc]) => (
-                    <div key={term} className="contents"><dt className={T.term}>{term}</dt><dd className="text-muted-foreground">{desc}</dd></div>
+                    <div key={term} className="contents"><dt className="min-w-0"><Clip className={T.term}>{term}</Clip></dt><dd className="min-w-0 text-muted-foreground"><Clip>{desc}</Clip></dd></div>
                   ))}
                 </dl>
                 <CodeFilesView files={m.files} data={data} open={open} />

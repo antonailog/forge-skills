@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { cn } from '@/lib/utils'
 
 // 摘要的两行：第一行「起因 → 做法」灰色，第二行只放结果，正文色、数字加重
-// 汇总页列表和单篇页顶部用同一份；列表里各截成一行，单篇页顶部不截
+// 汇总页列表（新复盘和旧复盘）用，各截成一行；单篇页顶部另有三栏写法（Overview.tsx SummaryBody）
 
 /** 结果里的数字加一点字重，眼睛能直接落在结果上 */
 const nums = (t: string) => t.split(/(\d[\d.,/%:：–-]*)/).map((x, i) => (i % 2 ? <span key={i} className="font-medium tabular-nums">{x}</span> : <Fragment key={i}>{x}</Fragment>))

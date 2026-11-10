@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowLeftRight, ArrowUpRight } from 'lucide-react'
-import { SayBlock } from '@/components/kit'
+import { QuoteLine, SayBlock } from '@/components/kit'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -225,7 +225,7 @@ function Expression({ data }: { data: SessionData }) {
             <div className="flex flex-col gap-3">
               <span className="flex flex-wrap items-center gap-2"><Badge className={cn('text-sm font-normal', EVAL['待改进'])}>{x.type}</Badge><span className={T.name}>{x.title}</span></span>
               <div className="flex flex-col gap-1.5">
-                {x.quotes.map(([t, q], i) => <p key={i}><span className="text-muted-foreground">{t}　</span>「{q}」</p>)}
+                {x.quotes.map(([t, q], i) => <QuoteLine key={i} className="text-foreground"><span className="text-muted-foreground">{t}　</span>{q}</QuoteLine>)}
               </div>
               <p className="text-muted-foreground"><span className="text-foreground">造成了什么：</span>{x.effect}</p>
             </div>
