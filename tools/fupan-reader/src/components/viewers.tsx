@@ -44,10 +44,11 @@ const fenceUrls = (text: string) =>
   })).join('')
 
 /** md 渲染：GFM 表格、任务列表都支持；行内代码不换字体，只加浅底色 */
+/** 代码块和 Code 组件同一套：浅灰底细边、正文色、等宽字；块里的 code 去掉行内代码的底色，否则浅底压在 prose 默认的深色块上看不见字 */
 /** localFiles：本机的 md（汇总页里的旧复盘），图片是 file:// 绝对路径，不能被默认的 URL 过滤掉 */
 export function Markdown({ text, localFiles }: { text: string; localFiles?: boolean }) {
   return (
-    <div className="prose prose-sm max-w-none [&_table]:text-sm dark:prose-invert prose-headings:text-sm prose-headings:font-semibold prose-a:text-brand prose-strong:font-semibold prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:font-sans prose-code:font-normal prose-code:text-[1em] prose-code:before:content-none prose-code:after:content-none">
+    <div className="prose prose-sm max-w-none [&_table]:text-sm dark:prose-invert prose-headings:text-sm prose-headings:font-semibold prose-a:text-brand prose-strong:font-semibold prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:font-sans prose-code:font-normal prose-code:text-[1em] prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-lg prose-pre:border prose-pre:bg-muted/40 prose-pre:text-foreground [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:font-mono">
       <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={localFiles ? (u) => u : undefined} components={{ a: (p) => <a {...p} target="_blank" rel="noopener" /> }}>{fenceUrls(text)}</ReactMarkdown>
     </div>
   )

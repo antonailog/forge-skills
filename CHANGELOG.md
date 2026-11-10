@@ -9,6 +9,7 @@
 ## [Unreleased]
 
 ### Changed
+- **forge-fupan 阅读页按验收反馈修一轮**：md 代码块改成浅底正文色（原来浅色底压在深色块上看不见字）；单篇顶部摘要改成起因 / 做法 / 结果三栏，一个字号一个字重，原话用左侧细线代替「」；关键决策表单元格不换行，决策列整句显示，其余列限宽截断、悬停看全文，整表放不下就横向滚动，整句原话外层的「」去掉；结果评估的子目标默认收起；交付物标题旁的提交说明去掉；关键代码的术语列不折行；关键术语只显示图标和词名，悬停弹出详情浮窗（类别、本次用没用、出处和出处原话，鼠标可移入、出处可点、Esc 关闭、键盘聚焦可用），卡片底部的跳转小字去掉。页面不再显示的 `session.commit` 和术语的 `step` / `kref`，skill 不再要求写，build.py 不再校验（旧数据里有也不报错）。
 - **forge-fupan 重写为 v4（单篇复盘页 + 复盘汇总页）**：去掉 Workbench 门禁、逐条 Prompt 分析、AI 表现复盘、速查手册、TLDR 和教训账本。流程改为：`find_session.py` 找会话 → `digest.py` 把 JSONL 压成摘要 → 对话里问一次 → 按三节写 JSON（工作总结：摘要、过程回顾、关键决策、结果评估、交付物、遗留事项；工作复盘：对标分析路线图、需求表达；知识拓展：盲区诊断 + 专题 + 延伸的知识地图、关键术语）→ `build.py` 校验、嵌文件快照、按函数名算行号、打码、截图，写进 `记录/复盘/<项目>/<模块>/<日期>-<标题>/`，并重建 `记录/复盘/index.html` 汇总页（默认按时间看最近；旧 md 复盘原文不动，模块和两行描述读复盘根的 `旧复盘描述.json`）。阅读页源码新增 `tools/fupan-reader/`（React + shadcn/ui，单文件构建，`npm run release` 拷成 `skills/forge-fupan/assets/reader.html`）；`tools/fupan-workbench/` 删除。
 - **forge-bugfix / forge-eng / forge-ship：教训账本改成按需只读**：v4 起复盘不再写 `learnings.jsonl`，开工时有旧条目才回看，复述写「旧复盘教训」；路径认 `FUPAN_ROOT`。forge-ship 去掉「按账本」的说法。
 - **_shared/visual-decision-layer.md 去掉复盘学习图**：模板和 fupan 配图规则删除，复盘页里的图由阅读页按数据画。

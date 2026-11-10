@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { LibraryBig } from 'lucide-react'
+import { ChevronDown, LibraryBig } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -7,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { EVAL } from '@/components/Review'
 import { StatusIcon, StatusText } from '@/components/StatusIcon'
 import { Clip } from '@/components/Clip'
-import { Star } from '@/components/Star'
+import { QuoteLine } from '@/components/kit'
 import { cn } from '@/lib/utils'
 import { T } from '@/typo'
 import type { SessionData } from '@/types'
@@ -57,13 +58,46 @@ export function Summary({ data }: P) {
         </BreadcrumbList>
       </Breadcrumb>
       <h1 className={T.title}>{s.title}</h1>
-      <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground">
-        <span>{s.range}</span><StatusText s={s.status} />
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground">
+        <StatusText s={s.status} /><span aria-hidden>·</span><span className="tabular-nums">{s.range}</span>
       </p>
-      <Star why={s.why} did={s.did} got={s.got} className="text-base" />
-      <p className="text-muted-foreground"><span className="text-foreground">起因：</span>「{s.cause}」</p>
+      <SummaryBody s={s} />
     </header>
   )
+}
+
+/* 摘要正文：起因、做法、结果三栏等宽。全块一个字号（15）、一个字重，只用两种颜色：栏名和原话灰，内容正文色；
+   原话不加「」，用左侧细线标出是引用 */
+type Sum = ReturnType<typeof ov>['summary']
+function SummaryBody({ s }: { s: Sum }) {
+  const col = 'flex min-w-0 flex-col gap-2 py-4'
+  const lab = 'text-muted-foreground'
+  return (
+    <div className="mt-2 grid grid-cols-3 border-y">
+      <div className={cn(col, 'pr-6')}><span className={lab}>起因</span><p>{s.why}</p>{s.cause && <QuoteLine>{s.cause}</QuoteLine>}</div>
+      <div className={cn(col, 'border-l px-6')}><span className={lab}>做法</span><p>{s.did}</p></div>
+      <div className={cn(col, 'border-l pl-6')}><span className={lab}>结果</span><p>{s.got}</p></div>
+    </div>
+  )
+}
+
+/** 整句就是一段或几段用「」括起的原话（理由摘原文时常见，前面可能带「AI 推荐理由：」，段间只有「；」「，」或紧挨着，
+    最后可以跟句号、问号、省略号）：去掉最外层的括号，紧挨着的两段之间补「；」；里面嵌套的「」、句中引用的「」都不动 */
+export function unquote(t: string) {
+  const m = t.match(/^([^「」]*：)?([\s\S]*)$/)
+  const pre = m?.[1] ?? '', body = m?.[2] ?? t
+  if (!body.startsWith('「')) return t
+  let depth = 0, out = '', gap = '', segs = 0
+  for (const ch of body) {
+    if (ch === '「' && depth++ === 0) {
+      if (segs++) { if (!/^[；;，,、\s]*$/.test(gap)) return t; out += gap || '；' }
+      gap = ''; continue
+    }
+    if (ch === '」') { if (--depth < 0) return t; if (depth === 0) continue }
+    if (depth === 0) { gap += ch; continue }
+    out += ch
+  }
+  return depth === 0 && /^[。！？!?…]*$/.test(gap) ? pre + out + gap : t
 }
 
 /* ---------- 1.2 过程回顾：纵向时间轴 ---------- */
@@ -85,7 +119,7 @@ export function Process({ data }: P) {
             </div>
             <div className={cn('flex min-w-0 flex-col gap-2', i < st.length - 1 && 'pb-8')}>
               <span className="flex flex-wrap items-center gap-2"><span className={T.name}>{s.name}</span>{s.dec.map((d) => <DecRef key={d} id={d} />)}</span>
-              <p className="text-muted-foreground">「{s.quote}」</p>
+              <QuoteLine>{s.quote}</QuoteLine>
               <p>{s.story}</p>
               <p className="rounded-lg bg-muted/50 px-4 py-2.5"><span className="text-muted-foreground">产出　</span>{s.out}</p>
             </div>
@@ -116,23 +150,24 @@ export function Decisions({ data }: P) {
   return (
     <section id="decisions" className="flex scroll-mt-8 flex-col gap-4 text-sm typo-body">
       <h3 className={T.h3}>关键决策</h3>
-      <Card className="gap-0 py-0 shadow-none">
-        <Table className="table-fixed text-sm">
+      {/* 一行一个决策、单元格不换行：决策列整句读全；其余三列各有上限，超出截断、悬停看全文；整表放不下就横向滚 */}
+      <Card className="gap-0 overflow-hidden py-0 shadow-none">
+        <Table className="w-max min-w-full text-sm">
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="w-[4em]">编号</TableHead><TableHead className="w-[17%]">决策</TableHead><TableHead className="w-[10em]">决策来源</TableHead>
-              <TableHead>备选方案</TableHead><TableHead>理由</TableHead><TableHead className="w-[19%]">后果</TableHead>
+              <TableHead className="px-4">编号</TableHead><TableHead className="px-4">决策</TableHead><TableHead className="px-4">决策来源</TableHead>
+              <TableHead className="px-4">备选方案</TableHead><TableHead className="px-4">理由</TableHead><TableHead className="px-4">后果</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {ds.map((d) => (
-              <TableRow key={d.id} ref={(el) => { rows.current[d.id] = el }} className={cn('align-top transition-colors duration-700', hl === d.id ? 'bg-brand-soft hover:bg-brand-soft' : 'hover:bg-transparent')}>
-                <TableCell className="text-muted-foreground">{d.id}</TableCell>
-                <TableCell className="font-medium"><Clip lines={2}>{d.what}</Clip></TableCell>
-                <TableCell><Badge className={cn('text-sm font-normal', SOURCE(d.source))}>{d.source}</Badge></TableCell>
-                <TableCell className="text-muted-foreground"><Clip lines={2}>{d.alts}</Clip></TableCell>
-                <TableCell><Clip lines={2}>{d.reason}</Clip></TableCell>
-                <TableCell><Clip lines={2}>{d.effect}</Clip></TableCell>
+              <TableRow key={d.id} ref={(el) => { rows.current[d.id] = el }} className={cn('transition-colors duration-700', hl === d.id ? 'bg-brand-soft hover:bg-brand-soft' : 'hover:bg-transparent')}>
+                <TableCell className="px-4 py-3 text-muted-foreground">{d.id}</TableCell>
+                <TableCell className="px-4 py-3 font-medium">{unquote(d.what)}</TableCell>
+                <TableCell className="px-4 py-3"><Badge className={cn('text-sm font-normal', SOURCE(d.source))}>{d.source}</Badge></TableCell>
+                <TableCell className="px-4 py-3 text-muted-foreground"><Clip className="max-w-[20em]">{unquote(d.alts)}</Clip></TableCell>
+                <TableCell className="px-4 py-3"><Clip className="max-w-[24em]">{unquote(d.reason)}</Clip></TableCell>
+                <TableCell className="px-4 py-3"><Clip className="max-w-[24em]">{unquote(d.effect)}</Clip></TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -156,24 +191,41 @@ export function Results({ data }: P) {
         <span className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground">{counts.map(([s, n]) => <StatusText key={s} s={s} n={n} />)}</span>
       </div>
       <div className="flex flex-col gap-3">
-        {goals.map((g) => (
-          <Card key={g.title} className="gap-0 py-0 shadow-none">
-            <div className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-x-3 gap-y-1.5 p-5">
+        {/* 子目标默认收起：点目标那一行展开；收起时右边写有几项子目标 */}
+        {goals.map((g) => {
+          const head = (
+            <>
               <StatusIcon s={g.status} className="mt-1" />
               <span className="flex flex-wrap items-baseline gap-x-3"><span className={T.name}>{g.title}</span><span className="text-muted-foreground">{g.kind}</span></span>
-              <span className="col-start-2 text-muted-foreground">来源：{g.origin} · 完成标准：{g.criterion}</span>
-            </div>
-            {g.children.map((c) => (
-              <div key={c.title} className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-x-3 border-t px-5 py-3.5">
-                <StatusIcon s={c.status} className="mt-1" />
-                <span className="flex min-w-0 flex-col gap-0.5">
-                  <span className="font-medium">{c.title}</span>
-                  <span className="text-muted-foreground">{withRefs(c.evidence)}</span>
+              {g.children.length > 0 && (
+                <span className="flex items-center gap-1.5 self-center text-muted-foreground">
+                  子目标 {g.children.length}<ChevronDown className="size-4 transition-transform group-data-[state=open]/goal:rotate-180" />
                 </span>
-              </div>
-            ))}
-          </Card>
-        ))}
+              )}
+              <span className="col-start-2 text-muted-foreground">来源：{g.origin} · 完成标准：{g.criterion}</span>
+            </>
+          )
+          const grid = 'grid w-full grid-cols-[1.25rem_minmax(0,1fr)_auto] gap-x-3 gap-y-1.5 p-5 text-left'
+          if (!g.children.length) return <Card key={g.title} className="gap-0 py-0 shadow-none"><div className={grid}>{head}</div></Card>
+          return (
+            <Collapsible key={g.title} asChild>
+              <Card className="group/goal gap-0 overflow-hidden py-0 shadow-none">
+                <CollapsibleTrigger className={cn(grid, 'transition-colors hover:bg-muted/40')}>{head}</CollapsibleTrigger>
+                <CollapsibleContent>
+                  {g.children.map((c) => (
+                    <div key={c.title} className="grid grid-cols-[1.25rem_minmax(0,1fr)] gap-x-3 border-t px-5 py-3.5">
+                      <StatusIcon s={c.status} className="mt-1" />
+                      <span className="flex min-w-0 flex-col gap-0.5">
+                        <span className="font-medium">{c.title}</span>
+                        <span className="text-muted-foreground">{withRefs(c.evidence)}</span>
+                      </span>
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )
+        })}
       </div>
       {findings.length > 0 && (
         <div className="flex flex-col gap-1.5 pt-2">

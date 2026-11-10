@@ -78,7 +78,7 @@ export type Bench = {
 }
 /** 关键术语：只收有指向性的词。side：mine 本次用了 / talked 讨论过没用 / base 行业做法 */
 export type GKind = '选型' | '效果' | '做法'
-export type GWord = { term: string; kind: GKind; side: 'mine' | 'talked' | 'base'; what: string; src: string | null; new: boolean; step: string | null; kref: string | null; icon: string }
+export type GWord = { term: string; kind: GKind; side: 'mine' | 'talked' | 'base'; what: string; src: string | null; new: boolean; icon: string }
 export type GModule = { id: string; area: string; name: string; words: GWord[]; say: string }
 
 /** 三、知识拓展：一条盲区对应的知识条目；what / judge / verify / reading 是 md */
@@ -99,7 +99,7 @@ export type Overview = {
 }
 
 export type SessionData = {
-  session: { title: string; id: string; range: string; commit: string }
+  session: { title: string; id: string; range: string }
   results: Result[]
   keyFiles: KeyFile[]
   code: { flow: string; modules: Module[] }
