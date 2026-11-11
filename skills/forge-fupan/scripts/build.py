@@ -829,6 +829,10 @@ def build_review(folder: Path, check_only=False, emit=None):
     build_index()
     size = (folder / 'data.js').stat().st_size / 1e6
     print(f'单篇：{folder / STUB}（数据 {size:.1f} MB）')
+    # 给用户的复盘页地址（SKILL.md 第 9 步）：在 VS Code 等编辑器里点「打开复盘.html」会在编辑器里打开、不执行跳转，落不到这一篇；
+    # 这个地址粘进浏览器地址栏就直接是这一篇。中文照原样（好认，浏览器认得），只转义会弄坏地址的几个字符
+    esc = lambda s: ''.join(f'%{ord(c):02X}' if c in ' %#?+' else c for c in s)
+    print(f'浏览器地址：file://{esc(str(ROOT / "index.html"))}#r={esc(rel)}')
 
 
 _IMG = re.compile(r'(!\[[^\]]*\]\()(<[^>]+>|[^)\s]+)((?:\s+"[^"]*")?\))')
