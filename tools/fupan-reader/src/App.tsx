@@ -9,7 +9,7 @@ import { Summary, Process, Decisions, Results } from '@/components/Overview'
 import { V as v } from '@/variants'
 import { cn } from '@/lib/utils'
 import { SideNav, useScrollSpy } from '@/components/SideNav'
-import { backHref } from '@/components/ReviewIndex'
+import { backHref, backLabel } from '@/components/ReviewIndex'
 import { T } from '@/typo'
 import type { Opened, ReviewPage } from '@/types'
 
@@ -59,7 +59,7 @@ export default function App({ data, dark }: { data: ReviewPage; dark: boolean })
 
   return (
     <div className="mx-auto grid max-w-[1400px] grid-cols-[13rem_minmax(0,1fr)] gap-12 px-8">
-      <SideNav title="目录" items={toc} active={active} pick={pick} back={{ href: back, label: '返回复盘汇总' }} hrefOf={(id) => `#${id}`} />
+      <SideNav items={toc} active={active} pick={pick} back={{ href: back, label: backLabel(back) }} hrefOf={(id) => `#${id}`} />
       <main className="flex min-w-0 flex-col gap-16 py-8">
         <Summary data={data} />
         <Chapter id="ch1" title="一、工作总结">

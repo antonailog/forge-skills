@@ -58,8 +58,7 @@ export function useScrollSpy(ids: string[]) {
   return [active, pick] as const
 }
 
-export function SideNav({ title, items, active, pick, back, hrefOf }: {
-  title: string
+export function SideNav({ items, active, pick, back, hrefOf }: {
   items: NavItem[]
   active: string | null
   /** 点了一项：instant 表示是点击（高亮直接到位），不是滚动带过去的 */
@@ -101,7 +100,6 @@ export function SideNav({ title, items, active, pick, back, hrefOf }: {
         </a>
       )}
       <div ref={scroller} className="-mx-3 min-h-0 overflow-y-auto px-3 [scrollbar-width:none]">
-        <p className="mb-2.5 border-b pb-1.5 font-medium text-muted-foreground">{title}</p>
         <ol ref={list} className="relative -mx-3 grid gap-0.5" onMouseLeave={() => setHover(null)}>
           <i aria-hidden className={cn(slide, 'rounded-md bg-muted/70 transition-[transform,height,opacity] duration-100', hover && ghost ? 'opacity-100' : 'opacity-0')}
             style={ghost ? { transform: `translateY(${ghost.y}px)`, height: ghost.h } : undefined} />

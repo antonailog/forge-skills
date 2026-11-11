@@ -18,14 +18,11 @@ export function CopyButton({ text, className }: { text: string; className?: stri
   )
 }
 
-/** 话术块：「下次这样说」，标签在左上、复制在右上、话术 16 号 */
+/** 话术块：「下次这样说」，标签在上、话术 16 号（不带复制：复习时不会立刻去干活，11-10 定） */
 export function SayBlock({ text, children, className }: { text: string; children?: React.ReactNode; className?: string }) {
   return (
     <div className={cn('flex flex-col gap-2 rounded-lg bg-brand-soft p-4', className)}>
-      <span className="flex items-center justify-between gap-3">
-        <span className="text-muted-foreground">下次这样说</span>
-        <CopyButton text={text} className="-my-1 -mr-2" />
-      </span>
+      <span className="text-muted-foreground">下次这样说</span>
       <p className="text-base">{children ?? text}</p>
     </div>
   )

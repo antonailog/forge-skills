@@ -4,7 +4,7 @@
 用法：check_quotes.py <会话日志.jsonl> <复盘文件夹>
 
 从复盘 JSON 里取：过程回顾的触发原话、摘要的 cause、需求表达的原话（整句），
-以及关键决策理由、知识条目来源、对标证据里「」括起来的部分。按 … 切成片段，
+以及关键决策理由、知识条目来源、对标证据、认领经验每步 note 里「」括起来的部分。按 … 切成片段，
 去掉空白、引号和加粗符号后在日志的文字里找（日志里转义过的引号、换行先解码）。
 ‹邮箱›‹IP› 这类打码处当断点。延伸学习引的是长期方向表，不查。上下文压缩的摘要不算原文。
 """
@@ -88,6 +88,10 @@ def quotes(r: dict):
     for b in r.get('bench') or []:
         for ev in (b.get('evidence') or []) if isinstance(b, dict) else []:
             bracket.append((f'对标 {b.get("id", "?")}', ev))
+    for c in r.get('sops') or []:
+        for st in (c.get('steps') or []) if isinstance(c, dict) else []:
+            if isinstance(st, dict):
+                bracket.append((f'经验 {c.get("sop", "?")} {st.get("step", "?")}', st.get('note', '')))
     for where, text in bracket:
         for m in re.finditer(r'「([^「」]{4,})」', str(text or '')):
             yield where, m.group(1)

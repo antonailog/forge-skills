@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ArrowUpRight } from 'lucide-react'
-import { CopyButton } from '@/components/kit'
 import { TermIcon } from '@/components/TermIcon'
 import { cn } from '@/lib/utils'
 import { T } from '@/typo'
@@ -181,10 +180,9 @@ function SayList({ data }: P) {
     <div className="flex flex-col gap-2 rounded-xl bg-brand-soft p-5">
       <span className="text-muted-foreground">下次这样说</span>
       {mods(data).map((m) => (
-        <div key={m.id} className="grid items-start gap-x-6 gap-y-1 border-t border-brand/10 pt-2 first-of-type:border-t-0 sm:grid-cols-[13rem_minmax(0,1fr)_auto]">
+        <div key={m.id} className="grid items-start gap-x-6 gap-y-1 border-t border-brand/10 pt-2 first-of-type:border-t-0 sm:grid-cols-[13rem_minmax(0,1fr)]">
           <Domain m={m} h={hue(data, m)} />
           <p>{m.say}</p>
-          <CopyButton text={m.say} className="-my-1" />
         </div>
       ))}
     </div>

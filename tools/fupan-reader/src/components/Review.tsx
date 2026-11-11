@@ -30,7 +30,7 @@ export const Block = ({ title, children, className }: { title: string; children:
   <section className={cn('flex flex-col gap-2', className)}><h4 className={T.label}>{title}</h4>{children}</section>
 )
 
-/** 下次这样说：用关键词写好的一句指令，可复制 */
+/** 下次这样说：用关键词写好的一句指令 */
 const EVALS: Eval[] = ['一致', '合理偏离', '待改进', '缺失']
 export const DOT: Record<Eval, string> = { 一致: 'bg-emerald-500', 合理偏离: 'bg-sky-500', 待改进: 'bg-amber-500', 缺失: 'bg-rose-500' }
 

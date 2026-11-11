@@ -119,5 +119,5 @@ export type IndexNew = { title: string; date: string; status: string; why: strin
 /** 旧复盘：module、why/did/got 来自 旧复盘描述.json（v2）；只有 line 的是 v1 的一句话描述 */
 export type IndexOld = { date: string; time: string | null; topic: string | null; title: string; path: string; rel?: string; ext: string; module?: string; why?: string; did?: string; got?: string; line?: string | null; md?: string; href?: string }
 export type IndexProject = { name: string; latest: string; count: number; modules: { name: string; reviews: IndexNew[] }[]; old: IndexOld[] }
-export type IndexPage = { kind: 'index'; projects: IndexProject[] }
+export type IndexPage = { kind: 'index'; projects: IndexProject[]; workbench?: { sop: boolean; kb: boolean } }
 export type PageData = ReviewPage | IndexPage

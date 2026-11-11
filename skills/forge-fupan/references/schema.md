@@ -6,7 +6,7 @@
 | --- | --- |
 | `1-总结.json` | `session`、`review.overview`（摘要、过程回顾、关键决策、结果评估） |
 | `2-交付物.json` | `results`、`keyFiles`、`code`、`others`、`leftovers`、`files`、`mask` |
-| `3-复盘.json` | `review.bench`、`review.path`、`review.task`、`review.sources`、`review.expression` |
+| `3-复盘.json` | `review.bench`、`review.path`、`review.task`、`review.sources`、`review.expression`、`review.sops`、`review.sopCandidates` |
 | `4-知识.json` | `review.knowledge`、`review.glossary` |
 
 子 agent 并行写知识条目时，各写一份 `4-知识-K2.json`，只含 `{"review":{"knowledge":{"entries":[…]}}}`，合并时自动接起来。文件名以 `_` 开头的不合并（草稿用）。
@@ -112,6 +112,8 @@
 - `keywords[].side`：mine（本次用的）· base（行业做法）；`src` 指向 sources 的键
 - `bench[].sources`：这一步引用的来源键，必填（没有引用写 `[]`）
 - `sources`：所有外部链接集中在这里，键名自己起；每个都要打开核对过，`note` 写引用的那句话在原文里说了什么
+- `sops`：认领经验，`[{"sop": "S02", "steps": [{"step": "s1", "eval": "待改进", "note": "一句话，60 字内"}]}]`；编号用 `build.py --catalog` 查；没有经验库就不写
+- `sopCandidates`：对不上任何一份经验的，`[{"name": "这次做的事", "why": "为什么对不上"}]`
 - `expression[].type`：需求质量的标准叫法：需求不完整 · 需求不可验证 · 需求有歧义 · 需求不一致 · 约束缺失 · 优先级缺失……
 
 ## 4-知识.json
@@ -132,6 +134,7 @@
 ```
 
 - `layers`：知识地图的骨架，这次工作对象的结构，自上而下 4–7 层；每层 `decide` 要定什么、`chosen` 这次选了什么
+- `entries[].kb`：知识库编号（K0014），库里没有写 `null`；`words[].kb` 对得上才写；没有知识库就都不写
 - `entries[].group`：盲区 · 专题 · 延伸；`kind`：架构 · 选型 · 工具 · 知识点（延伸、专题可以写 null）
 - `sourceLabel`：盲区写「盲区来源」，专题写「你说想学」，延伸写「为什么推荐给你」
 - `layers`：落在哪几层（名字要在 knowledge.layers 里）；空列表 = 挂不上这条结构，放进「结构之外」；kind 为架构或覆盖全部层的放在地图顶上

@@ -7,7 +7,8 @@
 用法：
   build.py <复盘文件夹>             校验 → 读文件、算行号、打码、截图 → 写 data.js 和「打开复盘.html」→ 重建汇总页
   build.py <复盘文件夹> --check     只校验，不出页面
-  build.py --index                  只重建汇总页（记录/复盘/index.html + index.data.js）
+  build.py --index                  只重建汇总页（记录/复盘/index.html + index.data.js，还有工作台的 经验.data.js、知识.data.js）
+  build.py --catalog                列出经验库和知识库的编号（写复盘时认领经验、标知识编号用）
   build.py --known-terms 词1 词2… --self <复盘文件夹> --session <会话 id>   这些词在以前的复盘里出现过没有
                                     （不算这一篇自己，也不算同一个会话以前用旧版写的复盘）
   build.py <复盘文件夹> --emit-data 输出.json   编好的数据另存一份（阅读页开发用，别存进复盘文件夹）
@@ -22,13 +23,16 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from urllib.parse import quote, unquote, urlencode
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))   # python3 -I 不会自动把脚本目录加进搜索路径
+import workbench   # noqa: E402  工作台：经验、知识两页的数据，认领经验和知识编号的校验、写入
+
 SKILL = Path(__file__).resolve().parent.parent
 ROOT = Path(os.environ.get('FUPAN_ROOT', Path.home() / 'claudecode_workspace' / '记录' / '复盘')).expanduser().resolve()
 BJ = timezone(timedelta(hours=8))
 STUB = '打开复盘.html'
 
 # ---------- 取值范围（和 references/schema.md 一致） ----------
-EVAL = {'一致', '合理偏离', '待改进', '缺失'}
+EVAL = workbench.EVAL   # 对标分析的判断和认领经验的 eval 同一份
 STATUS = {'达成', '部分达成', '待验证', '未达成', '移出范围', '延后'}
 SUMMARY_STATUS = {'已上线', '进行中', '仅讨论'}
 DEC_SOURCE = {'用户方案', '用户选择', '用户倾向', '采纳建议', '调整建议', '否决建议', 'AI 决定 · 已告知', 'AI 决定 · 未告知'}
@@ -782,6 +786,8 @@ def build_review(folder: Path, check_only=False, emit=None):
     icons_p = SKILL / 'assets' / 'icons.json'
     icons = json.loads(icons_p.read_text()) if icons_p.exists() else {}
     E, W = validate(d, icons)
+    E2, W2 = workbench.validate_links(d, ROOT)   # 认领经验、标知识编号
+    E += E2; W += W2
 
     def stop():
         for w in W:
@@ -818,6 +824,8 @@ def build_review(folder: Path, check_only=False, emit=None):
     rel = '/'.join(parts)
     href = '../../../index.html#' + urlencode({'r': rel})
     (folder / STUB).write_text(f'<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url={href}"><a href="{href}">打开复盘</a>\n', encoding='utf-8')
+    for line in workbench.apply_links(d, folder, ROOT):   # 写进经验库、知识库
+        print('工作台：' + line)
     build_index()
     size = (folder / 'data.js').stat().st_size / 1e6
     print(f'单篇：{folder / STUB}（数据 {size:.1f} MB）')
@@ -916,7 +924,11 @@ def build_index():
         p['count'] = len(dates)
         out.append(p)
     out.sort(key=lambda p: p['latest'], reverse=True)
-    write_js(ROOT / 'index.data.js', {'kind': 'index', 'projects': out})
+    for line in workbench.build_all(ROOT, write_js):   # 工作台的经验、知识两页
+        print('工作台：' + line)
+    avail = workbench.available(ROOT)   # 有库、页也生成出来了，顶栏才放这个页签
+    flags = {'sop': avail['sop'] and (ROOT / '经验.data.js').exists(), 'kb': avail['kb'] and (ROOT / '知识.data.js').exists()}
+    write_js(ROOT / 'index.data.js', {'kind': 'index', 'projects': out, 'workbench': flags})
     install_reader()
     n = len({r['href'] for p in out for m in p['modules'] for r in m['reviews']}) + sum(len(p['old']) for p in out)   # 跨项目的一篇只算一次
     print(f'汇总页：{ROOT / "index.html"}（{len(out)} 个项目，{n} 篇）')
@@ -963,13 +975,16 @@ def main():
     ap.add_argument('--self', dest='self_folder')
     ap.add_argument('--session')
     ap.add_argument('--emit-data')
+    ap.add_argument('--catalog', action='store_true')
     a = ap.parse_args()
     if a.known_terms:
         return known_terms(a.known_terms, a.self_folder or a.folder, a.session)
     if a.index:
         return build_index()
+    if a.catalog:
+        return workbench.catalog(ROOT)
     if not a.folder:
-        ap.error('给一个复盘文件夹，或用 --index / --known-terms')
+        ap.error('给一个复盘文件夹，或用 --index / --catalog / --known-terms')
     build_review(Path(a.folder).expanduser(), a.check, a.emit_data)
 
 

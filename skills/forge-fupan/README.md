@@ -21,6 +21,7 @@
 - **按会话证据补知识**：`references/write-knowledge.md` 从问过、没想到、说不出、判断不了这几类证据里找知识盲区，补到能指挥和判断 AI 为止。盲区挂在这件事的组成部分上，画成知识地图；关键词按领域收进关键术语。
 - **AI 写数据，脚本出页面**：AI 写四份 JSON，`scripts/build.py` 校验字段和互相引用，嵌进文件内容、按函数算行号，自动打码密钥和 IP，再截图，编成单篇数据。所有复盘共用一份阅读页 `assets/reader.html`。
 - **写复盘交给执行方**：在跑了很久的会话里原地写，每次请求都带着整个会话的上下文。`references/dispatch.md` 规定当前会话只定范围、转话和验收，写交给从零读日志的执行方：默认经 codex-delegate 派给 Codex，第一段写好启动消息就停，拿到你的回复再续写；返工两轮不过就换另一个执行方接手。`scripts/check_quotes.py` 把复盘里引用的原话拿到日志里查，只列搜不到的。
+- **经验库、知识库跟着长**：写复盘时用 `build.py --catalog` 查编号，认领这次对应的经验（`review.sops`，每步一句这次的真事），给知识条目和关键术语标知识库编号（`kb`）。`scripts/workbench.py` 校验后写进经验库、知识库：经验底部加这篇，知识点加出处，对不上的进经验候选、知识待归位。汇总页成了工作台，顶上切换复盘、经验、知识三页。没有经验库、知识库就只出复盘页
 - **按项目和模块找得回来**：汇总页默认按时间列出最近的复盘，每篇两行，写起因、做法和结果；点开某个项目，能看到各模块最近一次做到了哪里。
 
 ```text
@@ -36,10 +37,11 @@ forge-fupan/
 ├── scripts/
 │   ├── find_session.py       找到这次的会话日志
 │   ├── digest.py             会话日志压成摘要
-│   ├── build.py              校验、编页面、重建汇总页
+│   ├── build.py              校验、编页面、重建工作台、列编号（--catalog）
+│   ├── workbench.py          经验、知识两页的数据；认领经验和知识编号的校验、写入
 │   └── check_quotes.py       验收时查引用的原话
 └── assets/
-    ├── reader.html           单篇和汇总共用的阅读页
+    ├── reader.html           单篇、汇总、经验、知识共用的阅读页
     └── icons.json            关键术语能用的图标名单
 ```
 
@@ -47,6 +49,7 @@ forge-fupan/
 
 - 前提：Python 3.9 以上；默认交给 Codex 写，要装 Codex CLI 和 [codex-delegate](https://github.com/antonailog/skills/tree/main/skills/codex-delegate)，没装就由 Claude 子 agent 写；结果截图要装 Playwright，截不了图就只放链接；改阅读页要 Node，源码在仓库的 `tools/fupan-reader/`
 - 注意：复盘根目录默认是作者工作区的 `记录/复盘/`，换环境时设环境变量 `FUPAN_ROOT`
+- 注意：经验库、知识库默认在复盘根上两级的 `知识/知识图谱/2-结果区/`，换位置设 `FUPAN_KB`；没有就只出复盘页
 - 注意：同一个会话再复盘，会覆盖原来那个文件夹
 - 注意：以前按时间写的 md 复盘原样保留，它们的模块和两行描述写在复盘根目录的 `旧复盘描述.json`
 
