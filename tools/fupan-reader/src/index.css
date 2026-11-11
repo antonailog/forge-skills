@@ -288,6 +288,9 @@
 /* 中文正文行高 1.7；徽章和按钮保持原样 */
 .typo-body :is(p, dd, dt, li, span:not([data-slot=badge])) { line-height: 1.7; }
 html { scroll-behavior: smooth; }
+/* 工作台顶栏吸顶（11-11）：--bar = 顶栏高度，有顶栏的页面由 TopBar 设成 3.5rem；页内跳转、左栏、吸顶的步骤横轴都让开这一截 */
+:root { --bar: 0px; }
+html { scroll-padding-top: var(--bar); }
 
 /* Tailwind 4 把按钮的光标重置成了箭头，可点的东西统一用手形 */
 button:not(:disabled), [role="button"], summary, a[href], label[for] { cursor: pointer; }

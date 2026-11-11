@@ -123,13 +123,14 @@ export function Steps({ sop }: { sop: Sop }) {
   const go = (i: number) => {
     const el = bands.current[i]!
     lock.current = true; unlockLater(); setCur(i)
-    window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - bar.current!.offsetHeight + 1, behavior: 'smooth' })
+    const stuck = parseFloat(getComputedStyle(bar.current!).top) || 0   // 横轴吸在顶栏下面：要让开顶栏 + 横轴
+    window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - stuck - bar.current!.offsetHeight + 1, behavior: 'smooth' })
   }
   const n = sop.steps.length
   return (
     <div className="rounded-xl border">
       {/* 吸顶条：只放步骤横轴，和时间线同一个容器 */}
-      <div ref={bar} className="sticky top-0 z-20 rounded-t-xl border-b bg-background/95 px-4 py-4 backdrop-blur">
+      <div ref={bar} className="sticky top-[var(--bar)] z-20 rounded-t-xl border-b bg-background/95 px-4 py-4 backdrop-blur">
         <ol className="axis grid" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
           {sop.steps.map((s, i) => (
             <li key={s.id} className="relative">

@@ -92,7 +92,7 @@ export function SideNav({ items, active, pick, back, hrefOf }: {
   const slide = 'pointer-events-none absolute inset-x-0 top-0 ease-out'
   const R = 2 * Math.PI * 17
   return (
-    <nav className="sticky top-0 flex max-h-screen flex-col gap-5 self-start py-8 text-sm">
+    <nav className="sticky top-[var(--bar)] flex max-h-[calc(100vh-var(--bar))] flex-col gap-5 self-start py-8 text-sm">
       {back && (
         <a href={back.href} className={btn}>
           <span className={ic}><ArrowLeft className="size-3.5 transition-transform duration-150 group-hover/btn:-translate-x-0.5" /></span>
