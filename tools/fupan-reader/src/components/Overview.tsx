@@ -41,7 +41,7 @@ export function Summary({ data }: P) {
   const to = (q: Record<string, string>) => '#' + new URLSearchParams(q).toString()
   const crumb = 'rounded-md px-1.5 py-0.5 hover:bg-muted'
   return (
-    <header id="summary" className="flex scroll-mt-8 flex-col gap-3 text-sm typo-body">
+    <header id="summary" data-annot-block className="flex scroll-mt-8 flex-col gap-3 text-sm typo-body">
       {/* 回汇总页：汇总 → 项目 → 模块；本篇标题就在下面，不再重复 */}
       <Breadcrumb className="-ml-1.5">
         <BreadcrumbList>
@@ -108,7 +108,7 @@ export function Process({ data }: P) {
       <h3 className={T.h3}>过程回顾</h3>
       <ol className="flex flex-col">
         {st.map((s, i) => (
-          <li key={i} className="grid grid-cols-[7rem_1.25rem_minmax(0,1fr)] gap-x-4">
+          <li key={i} data-annot-block data-annot-heading={s.name} data-annot-level="4" className="grid grid-cols-[7rem_1.25rem_minmax(0,1fr)] gap-x-4">
             <div className="flex flex-col items-end pt-px">
               <span>{s.start}</span>
               <span className="text-muted-foreground">{s.dur}</span>
@@ -161,7 +161,7 @@ export function Decisions({ data }: P) {
           </TableHeader>
           <TableBody>
             {ds.map((d) => (
-              <TableRow key={d.id} ref={(el) => { rows.current[d.id] = el }} className={cn('transition-colors duration-700', hl === d.id ? 'bg-brand-soft hover:bg-brand-soft' : 'hover:bg-transparent')}>
+              <TableRow key={d.id} data-annot-block data-annot-heading={unquote(d.what)} data-annot-level="4" ref={(el) => { rows.current[d.id] = el }} className={cn('transition-colors duration-700', hl === d.id ? 'bg-brand-soft hover:bg-brand-soft' : 'hover:bg-transparent')}>
                 <TableCell className="px-4 py-3 text-muted-foreground">{d.id}</TableCell>
                 <TableCell className="px-4 py-3 font-medium">{unquote(d.what)}</TableCell>
                 <TableCell className="px-4 py-3"><Badge className={cn('text-sm font-normal', SOURCE(d.source))}>{d.source}</Badge></TableCell>

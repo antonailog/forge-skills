@@ -18,7 +18,7 @@ const Lbl = ({ icon: I, className, children }: { icon: typeof Target; className?
 
 export function Overview({ sop }: { sop: Sop }) {
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div data-annot-block data-annot-heading="概览" data-annot-level="3" className="overflow-hidden rounded-lg border">
       <div className="grid grid-cols-3 divide-x">
         <div className="flex flex-col gap-2 p-5"><Lbl icon={Target}>目的</Lbl><p>{sop.purpose}</p></div>
         <div className="flex flex-col gap-2 p-5"><Lbl icon={Route}>方法</Lbl><p>{sop.approach}</p></div>
@@ -154,7 +154,7 @@ export function Steps({ sop }: { sop: Sop }) {
           <div key={String(me)} className={cn('absolute top-0 z-10 flex w-14 justify-center pt-3', me ? 'left-0' : 'right-0')}><Who me={me} /></div>
         ))}
         {sop.steps.map((s, i) => (
-          <section key={s.id} ref={(el) => { bands.current[i] = el }} className="step-band px-14 pb-3">
+          <section key={s.id} data-annot-block data-annot-heading={s.name} data-annot-level="4" ref={(el) => { bands.current[i] = el }} className="step-band px-14 pb-3">
             {/* 每步开头：左边本步关键，中轴上是序号，右边相关知识 */}
             <div className="mb-3 grid grid-cols-[1fr_2.5rem_1fr] items-center py-3">
               <span className={cn(T.headline, 'pr-4 text-right')}>{s.key}</span>

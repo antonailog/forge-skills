@@ -8,5 +8,8 @@ import { viteSingleFile } from 'vite-plugin-singlefile'
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss(), viteSingleFile()],
-  resolve: { alias: { '@': path.resolve(__dirname, './src') } },
+  // 划线只用文本选择器；上游 optimal-select 的包入口不完整，沿用样稿的空模块。
+  resolve: { alias: { '@': path.resolve(__dirname, './src'), 'optimal-select': path.resolve(__dirname, './src/annot/optimal-select-stub.ts') } },
+  // 本地开发通过同源代理连接服务；serve.py 会校验 Host 和 X-Fupan。
+  server: { proxy: { '/api': { target: 'http://127.0.0.1:4330', changeOrigin: true } } },
 })

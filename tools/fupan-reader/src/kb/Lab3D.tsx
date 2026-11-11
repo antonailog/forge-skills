@@ -2,8 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import ForceGraph3D, { type ForceGraphMethods, type LinkObject, type NodeObject } from 'react-force-graph-3d'
 import SpriteText from 'three-spritetext'
 import * as THREE from 'three'
-import { Search, Star } from 'lucide-react'
-import { useFavs } from './favs'
+import { Search } from 'lucide-react'
 import { buildTree, pathTo, type Kind, type TNode } from './tree'
 import { place, norm, useSize, type V } from './geo'
 import { DetailHost } from './DetailHost'
@@ -67,8 +66,6 @@ export function Lab3D({ nav, stats }: { nav: Nav; stats?: ReactNode }) {
   const [hover, setHover] = useState<string | null>(null)
   const [q, setQ] = useState('')
   const [ready, setReady] = useState(false)
-  const favs = useFavs()
-  const [favMode, setFavMode] = useState(false) // 清单切到「收藏」：所有觉得不会的
   const fg = useRef<ForceGraphMethods<N, L>>(undefined)
   const searchRef = useRef<HTMLInputElement>(null)
   const { ref, w, h } = useSize<HTMLDivElement>()
@@ -262,29 +259,20 @@ export function Lab3D({ nav, stats }: { nav: Nav; stats?: ReactNode }) {
       </div>
       <div className="absolute top-4 bottom-4 left-4 z-30 flex w-[280px] flex-col overflow-hidden rounded-xl border bg-background/95 shadow-sm backdrop-blur">
           <div className="flex items-start gap-2 border-b px-5 py-4">
-            {favMode
-              ? <span className="flex flex-1 items-center gap-2 font-semibold"><Star className="size-4 fill-yellow-400 text-yellow-500" />收藏</span>
-              : <div className="flex flex-1 flex-col gap-1.5"><nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">{crumbs}</nav>{stats}</div>}
-            <button type="button" onClick={() => setFavMode(!favMode)}
-              className={cn('flex shrink-0 items-center gap-1 rounded-md px-2 py-0.5 tabular-nums transition-colors hover:bg-muted', favMode ? 'text-foreground' : 'text-muted-foreground')}>
-              {favMode ? '返回' : <><Star className="size-4" />{favs.length}</>}
-            </button>
+            <div className="flex flex-1 flex-col gap-1.5"><nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-muted-foreground">{crumbs}</nav>{stats}</div>
           </div>
           <ul className="flex flex-col overflow-y-auto p-2">
-            {(favMode ? favs.map((name) => [...byId.values()].find((t) => t.kind === 'point' && t.label === name)).filter((t): t is TNode => !!t) : focus.children).map((t) => {
+            {focus.children.map((t) => {
               const I = iconOf(t)
               const st = t.kind === 'point' ? nav.data.points[t.id].state : null
-              const faved = t.kind === 'point' && favs.includes(t.label)
               return (
                 <li key={t.id}>
-                  <button type="button" onMouseEnter={() => setHover(t.id)} onMouseLeave={() => setHover(null)} onClick={() => (favMode ? jump(t) : open(t))}
+                  <button type="button" onMouseEnter={() => setHover(t.id)} onMouseLeave={() => setHover(null)} onClick={() => open(t)}
                     className={cn('flex w-full items-center gap-2 rounded-md px-3 py-2 text-left hover:bg-muted', t.id === nav.sel && show && 'bg-foreground/10 font-medium')}>
                     <I className={cn('size-4 shrink-0', st ? { 学过: 'text-emerald-600', 碰过: 'text-amber-600', 没碰过: 'text-muted-foreground' }[st] : 'text-muted-foreground')} />
                     <span className="flex min-w-0 flex-col">
                       <span className="truncate">{t.label}</span>
-                      {favMode && <span className="truncate text-muted-foreground">{pathTo(t).slice(1, -1).map((x) => x.label).join(' › ')}</span>}
                     </span>
-                    {faved && !favMode && <Star className="ml-auto size-4 shrink-0 fill-yellow-400 text-yellow-500" />}
                     {t.children.length > 0 && <span className="ml-auto tabular-nums text-muted-foreground">{t.children.length}</span>}
                   </button>
                 </li>

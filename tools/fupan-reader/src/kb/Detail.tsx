@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { ChevronRight, Eye, Square, Star } from 'lucide-react'
-import { toggleFav, useFavs } from './favs'
+import { ChevronRight, Eye, Square } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { SayBlock } from '@/components/kit'
 import { Links } from '@/components/Links'
@@ -26,7 +25,7 @@ function Md({ text }: { text: string }) {
 
 const Heading = ({ children }: { children: ReactNode }) => <h4 className={T.h4}>{children}</h4> // 小节标题 18
 const Sec = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <section className={cn('flex flex-col gap-2 border-t pt-5', className)}>{children}</section>
+  <section data-annot-block className={cn('flex flex-col gap-2 border-t pt-5', className)}>{children}</section>
 )
 
 function SourceRow({ s }: { s: Source }) {
@@ -102,7 +101,7 @@ const Part = ({ id, title, children }: { id: string; title: string; children: Re
   </section>
 )
 const Sub = ({ title, children }: { title: string; children: ReactNode }) => (
-  <div className="flex flex-col gap-3"><Heading>{title}</Heading>{children}</div>
+  <div data-annot-block className="flex flex-col gap-3"><Heading>{title}</Heading>{children}</div>
 )
 
 function NewBody({ f, onJump }: { f: Full; onJump?: (id: string) => void }) {
@@ -180,17 +179,7 @@ function NewBody({ f, onJump }: { f: Full; onJump?: (id: string) => void }) {
   )
 }
 
-/** 收藏：觉得不会的点一下，会了再点取消 */
-function FavButton({ name }: { name: string }) {
-  const on = useFavs().includes(name)
-  return (
-    <button type="button" onClick={() => toggleFav(name)} className={cn('flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-muted', on ? 'text-foreground' : 'text-muted-foreground')}>
-      <Star className={cn('size-4', on && 'fill-yellow-400 text-yellow-500')} />{on ? '已收藏' : '收藏'}
-    </button>
-  )
-}
-
-/** 弹窗头：固定不动。左边名字和状态，右边收藏和关闭放在一起；下面一句话 */
+/** 弹窗头：固定不动。左边名字和状态，右边关闭；下面一句话 */
 export function DetailHead({ p, close }: { p: Point; close?: ReactNode }) {
   const f = p.full
   return (
@@ -198,7 +187,7 @@ export function DetailHead({ p, close }: { p: Point; close?: ReactNode }) {
       <div className="flex items-center gap-3">
         <span className={T.h2}>{f?.name ?? p.name}</span>
         <StateIcon s={p.state} />
-        <span className="ml-auto flex items-center gap-1"><FavButton name={p.name} />{close}</span>
+        <span className="ml-auto flex items-center gap-1">{close}</span>
       </div>
       {f && <p className={T.headline}>{f.one}</p>}
     </div>
@@ -219,7 +208,7 @@ export function DetailBody({ p, onJump }: { p: Point; onJump?: (id: string) => v
         <>
           {f.what && <Sec><Heading>是什么</Heading><Md text={f.what} />{f.aliases?.length ? <p className="text-muted-foreground">也叫：{f.aliases.join('、')}</p> : null}</Sec>}
           {f.judge && <Sec><Heading>怎么判断</Heading><Md text={f.judge} /></Sec>}
-          {(f.say || f.verify) && <section className="flex flex-col gap-3 border-t pt-5">
+          {(f.say || f.verify) && <section data-annot-block className="flex flex-col gap-3 border-t pt-5">
             {f.say && <SayBlock text={f.say} />}
             {f.verify && <div className="flex flex-col gap-2 rounded-lg bg-muted/50 p-4"><Heading>怎么验收</Heading><p>{f.verify}</p></div>}
           </section>}

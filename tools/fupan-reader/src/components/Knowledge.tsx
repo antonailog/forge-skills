@@ -101,7 +101,7 @@ const Heading = ({ children }: { children: ReactNode }) => <h4 className={T.name
 /** 右侧详情：「先读后用」的顺序，「结论先行」的元素——每节一个标题、节间分隔线；读的在前（是什么、怎么判断），用的在后（下次这样说、怎么验收），最后是链接 */
 function Detail({ e, data }: { e: KEntry; data: SessionData }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div data-annot-block data-annot-heading={e.title} data-annot-level="4" className="flex flex-col gap-6">
       <Head e={e} />
       <section className="flex flex-col gap-2 border-t pt-5"><Heading>是什么</Heading><Md text={e.what} /></section>
       <section className="flex flex-col gap-2 border-t pt-5"><Heading>怎么判断</Heading><Md text={e.judge} /></section>
