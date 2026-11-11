@@ -47,11 +47,11 @@ const HL_CSS = `
 .dark ::highlight(annot-star-on) { background-color: rgb(245 158 11 / 0.5); }
 .dark ::highlight(annot-ask-on) { background-color: rgb(139 92 246 / 0.55); }`
 
-type Pos = { top: number; bottom: number; endX: number }
+type Pos = { top: number; bottom: number; startX: number; endX: number }
 type Bar = { x: number; y: number; range: Range }
 
-export function Annotator({ page, doc, scope, box, col }: {
-  page: string; doc: Doc; scope: RefObject<HTMLElement | null>; box: RefObject<HTMLElement | null>; col: RefObject<HTMLElement | null>
+export function Annotator({ page, doc, scope, box, col, compact = false }: {
+  page: string; doc: Doc; scope: RefObject<HTMLElement | null>; box: RefObject<HTMLElement | null>; col?: RefObject<HTMLElement | null>; compact?: boolean
 }) {
   const { notes, store } = useNotes(page)
   const key = notes.map((n) => n.key + n.kind + JSON.stringify(n.quote)).join(',')
@@ -61,6 +61,7 @@ export function Annotator({ page, doc, scope, box, col }: {
   const [pos, setPos] = useState<Map<string, Pos>>(new Map())
   const [geo, setGeo] = useState({ colX: 0, colW: 0 })
   const [active, setActive] = useState<string | null>(null)
+  const [showPopover, setShowPopover] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
   const [bar, setBar] = useState<Bar | null>(null)
   const [heights, setHeights] = useState<Record<string, number>>({})
@@ -100,10 +101,10 @@ export function Annotator({ page, doc, scope, box, col }: {
       const rects = [...r.getClientRects()].filter((x) => x.width > 1 && x.height > 1)
       if (!rects.length) return
       const f = rects[0], l = rects[rects.length - 1]
-      m.set(id, { top: f.top - br.top, bottom: l.bottom - br.top, endX: l.right - br.left })
+      m.set(id, { top: f.top - br.top, bottom: l.bottom - br.top, startX: f.left - br.left, endX: l.right - br.left })
     })
     setPos(m)
-    const c = col.current?.getBoundingClientRect()
+    const c = col?.current?.getBoundingClientRect()
     setGeo({ colX: c ? c.left - br.left : 0, colW: c ? c.width : 0 })
   }, [ranges, box, col, scope])
   useLayoutEffect(() => { measure() }, [measure])
@@ -137,7 +138,7 @@ export function Annotator({ page, doc, scope, box, col }: {
       if (d.caretPositionFromPoint) { const p = d.caretPositionFromPoint(e.clientX, e.clientY); if (p) { node = p.offsetNode; off = p.offset } }
       else if (d.caretRangeFromPoint) { const r = d.caretRangeFromPoint(e.clientX, e.clientY); if (r) { node = r.startContainer; off = r.startOffset } }
       if (!node || !scope.current?.contains(node)) return setActive(null)
-      for (const [id, r] of rangesRef.current) { try { if (r.isPointInRange(node, off)) return setActive(id) } catch { /* 跨文档的点 */ } }
+      for (const [id, r] of rangesRef.current) { try { if (r.isPointInRange(node, off)) { setActive(id); if (compact) setShowPopover(true); return } } catch { /* 跨文档的点 */ } }
       setActive(null)
     }
     const up = (e: MouseEvent) => {
@@ -153,13 +154,20 @@ export function Annotator({ page, doc, scope, box, col }: {
         setBar({ x: rr.left + rr.width / 2 - br.left, y: rr.top - br.top, range: r.cloneRange() })
       })
     }
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setBar(null) }
-    const down = (e: MouseEvent) => { if (!(e.target as Element).closest?.('[data-annot-toolbar]')) setBar(null) }
+    const key = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setBar(null)
+      if (compact) { setActive(null); setShowPopover(false) }
+    }
+    const down = (e: MouseEvent) => {
+      if (!(e.target as Element).closest?.('[data-annot-toolbar]')) setBar(null)
+      if (compact && !(e.target as Element).closest?.('[data-annot-popover]')) { setActive(null); setShowPopover(false) }
+    }
     document.addEventListener('mousedown', down)
     document.addEventListener('mouseup', up)
     document.addEventListener('keydown', key)
     return () => { document.removeEventListener('mousedown', down); document.removeEventListener('mouseup', up); document.removeEventListener('keydown', key) }
-  }, [scope, box])
+  }, [scope, box, compact])
 
   const add = async (kind: Kind) => {
     const root = scope.current
@@ -170,7 +178,7 @@ export function Annotator({ page, doc, scope, box, col }: {
     const id = store.add({ kind, page, doc, ...context, quote: { exact: q.exact, prefix: q.prefix, suffix: q.suffix }, note: '' })
     // 直接使用刚选的 Range，提交是否成功都马上显示；随后定位器负责刷新后的还原。
     setRanges((old) => new Map(old).set(id, range))
-    setEditing(id); setActive(id); setBar(null)
+    setEditing(compact ? null : id); setActive(id); setBar(null); setShowPopover(false)
     getSelection()?.removeAllRanges()
   }
   const remove = (id: string) => { store.remove(id); setEditing(null) }
@@ -180,7 +188,7 @@ export function Annotator({ page, doc, scope, box, col }: {
   const layer = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const el = layer.current
-    if (!el) return
+    if (!el || compact) return
     const measureCards = () => {
       const h: Record<string, number> = {}
       el.querySelectorAll<HTMLElement>('[data-card]').forEach((c) => { h[c.dataset.card!] = c.offsetHeight })
@@ -190,7 +198,7 @@ export function Annotator({ page, doc, scope, box, col }: {
     const ro = new ResizeObserver(measureCards)
     el.querySelectorAll('[data-card]').forEach((c) => ro.observe(c))
     return () => ro.disconnect()
-  }, [key, pos])
+  }, [key, pos, compact])
 
   // 从上往下排：和原句同高，挤了就往下顺延
   const order = notes.filter((n) => pos.has(n.key)).sort((a, b) => pos.get(a.key)!.top - pos.get(b.key)!.top || pos.get(a.key)!.endX - pos.get(b.key)!.endX)
@@ -211,24 +219,28 @@ export function Annotator({ page, doc, scope, box, col }: {
 
   // 卡片顺延到底部时，右栏撑开滚动内容；不让最后一张被弹窗裁掉。
   useLayoutEffect(() => {
-    const column = col.current
+    const column = col?.current
     if (!column) return
     const top = column.offsetTop
     column.style.minHeight = order.length ? `${Math.max(0, cur - top)}px` : ''
     return () => { column.style.minHeight = '' }
   }, [col, cur, order.length])
 
+  // 精简模式划完只上色；点击原句或保存失败才显示浮层。关闭时清掉 active，轮询不会把它重新打开。
+  const popover = compact ? notes.find((n) => n.key === active && (showPopover || n.error)) : undefined
+  const popoverPos = popover && pos.get(popover.key)
+
   return (
     <>
       <style>{HL_CSS}</style>
       <div ref={layer} data-annot-ui data-annot-layer className="pointer-events-none absolute inset-0 z-10">
-        <svg className="absolute inset-0 h-full w-full overflow-visible">
+        {!compact && <svg className="absolute inset-0 h-full w-full overflow-visible">
           {order.map((n) => (
             <path key={n.key} d={path(n)} fill="none" stroke={STROKE[n.kind]} strokeWidth={active === n.key ? 1.75 : 1.25}
               strokeDasharray="4 3" strokeLinejoin="round" opacity={active === n.key ? 1 : 0.35} />
           ))}
-        </svg>
-        {order.map((n) => {
+        </svg>}
+        {!compact && order.map((n) => {
           const on = active === n.key || editing === n.key
           const hover = { onMouseEnter: () => setActive(n.key), onMouseLeave: () => { if (editing !== n.key) setActive(null) } }
           const field = <NoteField value={n.note} onChange={(s) => write(n.key, s)} focus={editing === n.key}
@@ -250,6 +262,20 @@ export function Annotator({ page, doc, scope, box, col }: {
             </div>
           )
         })}
+        {popover && popoverPos && (
+          <div data-annot-ui data-annot-popover role="group" aria-label={NAME[popover.kind] + '划线'}
+            style={{ left: `clamp(0px, ${popoverPos.startX}px, max(0px, 100% - 18rem))`, top: popoverPos.bottom + 8 }}
+            className="pointer-events-auto absolute z-20 flex w-[18rem] max-w-full flex-col gap-2 rounded-[8px] border bg-popover p-3 text-[15px] shadow-md">
+            <div className="flex items-center gap-2">
+              <KindIcon kind={popover.kind} className="size-[18px]" /><span>{NAME[popover.kind]}</span>
+              <button type="button" title="删除这条划线" onClick={() => remove(popover.key)} className="ml-auto flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground">
+                <Trash2 className="size-4" />
+              </button>
+            </div>
+            {popover.kind === 'ask' && popover.gen.status === 'done' && popover.gen.explain && <p data-annot-explain className="whitespace-pre-wrap text-[15px] leading-relaxed text-muted-foreground">{popover.gen.explain}</p>}
+            {popover.error && <span role="status" className="text-[15px] text-muted-foreground">未保存 <button type="button" disabled={popover.busy} onClick={() => void store.save(popover.key)} className="underline underline-offset-4">重试</button></span>}
+          </div>
+        )}
       </div>
       {store.loadError && <div data-annot-ui className="absolute top-8 text-[15px] text-muted-foreground" style={{ left: colX }} role="status">未保存 <button type="button" className="underline underline-offset-4" onClick={() => void store.load()}>重试</button></div>}
       {bar && (
