@@ -80,7 +80,7 @@ python3 $SKILL_DIR/scripts/build.py <复盘根>/<项目>/<模块>/<日期>-<标�
 
 首次写入在 `FUPAN_ROOT/_划线/` 创建 `划线.json`、`已读.json` 中对应的文件，读写共用 `.lock`；只启动和读取空列表不创建目录。划线存原文快照、备注、生成内容和推送记录；已读存页面键。`build.py` 扫目录时跳过 `_` 开头的目录。
 
-新划线后台排队调本机 Claude CLI 生成背景，「不懂」另生成讲解；疑问备注改了就按最新备注重写讲解，已有背景不动。先用 `FUPAN_CLAUDE` 指定的绝对路径；没设时找 PATH 里的 `claude`，再找版本最新的 VS Code Claude 扩展内置 CLI。`FUPAN_CLAUDE_MODEL` 可指定模型，不设用 CLI 默认。每次限时 120 秒，失败记 `failed`，不清掉旧内容；重启继续处理 `pending`，`POST /api/notes/<id>/gen` 可同步重试，已经完成的直接返回。写接口都要带 `X-Fupan: 1`。更多用法见 [README.md](README.md)。
+新划线后台排队调本机 Claude CLI 生成背景，「疑问」另生成讲解；疑问备注改了就按最新备注重写讲解，已有背景不动。先用 `FUPAN_CLAUDE` 指定的绝对路径；没设时找 PATH 里的 `claude`，再找版本最新的 VS Code Claude 扩展内置 CLI。`FUPAN_CLAUDE_MODEL` 可指定模型，不设用 CLI 默认。每次限时 120 秒，失败记 `failed`，不清掉旧内容；重启继续处理 `pending`，`POST /api/notes/<id>/gen` 可同步重试，已经完成的直接返回。写接口都要带 `X-Fupan: 1`。更多用法见 [README.md](README.md)。
 
 ## 产出
 
