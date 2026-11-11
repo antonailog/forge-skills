@@ -6,13 +6,13 @@ import { useNotes, type Draft } from './store'
 import type { Doc, Kind } from './api'
 import { selectionContext } from './context'
 
-// 划线批注：选中正文 → 弹出 ⭐ 收藏 / ❓ 不懂 → 原文上色，右侧出虚线 + 备注
+// 划线批注：选中正文 → 弹出 ⭐ 收藏 / ❓ 疑问 → 原文上色，右侧出虚线 + 备注
 // 原文上色用 CSS Custom Highlight API（不改 React 管的 DOM）；定位用 W3C TextQuoteSelector（Apache Annotator）
 // 保留已定稿的 A 批注栏和引线。
 export const FRAME = 'max-w-[1720px] grid-cols-[13rem_minmax(0,1fr)_17rem]'
 
 const STROKE: Record<Kind, string> = { star: '#f59e0b', ask: '#8b5cf6' }
-const NAME: Record<Kind, string> = { star: '收藏', ask: '不懂' }
+const NAME: Record<Kind, string> = { star: '收藏', ask: '疑问' }
 const RING: Record<Kind, string> = { star: 'ring-amber-400', ask: 'ring-violet-400' }
 
 export function KindIcon({ kind, className }: { kind: Kind; className?: string }) {
@@ -68,7 +68,7 @@ function visibleRects(range: Range, scope: HTMLElement, rects: DOMRect[]) {
 }
 
 type Pos = { top: number; endX: number; visible: { bottom: number; startX: number; endX: number } | null }
-type Bar = { x: number; y: number; range: Range }
+type Bar = { id: number; x: number; y: number; range: Range }
 
 export function Annotator({ page, doc, scope, box, col, compact = false }: {
   page: string; doc: Doc; scope: RefObject<HTMLElement | null>; box: RefObject<HTMLElement | null>; col?: RefObject<HTMLElement | null>; compact?: boolean
@@ -84,6 +84,7 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
   const [showPopover, setShowPopover] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
   const [bar, setBar] = useState<Bar | null>(null)
+  const selectionId = useRef(0)
   const consumedSelection = useRef<Bar | null>(null)
   const [heights, setHeights] = useState<Record<string, number>>({})
   const [tick, setTick] = useState(0)
@@ -145,7 +146,7 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
     return () => { ro.disconnect(); cancelAnimationFrame(frame); root?.removeEventListener('scroll', move, true); window.removeEventListener('scroll', move, true); window.removeEventListener('resize', move) }
   }, [measure, box, scope])
 
-  // 原文上色：普通、当前两档，各分收藏、不懂
+  // 原文上色：普通、当前两档，各分收藏、疑问
   useEffect(() => {
     const hs = (CSS as unknown as { highlights?: Map<string, unknown> }).highlights
     const H = (window as unknown as { Highlight?: new (...r: Range[]) => { priority: number } }).Highlight
@@ -179,7 +180,8 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
         const text = r.toString()
         if (!root.contains(r.startContainer) || !root.contains(r.endContainer) || (e.target as Element).closest?.('[data-annot-ui],button,input,textarea') || Array.from(text.trim()).length < 2 || Array.from(text).length > 1000) return setBar(null)
         const rr = r.getBoundingClientRect(), br = b.getBoundingClientRect()
-        setBar({ x: rr.left + rr.width / 2 - br.left, y: rr.top - br.top, range: r.cloneRange() })
+        // 每次有效选区都重新挂载工具条，重选同一句也播放入场动画。
+        setBar({ id: ++selectionId.current, x: rr.left + rr.width / 2 - br.left, y: rr.top - br.top, range: r.cloneRange() })
       })
     }
     const key = (e: KeyboardEvent) => {
@@ -309,11 +311,11 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
       </div>
       {store.loadError && <div data-annot-ui className="absolute top-8 text-[15px] text-muted-foreground" style={{ left: colX }} role="status">未保存 <button type="button" className="underline underline-offset-4" onClick={() => void store.load()}>重试</button></div>}
       {bar && (
-        <div data-annot-ui data-annot-toolbar onMouseDown={(e) => e.preventDefault()} style={{ left: bar.x, top: bar.y }}
-          className="absolute z-30 flex -translate-x-1/2 -translate-y-[calc(100%+8px)] items-center gap-0.5 rounded-[8px] border bg-popover p-1 shadow-md">
+        <div key={bar.id} data-annot-ui data-annot-toolbar onMouseDown={(e) => e.preventDefault()} style={{ left: bar.x, top: bar.y }}
+          className="absolute z-30 flex -translate-x-1/2 -translate-y-[calc(100%+8px)] items-center gap-0.5 rounded-[8px] border bg-popover p-1 shadow-md animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-1 duration-150 motion-reduce:animate-none">
           {(['star', 'ask'] as Kind[]).map((k) => (
-            <button key={k} type="button" title={NAME[k]} onClick={() => add(k)} className="flex size-8 items-center justify-center rounded-md hover:bg-accent">
-              <KindIcon kind={k} className="size-[18px]" />
+            <button key={k} type="button" onClick={() => add(k)} className="flex h-8 items-center justify-center gap-1.5 rounded-md px-2.5 text-[15px] text-foreground hover:bg-accent">
+              <KindIcon kind={k} className="size-[18px]" /><span>{NAME[k]}</span>
             </button>
           ))}
         </div>
