@@ -11,6 +11,8 @@
     "brands": "node scripts/gen-brands.mjs"
   },
   "dependencies": {
+    "@apache-annotator/dom": "0.2.0",
+    "@apache-annotator/selector": "0.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "0.577.0",

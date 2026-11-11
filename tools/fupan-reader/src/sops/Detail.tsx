@@ -1,4 +1,8 @@
-import { Fragment, useMemo, type ReactNode } from 'react'
+import { Fragment, useMemo, useRef, type ReactNode } from 'react'
+import { cn } from '@/lib/utils'
+import { Annotator, FRAME } from '@/annot/Annotator'
+import { ReadButton } from '@/annot/read'
+import { useAnnotationService } from '@/annot/service'
 import { ArrowRight, ChevronRight } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { SideNav, useScrollSpy, type NavItem } from '@/components/SideNav'
@@ -19,7 +23,7 @@ function Scope({ sop, all, onOpen }: { sop: Sop; all: Sop[]; onOpen: Open }) {
   const sc = sop.scope!
   const name = (id: string) => all.find((x) => x.id === id)?.name ?? id
   return (
-    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 gap-y-1 rounded-lg bg-muted/60 px-5 py-4">
+    <dl data-annot-block data-annot-heading="适用场景" data-annot-level="3" className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-5 gap-y-1 rounded-lg bg-muted/60 px-5 py-4">
       <dt className="text-muted-foreground">适用场景</dt>
       <dd>{sc.use}</dd>
       <dt className="text-muted-foreground">不适用</dt>
@@ -45,7 +49,7 @@ function Img({ k }: { k?: string }) {
 function IO({ sop }: { sop: Sop }) {
   const io = sop.io!
   return (
-    <section id="io" className="grid scroll-mt-8 grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] gap-y-3">
+    <section id="io" data-annot-block className="grid scroll-mt-8 grid-cols-[minmax(0,1fr)_2.5rem_minmax(0,1fr)] gap-y-3">
       <h3 className={T.h3}>输入</h3><span /><h3 className={T.h3}>输出</h3>
       <div className="flex flex-col gap-5 rounded-lg border p-5">
         <div className="flex flex-col gap-1 border-l-2 pl-4">{io.input.map((l) => <p key={l}>{l}</p>)}</div>
@@ -96,12 +100,14 @@ function tocOf(sop: Sop): NavItem[] {
 }
 
 export function Detail({ sop, all, onOpen, crumb }: { sop: Sop; all: Sop[]; onOpen: Open; crumb: ReactNode }) {
+  const { available } = useAnnotationService()
+  const box = useRef<HTMLDivElement>(null), scope = useRef<HTMLDivElement>(null), col = useRef<HTMLDivElement>(null)
   const toc = useMemo(() => tocOf(sop), [sop])
   const [active, pick] = useScrollSpy(useMemo(() => toc.map((t) => t.id), [toc]))
   return (
-    <div className="mx-auto grid max-w-[1440px] grid-cols-[13rem_minmax(0,1fr)] gap-12 px-8">
+    <div ref={box} className={cn('relative mx-auto grid gap-12 px-8', available ? FRAME : 'max-w-[1440px] grid-cols-[13rem_minmax(0,1fr)]')}>
     <SideNav items={toc} active={active} pick={pick} hrefOf={(id) => `#${id}`} />
-    <div className="typo-body flex min-w-0 flex-col gap-10 py-10">
+    <div ref={scope} data-annot-scope className="typo-body flex min-w-0 flex-col gap-10 py-10">
       <div id="ov" className="flex scroll-mt-8 flex-col gap-4">
         {crumb}
         <h2 className={T.h2}>{sop.name}</h2>
@@ -126,7 +132,9 @@ export function Detail({ sop, all, onOpen, crumb }: { sop: Sop; all: Sop[]; onOp
           <Links text={sop.reading} />
         </section>
       )}
+      <ReadButton key={sop.id} k={'s:' + sop.id} />
     </div>
+    {available && <><div ref={col} data-annot-col aria-hidden /><Annotator key={sop.id} page={'s:' + sop.id} doc={{ type: '经验', project: '经验', module: sop.domain, title: sop.name, one: sop.one }} scope={scope} box={box} col={col} /></>}
     </div>
   )
 }

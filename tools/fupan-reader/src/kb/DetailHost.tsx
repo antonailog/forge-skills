@@ -3,6 +3,9 @@ import { XIcon } from 'lucide-react'
 import { Boundary } from '@/components/Boundary'
 import { DetailBody, DetailHead } from './Detail'
 import type { Point } from './types'
+import { useRef } from 'react'
+import { Annotator } from '@/annot/Annotator'
+import { useAnnotationService } from '@/annot/service'
 
 // 知识点详情：居中弹窗，标题区固定、正文在下面滚。某个知识点的数据有问题只影响它自己的弹窗，地图和清单照常
 
@@ -11,7 +14,9 @@ export function DetailHost({ p, open, setOpen, onJump }: { p: Point | null; open
     <D.Root open={open && !!p} onOpenChange={setOpen}>
       <D.Portal>
         <D.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0" />
-        <D.Content data-slot="dialog-content" className="fixed top-1/2 left-1/2 z-50 flex max-h-[88vh] w-[880px] max-w-[calc(100vw-4rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border bg-background shadow-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
+        <D.Content data-slot="dialog-content" onEscapeKeyDown={(e) => {
+          if ((e.target as Element).closest?.('[data-annot-ui]') || document.querySelector('[data-annot-toolbar], [data-annot-popover]')) e.preventDefault()
+        }} className="fixed top-1/2 left-1/2 z-50 flex max-h-[88vh] w-[880px] max-w-[calc(100vw-4rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border bg-background shadow-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95">
           <D.Title className="sr-only">{p?.name}</D.Title>
           <D.Description className="sr-only">知识条目</D.Description>
           {p && (
@@ -23,12 +28,25 @@ export function DetailHost({ p, open, setOpen, onJump }: { p: Point | null; open
                 } />
               </div>
               <div data-slot="dialog-body" className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
-                <Boundary key={p.id} hint="这个知识点没有显示出来，让 AI 重建一次复盘汇总页再刷新。"><DetailBody p={p} onJump={onJump} /></Boundary>
+                <Boundary key={p.id} hint="这个知识点没有显示出来，让 AI 重建一次复盘汇总页再刷新。"><AnnotatedBody p={p} onJump={onJump} /></Boundary>
               </div>
             </>
           )}
         </D.Content>
       </D.Portal>
     </D.Root>
+  )
+}
+
+/** 整个批注层都在 dialog-body 的滚动内容里，和原句一起滚动。 */
+function AnnotatedBody({ p, onJump }: { p: Point; onJump?: (id: string) => void }) {
+  const { available } = useAnnotationService()
+  const box = useRef<HTMLDivElement>(null), scope = useRef<HTMLDivElement>(null)
+  if (!available) return <DetailBody p={p} onJump={onJump} />
+  return (
+    <div ref={box} className="relative">
+      <div ref={scope} data-annot-scope className="min-w-0"><DetailBody p={p} onJump={onJump} /></div>
+      <Annotator compact page={'k:' + p.id} doc={{ type: '知识', project: '知识', module: p.domain, title: p.full?.name ?? p.name, one: p.full?.one ?? '' }} scope={scope} box={box} />
+    </div>
   )
 }

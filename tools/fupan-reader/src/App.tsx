@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Annotator, FRAME } from '@/annot/Annotator'
+import { ReadButton } from '@/annot/read'
+import { useAnnotationService } from '@/annot/service'
 import { Deliverables } from '@/components/Deliverables'
 import { Leftovers } from '@/components/Leftovers'
 import { FileSheet } from '@/components/FileSheet'
@@ -48,7 +51,9 @@ function Chapter({ id, title, children }: { id: string; title: string; children:
   )
 }
 
-export default function App({ data, dark }: { data: ReviewPage; dark: boolean }) {
+export default function App({ data, dark, pageKey }: { data: ReviewPage; dark: boolean; pageKey: string }) {
+  const { available } = useAnnotationService()
+  const box = useRef<HTMLDivElement>(null), scope = useRef<HTMLElement>(null), col = useRef<HTMLDivElement>(null)
   const [opened, setOpened] = useState<Opened>(null)
   const toc = useMemo(() => tocOf(data), [data])
   const [active, pick] = useScrollSpy(useMemo(() => toc.map((t) => t.id), [toc]))
@@ -58,9 +63,9 @@ export default function App({ data, dark }: { data: ReviewPage; dark: boolean })
   useEffect(() => { document.title = data.review.overview.summary.title }, [data])
 
   return (
-    <div className="mx-auto grid max-w-[1400px] grid-cols-[13rem_minmax(0,1fr)] gap-12 px-8">
+    <div ref={box} className={cn('relative mx-auto grid gap-12 px-8', available ? FRAME : 'max-w-[1400px] grid-cols-[13rem_minmax(0,1fr)]')}>
       <SideNav items={toc} active={active} pick={pick} back={{ href: back, label: backLabel(back) }} hrefOf={(id) => `#${id}`} />
-      <main className="flex min-w-0 flex-col gap-16 py-8">
+      <main ref={scope} data-annot-scope className="flex min-w-0 flex-col gap-16 py-8">
         <Summary data={data} />
         <Chapter id="ch1" title="一、工作总结">
           {has('process') && <Process data={data} />}
@@ -71,7 +76,9 @@ export default function App({ data, dark }: { data: ReviewPage; dark: boolean })
         </Chapter>
         {has('ch2') && <Chapter id="ch2" title="二、工作复盘"><Review data={data} /></Chapter>}
         {has('ch3') && <Chapter id="ch3" title="三、知识拓展">{has('kmap') && <Knowledge data={data} />}<Terms data={data} /></Chapter>}
+        <ReadButton k={pageKey} />
       </main>
+      {available && <><div ref={col} data-annot-col aria-hidden /><Annotator key={pageKey} page={pageKey} doc={{ type: '复盘', project: s.projects[0] ?? '', module: s.module, title: s.title, one: [s.why, s.did].filter(Boolean).join(' → ') }} scope={scope} box={box} col={col} /></>}
       <FileSheet data={data} opened={opened} setOpened={setOpened} />
     </div>
   )

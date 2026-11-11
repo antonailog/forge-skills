@@ -16,3 +16,7 @@ npm run release    # 构建 + 拷进 skill 的 assets/（reader.html、icons.jso
 - 关键术语能用的品牌图标在 `scripts/gen-brands.mjs` 的 WANT 里加，再跑 `npm run brands`
 - 数据结构：复盘在 `src/types.ts`，改了字段同步改 `skills/forge-fupan/references/schema.md` 和 `scripts/build.py` 的校验；经验在 `src/sops/types.ts`、知识在 `src/kb/types.ts`，改了同步改 `scripts/workbench.py`
 - 字号阶梯在 `src/typo.ts`，共用的方框和按钮在 `src/components/kit.tsx`，状态图标在 `src/components/StatusIcon.tsx`
+
+`src/annot/` 是划线批注和已读：`Annotator.tsx` 沿用样稿 A 的选区工具条、CSS Highlight 上色和右侧卡片；`context.ts` 提取标题路径、语义块快照；`api.ts` 连接本地服务；`store.ts` 只在内存保留未保存的备注和重试状态，`read.tsx` 提供已读按钮与列表置灰。HTTP(S) 打开后 `/api/health` 成功才启用；file:// 或探测失败时保持普通阅读页，不提示、不读写浏览器持久存储。
+
+本地开发先在仓库根运行 `python3 skills/forge-fupan/scripts/serve.py --port 4330`，再到本目录运行 `npm run dev`。Vite 把 `/api` 同源代理到 `127.0.0.1:4330`（会改写 Host），数据脚本仍从 `public/` 读取。写操作会落到服务的 `FUPAN_ROOT/_划线/`；开发或自测请把 `FUPAN_ROOT`、`FUPAN_KB` 指向临时数据目录。完整临时数据浏览器自测可在仓库根运行 `python3 .forge/jobs/T2-selftest.py`，使用 4332 端口、假 CLI，截图和报告写到 `.forge/jobs/T2-shots/`。

@@ -157,7 +157,7 @@ function Route({ data }: { data: SessionData }) {
         </HScroll>
       </Card>
 
-      <Card className="gap-5 p-6 shadow-none">
+      <Card data-annot-block data-annot-heading={b.step} data-annot-level="4" className="gap-5 p-6 shadow-none">
         <div className="flex flex-col gap-2">
           <span className="flex flex-wrap items-center gap-3"><span className="text-muted-foreground">第 {sel + 1} 步</span><span className={T.h4}>{b.step}</span><span className="text-muted-foreground"><EvalText e={b.eval} /></span></span>
           <p className="text-base">{b.gapLine}</p>
@@ -221,7 +221,7 @@ function Expression({ data }: { data: SessionData }) {
       </div>
       <Card className="gap-0 py-0 shadow-none">
         {data.review.expression.map((x, i) => (
-          <div key={x.title} className={cn('grid gap-6 p-6 lg:grid-cols-2', i && 'border-t')}>
+          <div key={x.title} data-annot-block data-annot-heading={x.title} data-annot-level="4" className={cn('grid gap-6 p-6 lg:grid-cols-2', i && 'border-t')}>
             <div className="flex flex-col gap-3">
               <span className="flex flex-wrap items-center gap-2"><Badge className={cn('text-sm font-normal', EVAL['待改进'])}>{x.type}</Badge><span className={T.name}>{x.title}</span></span>
               <div className="flex flex-col gap-1.5">

@@ -5,6 +5,7 @@ import { Star } from '@/components/Star'
 import { cn } from '@/lib/utils'
 import { T } from '@/typo'
 import type { IndexOld, IndexPage, IndexProject } from '@/types'
+import { readKey, readRow, useReadSet } from '@/annot/read'
 
 // 复盘汇总：你打开它主要看最近做了什么，顺带看各模块到哪了
 // 左栏最上面是「最近」（默认）：所有项目按时间倒序、按月分组；点某个项目：顶上一排模块现状，下面是这个项目的时间线，点模块只看这一块
@@ -45,11 +46,12 @@ const modulesOf = (rows: Row[]) => {
 
 /** 一行一篇：日期 | 状态图标 + 标题 + 路径（同一行），下面两行摘要 */
 function List({ rows, cross }: { rows: Row[]; cross: boolean }) {
+  const read = useReadSet()
   return (
     <ol className="flex flex-col border-t border-foreground">
       {rows.map((r) => (
         <li key={r.key}>
-          <a href={r.href} onClick={remember} className="group grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-5 border-b py-4 transition-colors hover:bg-muted/40">
+          <a href={r.href} onClick={remember} className={cn('group grid grid-cols-[6.5rem_minmax(0,1fr)] gap-x-5 border-b py-4 transition-colors hover:bg-muted/40', readRow(read.has(readKey(r.href))))}>
             <span className="font-mono text-muted-foreground tabular-nums">{r.date}</span>
             <span className="flex min-w-0 flex-col gap-1">
               <span className="flex min-w-0 items-center gap-2">

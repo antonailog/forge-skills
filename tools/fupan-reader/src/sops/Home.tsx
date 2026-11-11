@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { T } from '@/typo'
 import type { Sop } from './types'
+import { readRow, useReadSet } from '@/annot/read'
 
 // 经验首页：照复盘汇总页（03-复盘文档 ReviewIndex.tsx）——左边领域列表，右边这个领域的经验按性质（设计、构建……）分组，一份一行；点开整页进详情
 
@@ -50,11 +51,12 @@ function Group({ name, n, children }: { name: string; n: number; children: React
 const row = 'group grid w-full grid-cols-[minmax(0,1fr)_auto] items-start gap-x-5 px-5 py-3.5 text-left transition-colors hover:bg-muted/50'
 
 export function Home({ sops, domain, pick, onOpen }: { sops: Sop[]; domain: string; pick: (d: string) => void; onOpen: (id: string) => void }) {
+  const read = useReadSet()
   const domains = [...new Set(sops.map((s) => s.domain))].map((d) => [d, sops.filter((s) => s.domain === d).length] as [string, number])
   const list = sops.filter((s) => s.domain === domain)
   const types = [...new Set(list.map((s) => s.type))]
   const Row = (s: Sop) => (
-    <button key={s.id} type="button" onClick={() => onOpen(s.id)} className={row}>
+    <button key={s.id} type="button" onClick={() => onOpen(s.id)} className={cn(row, readRow(read.has('s:' + s.id)))}>
       <span className="flex min-w-0 flex-col gap-1">
         <span className={T.name}>{s.name}</span>
         <span className="text-muted-foreground">{s.one}</span>

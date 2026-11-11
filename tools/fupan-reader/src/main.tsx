@@ -14,6 +14,7 @@ import { KnowledgePage } from '@/kb/Page'
 import type { KData } from '@/kb/types'
 import { RADIUS, V } from '@/variants'
 import type { PageData } from '@/types'
+import { AnnotationService } from '@/annot/service'
 
 // 一份阅读页管整个 记录/复盘/：放在 记录/复盘/index.html，按地址里的 # 切页面
 //   #r=<项目>/<模块>/<日期-标题>  → 单篇，读那个文件夹里的 data.js
@@ -119,13 +120,13 @@ function Root() {
   const key = `${state.key}#${v.q.toString()}`
   if (kind === 'sops') return <>{bar}<Boundary key={key} hint="这份没有显示出来，让 AI 重建一次复盘汇总页再刷新。"><Reveal><SopPage data={d as unknown as SopData} hash={v.q} /></Reveal></Boundary></>
   if (kind === 'knowledge') return <>{bar}<Boundary key={key} hint="知识页没有显示出来，让 AI 重建一次复盘汇总页再刷新。"><KnowledgePage key={v.q.get('k') ?? ''} data={d as unknown as KData} hash={v.q} /></Boundary></>
-  if (d.kind !== 'index') page = <App data={d} dark={isDark} />
+  if (d.kind !== 'index') page = <App data={d} dark={isDark} pageKey={'r:' + (v.r ?? '')} />
   else if (v.o) {
     const vo = v.o
     const hit = d.projects.flatMap((p) => p.old.map((x) => ({ x, p: p.name }))).find(({ x }) => x.rel === vo || x.path === rootDir() + vo || x.path.endsWith('/' + vo))
-    page = hit ? <OldReview o={hit.x} project={hit.p} /> : <p className="p-8 text-sm text-muted-foreground">找不到这篇旧复盘：{vo}</p>
+    page = hit ? <OldReview o={hit.x} project={hit.p} pageKey={'o:' + vo} /> : <p className="p-8 text-sm text-muted-foreground">找不到这篇旧复盘：{vo}</p>
   } else return <>{bar}<Boundary key={state.key}><Reveal><ReviewIndex data={d} /></Reveal></Boundary></>
   return <Boundary key={state.key}>{page}</Boundary>
 }
 
-createRoot(document.getElementById('root')!).render(<StrictMode><TooltipProvider delayDuration={150}><Root /></TooltipProvider></StrictMode>)
+createRoot(document.getElementById('root')!).render(<StrictMode><TooltipProvider delayDuration={150}><AnnotationService><Root /></AnnotationService></TooltipProvider></StrictMode>)

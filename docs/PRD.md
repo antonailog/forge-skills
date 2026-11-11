@@ -1,12 +1,23 @@
 # Forge — 产品需求文档 (PRD)
 
-**版本:** v2026.04.27-fupan-report-structure
-**日期:** 2026-04-27
-**状态:** 需求确认
+**版本:** v2026.11.11-fupan-highlight
+**日期:** 2026-11-11
+**状态:** 需求确认（划线回顾）
+
+> **现行说明（2026-11-11）**：下文「一」至「九」描述的是 2026-04 版 Fupan Workbench（FastAPI 服务、task 队列、Markdown 复盘），已被 v4（2026-11-09 起）取代。v4 的现行流程、产出和数据见 `skills/forge-fupan/README.md`、`SKILL.md`、`references/schema.md`。本文件这次只新增「当前迭代：划线回顾」一节为当前事实；旧章节待整份重写时再清。
 
 ---
 
 ## 迭代历史摘要
+
+### v2026.11.11-fupan-highlight — 工作台划线回顾
+
+- 工作台改由本地服务 `scripts/serve.py` 托管（`http://127.0.0.1:4330`），划线和已读存在复盘根 `_划线/`。
+- 复盘单篇、旧复盘、经验详情、知识点弹窗可划线：⭐ 收藏、❓ 不懂；原文上色，右侧批注栏（虚线 + 备注）。
+- 服务在后台给每条划线写背景（项目、在做的事、这一处的情况），❓ 另写讲解，页面卡片下显示。
+- 复盘单篇、旧复盘、经验详情最下面「已读」按钮，列表里读过的那一行变灰；历史复盘全部算未读。
+- 作者工作区另有推送脚本：21:00 推当天新划的，次日、第三天 09:00 复习，每条 3 次，发飞书群；凭证不进本仓库。
+- 去掉知识点弹窗原来的「收藏」（整个知识点、存浏览器）。
 
 ### v2026.04.27-fupan-report-structure — Fupan 复盘报告结构优化
 
@@ -48,6 +59,54 @@
   - 验收标准：用户不需要回命令行即可完成学习选择；超时或服务失败时可降级到对话内确认。
   - 受影响文件：`skills/forge-fupan/SKILL.md`、`skills/forge-fupan/parse_tokens.py`、新增 `skills/forge-fupan/workbench/`。
   - 关联变更：`README.md`、`docs/skills-reference.md`、`CHANGELOG.md` 需要在实现完成后同步说明。
+
+## 当前迭代：划线回顾（v2026.11.11）
+
+完整行为契约见 `.features/fupan-highlight/feature-spec.md`；讨论与原话在作者工作区 `工具/复盘改造/1-工作区/07-划线回顾/`。
+
+### 变更摘要
+
+工作台原来只能读。现在读的时候能划线（⭐ 收藏、❓ 不懂）、写备注，读完能点「已读」；划过的句子由作者工作区的推送脚本按 3 次节奏发到飞书群复习。工作台改由本地服务托管，划线和已读存成文件，AI 和推送脚本都读得到。
+
+### 产品事实
+
+| 项 | 当前规格 |
+| --- | --- |
+| 打开方式 | `http://127.0.0.1:4330/`（serve.py，LaunchAgent 常驻）；file:// 打开仍能读，但没有划线和已读 |
+| 能划线的页面 | 复盘单篇、旧复盘、经验详情、知识点弹窗 |
+| 划线类型 | ⭐ 收藏（好知识、好表达都算，要区分写在备注里）、❓ 不懂 |
+| 划线展示 | 原文上色；右侧批注栏 17rem，卡片与原句同高，虚线从原句末尾连到卡片；知识点弹窗加宽到 1200px |
+| 背景与讲解 | 新建后后台生成并存回；背景 = 项目 › 模块：在做的事 + 这一处的情况；❓ 加讲解（≤ 200 字）；失败时用位置和原文拼背景 |
+| 已读 | 复盘单篇、旧复盘、经验详情最下面一个按钮，可取消；列表行 opacity .5；历史复盘默认未读 |
+| 推送 | 21:00 当天新增；第一次推送后的次日、第三天 09:00 复习；每条 3 次；卡片每条一块灰底，背景 / 疑问·收藏 / 备注，模块名加粗、无表情 |
+| 数据 | `FUPAN_ROOT/_划线/划线.json`、`已读.json` |
+| 去掉 | 知识点弹窗和知识页清单的「收藏」 |
+
+### 前端变更要点
+
+- 新增 `tools/fupan-reader/src/annot/`：划线组件（选区工具条、CSS Custom Highlight 上色、批注栏和虚线、备注编辑）、接口客户端、已读按钮；从样稿 `07-划线回顾/2026-11-11-样稿-划线批注/src/annot/` 移植，localStorage 换成接口
+- 接入：`src/App.tsx`（单篇）、`components/OldReview.tsx`、`sops/Detail.tsx`、`kb/Detail.tsx` + `kb/DetailHost.tsx`（弹窗加宽）；列表置灰接 `components/ReviewIndex.tsx`、`sops/Home.tsx`
+- 删除 `kb/favs.ts` 及 `kb/Detail.tsx`、`kb/Lab3D.tsx` 里的收藏入口
+- 页面用 `/api/health` 判断能力；不通时一律不出划线和已读
+
+### 后端变更要点
+
+- 新增 `skills/forge-fupan/scripts/serve.py`（标准库 http.server，只绑 127.0.0.1）：静态托管 FUPAN_ROOT；`/api/health`、`/api/notes`（GET/POST/PATCH/DELETE）、`/api/read`（GET/PUT/DELETE）；原子写 + 锁
+- 新建划线后后台队列调用本机 Claude CLI 生成背景和讲解，限时 120 秒，失败记 gen.status=failed
+- `scripts/build.py`：服务通时打印 http 地址；扫复盘根继续跳过 `_` 开头的目录
+- 作者工作区（不在本仓库）：`工具/复盘改造/2-结果区/划线推送/push.py` + 两个 LaunchAgent（服务常驻、推送每 10 分钟）
+
+### 测试验收标准
+
+见 Feature Spec「四、验收检查表」；推送用注入时间的方式跑 21:05、次日 09:05、第三日 09:05、第四日四次。
+
+### Agent 补充信息
+
+- 阅读页源码在 `tools/fupan-reader/`，改完 `npm run release` 更新 `skills/forge-fupan/assets/reader.html`
+- 样稿基于 11-10 的阅读页，main 之后又合了顶栏吸顶（PR #16），移植时以 main 为准
+- 公开仓库：飞书 chat_id、app 凭证、open_id 一律不进；推送脚本只在作者工作区
+- Mac 系统时区是洛杉矶，定时一律按 `Asia/Shanghai` 换算
+- 改了数据字段同步 `skills/forge-fupan/README.md`、`SKILL.md`（打开方式、服务、数据位置）
 
 ---
 

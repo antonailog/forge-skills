@@ -139,7 +139,7 @@ function Cards({ data }: P) {
         const h = hue(data, m)
         const words = ordered(m)
         return (
-          <section key={m.id} className="grid grid-cols-[13rem_minmax(0,1fr)] gap-x-6 border-t py-4 first:border-t-0 first:pt-0">
+          <section key={m.id} data-annot-block data-annot-heading={m.area + ' · ' + m.name} data-annot-level="4" className="grid grid-cols-[13rem_minmax(0,1fr)] gap-x-6 border-t py-4 first:border-t-0 first:pt-0">
             <span className="flex items-center gap-2 self-start py-1.5"><span className={cn('size-2.5 rounded-full', h.solid)} /><span className={cn('font-semibold', h.text)}>{m.area}</span><span className={T.name}>{m.name}</span></span>
             <ul className="grid grid-flow-col grid-cols-3 gap-x-6 gap-y-1" style={{ gridTemplateRows: `repeat(${Math.ceil(words.length / 3)}, auto)` }}>
               {words.map((w) => {
@@ -180,7 +180,7 @@ function SayList({ data }: P) {
     <div className="flex flex-col gap-2 rounded-xl bg-brand-soft p-5">
       <span className="text-muted-foreground">下次这样说</span>
       {mods(data).map((m) => (
-        <div key={m.id} className="grid items-start gap-x-6 gap-y-1 border-t border-brand/10 pt-2 first-of-type:border-t-0 sm:grid-cols-[13rem_minmax(0,1fr)]">
+        <div key={m.id} data-annot-block data-annot-heading={m.area + ' · ' + m.name} data-annot-level="4" className="grid items-start gap-x-6 gap-y-1 border-t border-brand/10 pt-2 first-of-type:border-t-0 sm:grid-cols-[13rem_minmax(0,1fr)]">
           <Domain m={m} h={hue(data, m)} />
           <p>{m.say}</p>
         </div>
