@@ -769,6 +769,28 @@ def install_reader():
     shutil.copyfile(SKILL / 'assets' / 'reader.html', ROOT / 'index.html')
 
 
+def browser_address(rel: str) -> str:
+    """服务可用就给 http 地址；没开服务时保留原来的 file 地址。"""
+    from http.client import HTTPException
+    from urllib.request import ProxyHandler, build_opener
+
+    try:
+        port = int(os.environ.get('FUPAN_PORT', '4330'))
+        if not 1 <= port <= 65535:
+            raise ValueError
+        base = f'http://127.0.0.1:{port}'
+        # 本机探活不经过系统或环境变量里的代理。
+        with build_opener(ProxyHandler({})).open(base + '/api/health', timeout=0.5) as response:
+            if response.status == 200 and json.loads(response.read()).get('ok') is True:
+                path = (ROOT / 'index.html').relative_to(ROOT.parent.parent).as_posix()
+                return base + '/' + quote(path) + '#r=' + quote(rel, safe='')
+    except (OSError, ValueError, AttributeError, HTTPException):
+        pass
+    # 中文照原样（好认，浏览器认得），只转义会弄坏 file 地址的几个字符。
+    esc = lambda s: ''.join(f'%{ord(c):02X}' if c in ' %#?+' else c for c in s)
+    return f'file://{esc(str(ROOT / "index.html"))}#r={esc(rel)}'
+
+
 def build_review(folder: Path, check_only=False, emit=None):
     folder = folder.resolve()
     try:
@@ -830,9 +852,8 @@ def build_review(folder: Path, check_only=False, emit=None):
     size = (folder / 'data.js').stat().st_size / 1e6
     print(f'单篇：{folder / STUB}（数据 {size:.1f} MB）')
     # 给用户的复盘页地址（SKILL.md 第 9 步）：在 VS Code 等编辑器里点「打开复盘.html」会在编辑器里打开、不执行跳转，落不到这一篇；
-    # 这个地址粘进浏览器地址栏就直接是这一篇。中文照原样（好认，浏览器认得），只转义会弄坏地址的几个字符
-    esc = lambda s: ''.join(f'%{ord(c):02X}' if c in ' %#?+' else c for c in s)
-    print(f'浏览器地址：file://{esc(str(ROOT / "index.html"))}#r={esc(rel)}')
+    # 这个地址粘进浏览器地址栏就直接是这一篇；服务可用时优先从本机 http 打开。
+    print('浏览器地址：' + browser_address(rel))
 
 
 _IMG = re.compile(r'(!\[[^\]]*\]\()(<[^>]+>|[^)\s]+)((?:\s+"[^"]*")?\))')
