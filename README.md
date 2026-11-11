@@ -211,7 +211,7 @@ forge   ❯ 已修复。搜索代码库发现 3 处类似风险：
 | forge-doc-release | `/forge-doc-release` | 发布后文档同步（README/ARCHITECTURE/CHANGELOG 对齐已发布内容） |
 | forge-doc-policy | `/forge-doc-policy` | 文档治理规范（doc-paths.md 真相源白名单 + frontmatter schema + init-project.sh 脚手架） |
 | forge-feature-doc | `/forge-feature-doc` | 需求设计文档：每个功能一份给人看的设计文档（待拍板置顶、先图后字、只写当前设计、末尾关键改动），配出图脚本和上线前检查；forge 各阶段收尾时同步，review / ship 当门禁 |
-| forge-fupan | `/forge-fupan` | 复盘 v4：默认交给 Codex 写 → 读会话日志 → 对话里问一次 → 单篇复盘页（工作总结、对标分析、需求表达、知识地图、关键术语）→ 按项目、模块归进复盘汇总页 |
+| forge-fupan | `/forge-fupan` | 复盘 v4：默认交给 Codex 写 → 读会话日志 → 对话里问一次 → 单篇复盘页（工作总结、对标分析、需求表达、知识地图、关键术语）→ 按项目、模块归进复盘汇总页；认领经验、标知识编号写进经验库和知识库，汇总页顶上切换复盘 / 经验 / 知识 |
 
 ### 每个 Skill 怎么运转
 
@@ -402,7 +402,7 @@ forge-skills/
 │   ├── forge-doc-policy/           ←   文档治理规范 + init 脚手架
 │   ├── forge-feature-doc/          ←   需求设计文档（每功能一份给人看 + 出图 + 上线前检查）
 │   ├── forge-status/               ←   并行会话巡检
-│   └── forge-fupan/                ←   复盘（单篇复盘页 + 复盘汇总页）
+│   └── forge-fupan/                ←   复盘（单篇复盘页 + 工作台：复盘 / 经验 / 知识）
 │       └── */references/           ←   各 skill 的阶段手册（按需加载）
 ├── tools/
 │   └── fupan-reader/               ← 复盘阅读页源码（React），构建产物拷进 skills/forge-fupan/assets/

@@ -82,7 +82,7 @@ function Links({ text }: { text: string }) {
   )
 }
 
-/** 下次这样说：绿底，复制按钮收在右上角 */
+/** 下次这样说：绿底 */
 const Say = ({ e }: { e: KEntry }) => <SayBlock text={e.say} />
 
 /** 标题区：只有「三块」的标签带颜色；来源那句不加竖线，直接跟在标题下 */

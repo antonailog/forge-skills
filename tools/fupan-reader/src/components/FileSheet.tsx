@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, Copy, ExternalLink } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
@@ -12,15 +12,6 @@ import type { CodeFile, FileEntry, Opened, SessionData } from '@/types'
 
 const vscode = (abs: string) => 'vscode://file' + abs.split('/').map(encodeURIComponent).join('/')
 const expand = (ranges: [number, number][]) => ranges.flatMap(([a, b]) => Array.from({ length: b - a + 1 }, (_, i) => a + i))
-
-function CopyPath({ text }: { text: string }) {
-  const [done, setDone] = useState(false)
-  return (
-    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" onClick={() => navigator.clipboard?.writeText(text).then(() => setDone(true))}>
-      {done ? <Check /> : <Copy />}{done ? '已复制' : '复制路径'}
-    </Button>
-  )
-}
 
 /** 没有讲解卡、也不是关键配置的文件：按类型渲染 */
 function PlainBody({ f }: { f: FileEntry }) {
@@ -142,7 +133,6 @@ export function FileSheet({ data, opened, setOpened }: { data: SessionData; open
               </SheetDescription>
               <div className="-ml-2 flex flex-wrap gap-1">
                 <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground" asChild><a href={vscode(f.abs)}><ExternalLink />在 VS Code 中打开</a></Button>
-                <CopyPath text={f.abs} />
               </div>
             </SheetHeader>
             {cf ? <CodeBody key={`${fo!.key}-${fo!.step ?? 0}`} f={f} cf={cf} start={fo!.step ?? 0} /> : (

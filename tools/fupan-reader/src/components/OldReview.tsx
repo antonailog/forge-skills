@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { SideNav, useScrollSpy, type NavItem } from '@/components/SideNav'
 import { Markdown } from '@/components/viewers'
 import { T } from '@/typo'
-import { backHref } from '@/components/ReviewIndex'
+import { backHref, backLabel } from '@/components/ReviewIndex'
 import { Star } from '@/components/Star'
 import type { IndexOld } from '@/types'
 
@@ -35,7 +35,8 @@ export function OldReview({ o, project }: { o: IndexOld; project: string }) {
     const seen = new Map<string, number>()
     const items: NavItem[] = []
     box.current?.querySelectorAll<HTMLElement>('h2, h3').forEach((h) => {
-      const base = slug(h.textContent ?? '') || 'section'
+      const t = slug(h.textContent ?? '') || 'section'
+      const base = t === 'sop' || t === 'kb' ? `${t}-` : t   // #sop、#kb 是经验、知识两页的地址，标题锚点让开
       const k = seen.get(base) ?? 0
       seen.set(base, k + 1)
       h.id = k ? `${base}-${k}` : base
@@ -51,7 +52,7 @@ export function OldReview({ o, project }: { o: IndexOld; project: string }) {
   const back = backHref('#' + new URLSearchParams({ p: project, m: o.module ?? '未分模块' }).toString())
   return (
     <div className="mx-auto grid max-w-[1400px] grid-cols-[13rem_minmax(0,1fr)] gap-12 px-8 text-sm typo-body">
-      <SideNav title="目录" items={toc} active={active} pick={pick} back={{ href: back, label: '返回复盘汇总' }} hrefOf={(id) => `#${id}`} />
+      <SideNav items={toc} active={active} pick={pick} back={{ href: back, label: backLabel(back) }} hrefOf={(id) => `#${id}`} />
       <main className="flex min-w-0 max-w-4xl flex-col gap-8 py-8">
         <header className="flex flex-col gap-3">
           <h1 className={T.title}>{title}</h1>

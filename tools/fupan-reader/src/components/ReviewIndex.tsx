@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { SideNav } from '@/components/SideNav'
 import { StatusIcon } from '@/components/StatusIcon'
 import { Star } from '@/components/Star'
@@ -19,7 +19,16 @@ const KEY = 'fupan-back'
 type Back = { hash: string; y: number }
 const readBack = (): Back | null => { try { return JSON.parse(sessionStorage.getItem(KEY) ?? 'null') } catch { return null } }
 export const backHref = (fallback: string) => readBack()?.hash ?? fallback
-const remember = () => { try { sessionStorage.setItem(KEY, JSON.stringify({ hash: location.hash || '#', y: window.scrollY })) } catch { /* 存不了就回默认位置 */ } }
+/** 返回按钮的字：从经验、知识点点进来的回那里 */
+export const backLabel = (href: string) => /^#(s=|d=|sop)/.test(href) ? '返回经验' : /^#(k=|kb)/.test(href) ? '返回知识' : '返回复盘汇总'
+/** 换页后读一次：地址正是记下的那一页（点了「返回」回来）就给出当时的滚动位置并清掉，下次从顶部开始 */
+export const takeBack = (): number | null => {
+  const b = readBack()
+  if (!b || b.hash !== (location.hash || '#')) return null
+  try { sessionStorage.removeItem(KEY) } catch { /* 清不掉也只是下次多还原一次 */ }
+  return b.y
+}
+export const remember = () => { try { sessionStorage.setItem(KEY, JSON.stringify({ hash: location.hash || '#', y: window.scrollY })) } catch { /* 存不了就回默认位置 */ } }
 
 type Row = { key: string; href: string; date: string; title: string; status?: string; project: string; module: string; why?: string; did?: string; got?: string; line?: string | null }
 const rowsOf = (p: IndexProject): Row[] => [
@@ -94,16 +103,11 @@ export function ReviewIndex({ data }: { data: IndexPage }) {
   const go = (q: Record<string, string>) => history.replaceState(null, '', '#' + new URLSearchParams(q).toString())
   const pick = (name: string) => { setCur(name); setMod(null); go(name === RECENT ? {} : { p: name }); window.scrollTo({ top: 0 }) }
   const pickMod = (m: string) => { const next = mod === m ? null : m; setMod(next); go(next ? { p: cur, m: next } : { p: cur }) }
-  // 从单篇页返回：回到点进去时的位置
-  useLayoutEffect(() => {
-    const b = readBack()
-    if (b && b.hash === (location.hash || '#')) window.scrollTo({ top: b.y })
-  }, [])
   useEffect(() => { document.title = p ? `复盘汇总 · ${p.name}` : '复盘汇总' }, [p])
   if (!projects.length) return <p className="p-8 text-sm text-muted-foreground">还没有复盘</p>
   return (
     <div className="mx-auto grid max-w-[1400px] grid-cols-[15rem_minmax(0,1fr)] gap-12 px-8 text-sm typo-body">
-      <SideNav title="项目" items={[{ id: RECENT, label: '最近' }, ...projects.map((x) => ({ id: x.name, label: x.name, count: x.count }))]} active={cur} pick={pick} />
+      <SideNav items={[{ id: RECENT, label: '最近' }, ...projects.map((x) => ({ id: x.name, label: x.name, count: x.count }))]} active={cur} pick={pick} />
       <main className="flex min-w-0 flex-col gap-8 py-8">
         {p ? (
           <>
