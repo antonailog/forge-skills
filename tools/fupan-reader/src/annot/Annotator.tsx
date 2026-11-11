@@ -47,7 +47,27 @@ const HL_CSS = `
 .dark ::highlight(annot-star-on) { background-color: rgb(245 158 11 / 0.5); }
 .dark ::highlight(annot-ask-on) { background-color: rgb(139 92 246 / 0.55); }`
 
-type Pos = { top: number; bottom: number; startX: number; endX: number }
+/** Range 返回排版矩形；引线和浮层只用正文内各层 overflow 裁切后仍可见的部分。 */
+function visibleRects(range: Range, scope: HTMLElement, rects: DOMRect[]) {
+  let left = -Infinity, top = -Infinity, right = Infinity, bottom = Infinity
+  const node = range.commonAncestorContainer
+  for (let el = node.nodeType === Node.ELEMENT_NODE ? node as Element : node.parentElement; el && scope.contains(el); el = el.parentElement) {
+    const style = getComputedStyle(el)
+    const clipX = style.overflowX !== 'visible', clipY = style.overflowY !== 'visible'
+    if (!clipX && !clipY) continue
+    const bounds = el.getBoundingClientRect()
+    // client 区域不包含边框和滚动条，且两轴分别裁切。
+    const x = bounds.left + el.clientLeft, y = bounds.top + el.clientTop
+    if (clipX) { left = Math.max(left, x); right = Math.min(right, x + el.clientWidth) }
+    if (clipY) { top = Math.max(top, y); bottom = Math.min(bottom, y + el.clientHeight) }
+  }
+  return rects.map((r) => {
+    const x = Math.max(r.left, left), y = Math.max(r.top, top)
+    return new DOMRect(x, y, Math.min(r.right, right) - x, Math.min(r.bottom, bottom) - y)
+  }).filter((r) => r.width > 1 && r.height > 1)
+}
+
+type Pos = { top: number; endX: number; visible: { bottom: number; startX: number; endX: number } | null }
 type Bar = { x: number; y: number; range: Range }
 
 export function Annotator({ page, doc, scope, box, col, compact = false }: {
@@ -94,15 +114,18 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
   }, [key, tick, page, scope])
 
   const measure = useCallback(() => {
-    const b = box.current
-    if (!b) return
+    const b = box.current, root = scope.current
+    if (!b || !root) return
     const br = b.getBoundingClientRect()
     const m = new Map<string, Pos>()
     ranges.forEach((r, id) => {
       const rects = [...r.getClientRects()].filter((x) => x.width > 1 && x.height > 1)
       if (!rects.length) return
       const f = rects[0], l = rects[rects.length - 1]
-      m.set(id, { top: f.top - br.top, bottom: l.bottom - br.top, startX: f.left - br.left, endX: l.right - br.left })
+      const visible = visibleRects(r, root, rects), vf = visible[0], vl = visible[visible.length - 1]
+      // 卡片对齐和排序仍取原句排版位置，完全裁掉也保留卡片。
+      m.set(id, { top: f.top - br.top, endX: l.right - br.left,
+        visible: vf && vl ? { bottom: vl.bottom - br.top, startX: vf.left - br.left, endX: vl.right - br.left } : null })
     })
     setPos(m)
     const c = col?.current?.getBoundingClientRect()
@@ -113,10 +136,13 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
     const ro = new ResizeObserver(() => measure())
     if (box.current) ro.observe(box.current)
     if (scope.current) ro.observe(scope.current)
-    const move = () => measure()
-    window.addEventListener('scroll', move, true)
+    const root = scope.current
+    let frame = 0
+    const move = () => { if (!frame) frame = requestAnimationFrame(() => { frame = 0; measure() }) }
+    root?.addEventListener('scroll', move, { capture: true, passive: true })
+    window.addEventListener('scroll', move, { capture: true, passive: true })
     window.addEventListener('resize', move)
-    return () => { ro.disconnect(); window.removeEventListener('scroll', move, true); window.removeEventListener('resize', move) }
+    return () => { ro.disconnect(); cancelAnimationFrame(frame); root?.removeEventListener('scroll', move, true); window.removeEventListener('scroll', move, true); window.removeEventListener('resize', move) }
   }, [measure, box, scope])
 
   // 原文上色：普通、当前两档，各分收藏、不懂
@@ -217,7 +243,7 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
   const { colX, colW } = geo
 
   const path = (n: Draft) => {
-    const p = pos.get(n.key)!, y = ys[n.key]
+    const p = pos.get(n.key)!.visible!, y = ys[n.key]
     return `M${p.endX + 2} ${p.bottom + 2} H${colX - 16} V${y + 19} H${colX}`
   }
 
@@ -232,14 +258,14 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
 
   // 精简模式划完只上色；点击原句或保存失败才显示浮层。关闭时清掉 active，轮询不会把它重新打开。
   const popover = compact ? notes.find((n) => n.key === active && (showPopover || n.error)) : undefined
-  const popoverPos = popover && pos.get(popover.key)
+  const popoverPos = popover && pos.get(popover.key)?.visible
 
   return (
     <>
       <style>{HL_CSS}</style>
       <div ref={layer} data-annot-ui data-annot-layer className="pointer-events-none absolute inset-0 z-10">
         {!compact && <svg className="absolute inset-0 h-full w-full overflow-visible">
-          {order.map((n) => (
+          {order.filter((n) => pos.get(n.key)!.visible).map((n) => (
             <path key={n.key} d={path(n)} fill="none" stroke={STROKE[n.kind]} strokeWidth={active === n.key ? 1.75 : 1.25}
               strokeDasharray="4 3" strokeLinejoin="round" opacity={active === n.key ? 1 : 0.35} />
           ))}
