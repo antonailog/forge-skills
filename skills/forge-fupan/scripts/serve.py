@@ -240,8 +240,10 @@ def generate(note, timeout=GEN_TIMEOUT):
     model = os.environ.get('FUPAN_CLAUDE_MODEL')
     if model:
         command += ['--model', model]
+    # 在空的临时目录里调：不带上服务所在目录的 CLAUDE.md 和项目记忆，省时省额度
     result = subprocess.run(command, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, encoding='utf-8', timeout=timeout, check=True)
+                            stderr=subprocess.PIPE, encoding='utf-8', timeout=timeout, check=True,
+                            cwd=tempfile.gettempdir())
     output = result.stdout.strip()
     fenced = re.fullmatch(r'```(?:json)?[ \t]*\r?\n(.*?)\r?\n```', output, re.DOTALL | re.IGNORECASE)
     if fenced:
