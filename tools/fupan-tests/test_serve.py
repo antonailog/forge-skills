@@ -4,6 +4,7 @@ import http.client
 import io
 import json
 import os
+import socket
 import subprocess
 import sys
 import tempfile
@@ -38,6 +39,9 @@ assert sys.argv[1] == '-p'
 assert '只输出一个 JSON' in sys.argv[2]
 with pathlib.Path(__file__).with_suffix('.calls').open('a') as f:
     f.write('call\n')
+with pathlib.Path(__file__).with_suffix('.invocations').open('a') as f:
+    f.write(json.dumps({'args': sys.argv[1:], 'cwd': str(pathlib.Path.cwd()),
+                        'empty': not any(pathlib.Path.cwd().iterdir())}, ensure_ascii=False) + '\n')
 if '--model' in sys.argv:
     assert sys.argv[sys.argv.index('--model') + 1] == 'test-model'
 if mode == 'timeout':
@@ -47,6 +51,8 @@ elif mode == 'invalid':
 elif mode == 'exit':
     sys.exit(7)
 else:
+    if mode == 'slow':
+        time.sleep(2)
     if mode == 'wait':
         marker = pathlib.Path(__file__).with_suffix('.started')
         marker.write_text('started')
@@ -55,11 +61,16 @@ else:
     data = {'background': '项目 › 模块：检查重试的截止点。\n这一处在说明超过截止点后该如何处理。',
             'explain': '截止点是本次检查的界限，不代表实际发送发生的时间。'}
     if mode == 'long':
-        data['explain'] = '字' * 201
+        data['explain'] = '字' * 401
     if mode == 'one-line':
         data['background'] = '只有一段'
     if mode == 'label':
         data['background'] = '项目 › 模块：检查重试的截止点。\n这一处的情况：复盘在说超过截止点后该如何处理。'
+    if mode == 'echo':
+        source = json.loads(sys.argv[2].split('资料：\n', 1)[1])
+        data['explain'] = '回答：' + source['note']
+        if source['note']:
+            data['background'] = '项目 › 模块：这是另一份背景。\n备注不该改变背景。'
     output = json.dumps(data, ensure_ascii=False)
     if mode in ('fenced-json', 'fenced'):
         output = ' \n```' + ('json' if mode == 'fenced-json' else '') + '\n' + output + '\n```\n \t'
@@ -166,6 +177,9 @@ class EndpointCases:
         data = payload(**kwargs)
         return self.api('POST', '/api/notes', data, status=201)
 
+    def invocations(self):
+        return [json.loads(line) for line in self.cli.with_suffix('.invocations').read_text().splitlines()]
+
     def wait_for(self, predicate):
         deadline = time.monotonic() + 4
         while time.monotonic() < deadline:
@@ -238,11 +252,31 @@ class EndpointCases:
         self.assertEqual(self.api(path='/api/read'), expected[1:])
         self.api('PUT', '/api/read/bad', status=400)
 
+    def test_snapshot_field_length_limits(self):
+        data = payload()
+        data['quote'] = {'exact': '字' * 1001, 'prefix': '前' * 201, 'suffix': '后' * 201}
+        self.api('POST', '/api/notes', data, status=400)
+        data['quote']['exact'] = '字' * 1000
+        data['section'] = '节' * 301
+        for key in ('project', 'module', 'title', 'one'):
+            data['doc'][key] = '文' * 301
+        note = self.api('POST', '/api/notes', data, status=201)
+        self.assertEqual(note['quote'], {'exact': '字' * 1000, 'prefix': '前' * 200, 'suffix': '后' * 200})
+        self.assertEqual(note['section'], '节' * 300)
+        self.assertEqual(note['doc']['type'], '复盘')
+        for key in ('project', 'module', 'title', 'one'):
+            self.assertEqual(note['doc'][key], '文' * 300)
+
     def test_security_on_static_api_and_preflight(self):
         (self.root / 'index.data.js').write_text('private')
         for path in ('/api/health', '/记录/复盘/index.data.js', '/'):
             self.api(path=path, headers={'Host': 'evil.test:' + str(self.port)}, status=403)
-            self.api(path=path, headers={'Sec-Fetch-Site': 'cross-site'}, status=403)
+            for site in ('cross-site', 'same-site', 'unexpected', ''):
+                self.api(path=path, headers={'Sec-Fetch-Site': site}, status=403)
+            for site in ('same-origin', 'none'):
+                code, headers, body = self.request(path=path, headers={'Sec-Fetch-Site': site})
+                self.assertEqual(code, 302 if path == '/' else 200)
+                self.assertFalse(any(k.lower().startswith('access-control-') for k in headers))
         self.api(headers={'Host': 'localhost:' + str(self.port)})
         self.api(headers={'Host': '127.0.0.1'}, status=403)
         for method, path in [('POST', '/api/notes'), ('PATCH', '/api/notes/missing'),
@@ -302,6 +336,31 @@ class EndpointCases:
             self.assertEqual(code, 416)
             self.assertEqual(headers['Content-Range'], 'bytes */10')
 
+    def test_workspace_images_and_hidden_paths(self):
+        directory = self.workspace / '工具' / '配图'
+        directory.mkdir(parents=True)
+        for extension in ('png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'):
+            (directory / ('图.' + extension)).write_bytes(b'image')
+            self.assertEqual(self.request(path='/工具/配图/图.' + extension)[0], 200)
+        for extension in ('md', 'json'):
+            (directory / ('private.' + extension)).write_text('private')
+            self.api(path='/工具/配图/private.' + extension, status=404)
+        for base in (self.workspace, self.root, self.kb):
+            hidden = base / '.隐藏'
+            hidden.mkdir()
+            (hidden / 'x.png').write_bytes(b'private')
+            path = '/' + (hidden / 'x.png').relative_to(self.workspace).as_posix()
+            self.api(path=path, status=404)
+        (directory / 'hidden.png').symlink_to(self.workspace / '.隐藏' / 'x.png')
+        (directory / 'fake.png').symlink_to(directory / 'private.json')
+        with tempfile.TemporaryDirectory() as outside:
+            target = Path(outside) / 'outside.png'
+            target.write_bytes(b'private')
+            (directory / 'outside.png').symlink_to(target)
+            for path in ('/工具/配图/hidden.png', '/工具/配图/fake.png', '/工具/配图/outside.png',
+                         '/工具/配图/../配图/图.png', '/工具/配图/%2e%2e/配图/图.png'):
+                self.api(path=path, status=404)
+
     def test_concurrent_creates_and_push_records(self):
         barrier = threading.Barrier(10)
 
@@ -335,12 +394,15 @@ class EndpointCases:
             self.assertEqual(done['gen']['tries'], 1)
             self.assertEqual('explain' in done['gen'], kind == 'ask')
             self.assertEqual(len(done['gen']['background'].splitlines()), 2)
-            self.assertLessEqual(len(done['gen']['background']), 160)
+            self.assertLessEqual(len(done['gen']['background']), 240)
             self.assertIsNotNone(datetime.fromisoformat(done['gen']['at']).utcoffset())
             if kind == 'ask':
                 self.assertTrue(done['gen']['explain'])
                 self.assertLessEqual(len(done['gen']['explain']), 200)
-            for tries, mode in enumerate(('invalid', 'exit', 'timeout', 'one-line'), 2):
+            # 已成功的同步请求直接复用结果；失败重试从 failed 状态开始，保留旧内容。
+            self.app.store.change(note['id'], lambda n: n['gen'].update(status='failed'))
+            modes = ('invalid', 'exit', 'timeout', 'long' if kind == 'ask' else 'one-line')
+            for tries, mode in enumerate(modes, 2):
                 self.cli.with_suffix('.mode').write_text(mode)
                 self.app.generator.timeout = .08 if mode == 'timeout' else 2
                 failed = self.api('POST', path)
@@ -405,9 +467,9 @@ class EndpointCases:
         self.app.generator.timeout = .08
         with self.app.generator.serial:
             started = time.monotonic()
-            failed = self.api('POST', '/api/notes/' + note['id'] + '/gen')
+            pending = self.api('POST', '/api/notes/' + note['id'] + '/gen')
         self.assertLess(time.monotonic() - started, 1)
-        self.assertEqual(failed['gen'], {'status': 'failed', 'tries': 1})
+        self.assertEqual(pending['gen'], {'status': 'pending', 'tries': 0})
         self.assertFalse(self.cli.with_suffix('.calls').exists())
 
     def test_invalid_generation_length_fails(self):
@@ -415,6 +477,119 @@ class EndpointCases:
         note = self.create()
         failed = self.api('POST', '/api/notes/' + note['id'] + '/gen')
         self.assertEqual(failed['gen'], {'status': 'failed', 'tries': 1})
+
+    def test_ask_patch_regenerates_explain_without_changing_background(self):
+        self.cli.with_suffix('.mode').write_text('echo')
+        self.app.generator.start()
+        data = payload()
+        data['note'] = ''
+        note = self.api('POST', '/api/notes', data, status=201)
+        self.wait_for(lambda: self.app.store.get(note['id'])['gen']['status'] == 'done')
+        background = self.app.store.get(note['id'])['gen']['background']
+        question = '截止点和实际发送时间有什么区别？'
+        changed = self.api('PATCH', '/api/notes/' + note['id'], {'note': question})
+        self.assertEqual(changed['gen']['status'], 'pending')
+        self.assertEqual(changed['gen']['background'], background)
+        self.wait_for(lambda: self.app.store.get(note['id'])['gen']['status'] == 'done')
+        final = self.app.store.get(note['id'])
+        self.assertEqual(final['gen']['background'], background)
+        self.assertEqual(final['gen']['explain'], '回答：' + question)
+        self.assertEqual(final['gen']['tries'], 2)
+        calls = self.invocations()
+        self.assertEqual(len(calls), 2)
+        self.assertIn(question, calls[1]['args'][1])
+        self.assertIn('只生成 explain，不生成或改写 background', calls[1]['args'][1])
+
+    def test_ask_patch_during_first_generation_discards_stale_explain(self):
+        self.cli.with_suffix('.mode').write_text('wait')
+        self.app.generator.start()
+        data = payload()
+        data['note'] = ''
+        note = self.api('POST', '/api/notes', data, status=201)
+        self.wait_for(lambda: self.cli.with_suffix('.started').exists())
+        self.api('PATCH', '/api/notes/' + note['id'], {'note': '第一个问题'})
+        self.api('PATCH', '/api/notes/' + note['id'], {'note': '最新的问题'})
+        self.cli.with_suffix('.mode').write_text('echo')
+        self.cli.with_suffix('.release').touch()
+        self.wait_for(lambda: self.app.store.get(note['id'])['gen']['status'] == 'done')
+        final = self.app.store.get(note['id'])
+        self.assertEqual(final['gen']['background'],
+                         '项目 › 模块：检查重试的截止点。\n这一处在说明超过截止点后该如何处理。')
+        self.assertEqual(final['gen']['explain'], '回答：最新的问题')
+        self.assertEqual(len(self.invocations()), 2)
+        self.assertIn('最新的问题', self.invocations()[1]['args'][1])
+
+    def test_pending_explain_resumes_after_restart(self):
+        note = self.create()
+        done = self.api('POST', '/api/notes/' + note['id'] + '/gen')
+        self.api('PATCH', '/api/notes/' + note['id'], {'note': '重启后继续回答的问题'})
+        self.cli.with_suffix('.mode').write_text('echo')
+        self.app.generator = serve.Generator(self.app.store, timeout=2)
+        self.addCleanup(self.app.generator.close)
+        self.app.generator.start()
+        self.wait_for(lambda: self.app.store.get(note['id'])['gen']['status'] == 'done')
+        final = self.app.store.get(note['id'])
+        self.assertEqual(final['gen']['background'], done['gen']['background'])
+        self.assertEqual(final['gen']['explain'], '回答：重启后继续回答的问题')
+        self.assertEqual(len(self.invocations()), 2)
+
+    def test_same_ask_note_and_star_note_edits_do_not_regenerate(self):
+        for kind in ('ask', 'star'):
+            note = self.create(kind=kind)
+            done = self.api('POST', '/api/notes/' + note['id'] + '/gen')
+            queued = self.app.generator.queue.qsize()
+            changed = self.api('PATCH', '/api/notes/' + note['id'],
+                               {'note': note['note'] if kind == 'ask' else '只改收藏备注'})
+            self.assertEqual(changed['gen'], done['gen'])
+            self.assertEqual(self.app.generator.queue.qsize(), queued)
+        self.assertEqual(len(self.invocations()), 2)
+
+    def test_synchronous_retry_reuses_background_completion(self):
+        self.app = serve.App(timeout=3)
+        self.server.app = self.app
+        self.addCleanup(self.app.generator.close)
+        self.cli.with_suffix('.mode').write_text('slow')
+        self.app.generator.start()
+        note = self.create()
+        time.sleep(.2)
+        done = self.api('POST', '/api/notes/' + note['id'] + '/gen')
+        self.assertEqual(done['gen']['status'], 'done')
+        self.assertEqual(done['gen']['tries'], 1)
+        self.assertEqual(self.app.store.get(note['id'])['gen'], done['gen'])
+        self.assertEqual(len(self.invocations()), 1)
+
+    def test_done_generation_cannot_be_downgraded(self):
+        note = self.create()
+        path = '/api/notes/' + note['id'] + '/gen'
+        done = self.api('POST', path)
+        self.cli.with_suffix('.mode').write_text('invalid')
+        self.assertEqual(self.api('POST', path), done)
+        self.assertEqual(self.app.generator.save(note['id'], None), done)
+        self.assertEqual(self.app.store.get(note['id']), done)
+        self.assertEqual(len(self.invocations()), 1)
+
+    def test_cli_isolation_and_temporary_directory_cleanup(self):
+        for mode in ('success', 'invalid', 'exit', 'timeout'):
+            self.cli.with_suffix('.mode').write_text(mode)
+            self.app.generator.timeout = .2 if mode == 'timeout' else 2
+            note = self.create()
+            result = self.api('POST', '/api/notes/' + note['id'] + '/gen')
+            self.assertEqual(result['gen']['status'], 'done' if mode == 'success' else 'failed')
+        calls = self.invocations()
+        self.assertEqual(len(calls), 4)
+        self.assertEqual(len({call['cwd'] for call in calls}), 4)
+        for call in calls:
+            args = call['args']
+            self.assertIn('--tools', args)
+            self.assertEqual(args[args.index('--tools') + 1], '')
+            self.assertIn('--strict-mcp-config', args)
+            self.assertIn('--no-session-persistence', args)
+            self.assertIn('--settings', args)
+            self.assertEqual(json.loads(args[args.index('--settings') + 1]), {'disableAllHooks': True})
+            self.assertNotIn('--bare', args)
+            self.assertTrue(call['empty'])
+            self.assertTrue(Path(call['cwd']).name.startswith('fupan-claude-'))
+            self.assertFalse(Path(call['cwd']).exists())
 
     def test_generation_preserves_concurrent_edits_and_does_not_resurrect_deleted_note(self):
         self.cli.with_suffix('.mode').write_text('wait')
@@ -449,6 +624,16 @@ class EndpointCases:
         self.create()
         path = self.root / '_划线' / '划线.json'
         path.write_text('broken')
+        self.app.generator = serve.Generator(self.app.store, timeout=2)
+        self.addCleanup(self.app.generator.close)
+        with patch('sys.stderr', new_callable=io.StringIO) as error:
+            self.app.generator.start()
+        self.assertEqual(len(error.getvalue().splitlines()), 1)
+        self.assertIn('服务继续运行', error.getvalue())
+        self.assertTrue(self.app.generator.thread.is_alive())
+        self.assertEqual(self.api(), {'ok': True})
+        (self.root / 'index.html').write_text('readable')
+        self.assertEqual(self.request(path='/记录/复盘/index.html')[0], 200)
         self.api(path='/api/notes', status=500)
         self.api('POST', '/api/notes', payload(), status=500)
         self.assertEqual(path.read_text(), 'broken')
@@ -472,12 +657,67 @@ class HTTPTests(EndpointCases, unittest.TestCase):
         self.assertIn('不会换端口', result.stderr)
         self.assertFalse((self.root / '_划线').exists())
 
+    def test_wildcard_listener_blocks_server_start(self):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            listener.bind(('0.0.0.0', 0))
+            listener.listen()
+            port = listener.getsockname()[1]
+            result = subprocess.run([sys.executable, str(SCRIPTS / 'serve.py'), '--port', str(port)],
+                                    capture_output=True, text=True, timeout=5)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('端口已被占用', result.stderr)
+        self.assertIn(str(port), result.stderr)
+        self.assertIn('不会换端口', result.stderr)
+
 
 class NoSocketTests(EndpointCases, unittest.TestCase):
     """沙箱拒绝 bind 时可以单独运行；不替代 HTTPTests 的正式门禁。"""
 
 
 class UnitTests(unittest.TestCase):
+    def test_start_survives_pending_read_errors(self):
+        for failure in (ValueError('bad JSON'), OSError('read failed'), KeyError('id')):
+            with self.subTest(error=type(failure).__name__), tempfile.TemporaryDirectory() as temporary:
+                generator = serve.Generator(serve.Store(Path(temporary)))
+                try:
+                    with patch.object(generator.store, 'read', side_effect=failure), patch('sys.stderr', new_callable=io.StringIO) as error:
+                        generator.start()
+                    self.assertTrue(generator.thread.is_alive())
+                    self.assertEqual(len(error.getvalue().splitlines()), 1)
+                finally:
+                    generator.close()
+
+    def test_local_image_paths_work_for_file_and_http(self):
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as outside:
+            workspace = Path(temporary).resolve()
+            root = workspace / '记录' / '复盘'
+            root.mkdir(parents=True)
+            picture = workspace / '工具' / '图 空格.png'
+            picture.parent.mkdir()
+            picture.write_bytes(b'png')
+            external = Path(outside).resolve() / 'outside.png'
+            external.write_bytes(b'png')
+            expected = quote('../../工具/图 空格.png')
+            with patch.object(build, 'ROOT', root):
+                pdir = root / '项目'
+                relative = quote(os.path.relpath(picture, pdir))
+                for source in (relative, picture.as_uri(), '<' + str(picture) + '>'):
+                    self.assertEqual(build._old_md('![图](' + source + ')', pdir), '![图](' + expected + ')')
+                self.assertEqual(build._old_md('![外部](' + external.as_uri() + ')', pdir),
+                                 '![外部](' + external.as_uri() + ')')
+                self.assertEqual(build._old_md('![网络](https://example.com/x.png)', pdir),
+                                 '![网络](https://example.com/x.png)')
+                data = {'files': {'工具/图 空格.png': {}, str(external): {}}, 'results': [], 'keyFiles': [],
+                        'code': {'modules': []}, 'others': {'groups': []}, 'leftovers': {}, 'mask': []}
+                errors, warnings = [], []
+                files = build.compile_files(data, workspace, None, errors, warnings)
+                self.assertEqual(errors, [])
+                self.assertEqual(warnings, [])
+                self.assertEqual(files['工具/图 空格.png']['src'], expected)
+                self.assertNotIn('file://', files['工具/图 空格.png']['src'])
+                self.assertEqual(files[str(external)]['src'], external.as_uri())
+
     def test_build_encodes_http_path_and_fragment(self):
         with patch('urllib.request.build_opener') as factory, patch.dict(os.environ, {'FUPAN_PORT': '4338'}):
             response = factory.return_value.open.return_value.__enter__.return_value

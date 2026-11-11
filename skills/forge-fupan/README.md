@@ -48,7 +48,7 @@ forge-fupan/
 
 ## 本地服务
 
-`serve.py` 把工作台放到本机 http 地址上，提供划线、备注、已读和推送记录接口。新划线保存后，后台依次生成背景；「不懂」再生成讲解。阅读页接入这些接口后即可使用划线和已读；本次服务不改阅读页。
+`serve.py` 把工作台放到本机 http 地址上，提供划线、备注、已读和推送记录接口。新划线保存后，后台依次生成背景；「不懂」再生成讲解。阅读页从 http 地址打开时可以划线和点已读，`file://` 打开时只能读。
 
 在 skill 目录启动，终端保持运行：
 
@@ -56,11 +56,13 @@ forge-fupan/
 python3 scripts/serve.py
 ```
 
-打开 `http://127.0.0.1:4330/`。服务只监听本机，只能读取 `FUPAN_ROOT` 和 `FUPAN_KB` 两棵目录。端口用 `FUPAN_PORT` 或 `--port` 改；端口被占会直接报错，不换端口。`build.py` 编完会先探活，服务可用就打印 http 单篇地址，不通仍给 file 地址。
+打开 `http://127.0.0.1:4330/`。服务只监听本机，托管 `FUPAN_ROOT`、`FUPAN_KB` 两棵目录，以及工作区内的 png、jpg、jpeg、gif、webp、svg 图片；路径里有以 `.` 开头的目录或文件就不放行。端口用 `FUPAN_PORT` 或 `--port` 改；端口被占会直接报错，不换端口。`build.py` 编完会先探活，服务可用就打印 http 单篇地址，不通仍给 file 地址。
 
 数据在 `FUPAN_ROOT/_划线/`：`划线.json` 存划线、生成内容和推送记录，`已读.json` 存已读页面键，`.lock` 是共用文件锁。首次写入才创建目录；只启动服务、读空列表不会落盘。修改通过接口做，文件用锁和临时文件替换保护；编译工作台会跳过 `_` 开头的目录。
 
 生成用本机 Claude CLI，需已能非交互运行。每次最多 120 秒，失败会记为 `failed`，已保存的划线和生成内容保留。服务重启会接着处理 `pending`；`POST /api/notes/<id>/gen` 可同步重试。`tries` 记录已尝试的次数，成功、失败都计一次。
+
+修改「不懂」的备注会按最新疑问重写讲解，已有背景保留；备注没变或改的是收藏备注，就不再生成。已完成的同步重试直接返回已有结果，等锁超时也不改生成状态。每次 CLI 在新建的临时目录运行，用完删除，禁用工具、MCP、hooks 和会话持久化。
 
 | 环境变量 | 用处 |
 | --- | --- |
@@ -70,7 +72,7 @@ python3 scripts/serve.py
 | `FUPAN_CLAUDE` | Claude CLI 的绝对路径；没设时先找 PATH，再找版本最新的 VS Code Claude 扩展内置 CLI；显式路径无效就记生成失败 |
 | `FUPAN_CLAUDE_MODEL` | 生成用的模型；不设就用 CLI 默认模型 |
 
-接口返回 JSON，错误是 `{"error":"一句中文"}`。`GET /api/notes` 返回全部，加 `?page=<页面键>` 只查这一页；新建返回 201 和整条，改备注、生成、追加推送记录都返回整条，删除返回 `{"ok":true}`。`GET /api/read` 返回键数组，`PUT / DELETE /api/read/<编码后的页面键>` 返回更新后的数组。所有非 GET 接口都要带 `X-Fupan: 1`；不开放跨站调用。
+接口返回 JSON，错误是 `{"error":"一句中文"}`。`GET /api/notes` 返回全部，加 `?page=<页面键>` 只查这一页；新建返回 201 和整条，改备注、生成、追加推送记录都返回整条，删除返回 `{"ok":true}`。`GET /api/read` 返回键数组，`PUT / DELETE /api/read/<编码后的页面键>` 返回更新后的数组。所有非 GET 接口都要带 `X-Fupan: 1`；请求带 `Sec-Fetch-Site` 时只接受 `same-origin` 和 `none`，没带这个头的 curl 等客户端照常使用。
 
 测试与只读冒烟命令见仓库 [tools/fupan-tests/README.md](../../tools/fupan-tests/README.md)。
 

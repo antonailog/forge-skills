@@ -21,7 +21,7 @@ from __future__ import annotations
 import argparse, json, os, re, shutil, sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from urllib.parse import quote, unquote, urlencode
+from urllib.parse import quote, unquote, urlencode, urlsplit
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))   # python3 -I 不会自动把脚本目录加进搜索路径
 import workbench   # noqa: E402  工作台：经验、知识两页的数据，认领经验和知识编号的校验、写入
@@ -636,6 +636,14 @@ def excerpt(lines: list[str], spec, extra):
     return out
 
 
+def image_src(path: Path) -> str:
+    """工作区内图片相对 index.html 定位，兼容 file 和 http；外部图片保留文件地址。"""
+    path = path.resolve()
+    if path.is_relative_to(ROOT.parent.parent):
+        return quote(Path(os.path.relpath(path, ROOT)).as_posix())
+    return path.as_uri()
+
+
 def compile_files(d: dict, root: Path, end, E: list[str], W: list[str]) -> dict:
     refs = list(d['files'])
     refs += [x['file'] for x in d['results'] if isinstance(x, dict) and x.get('file')]
@@ -665,7 +673,7 @@ def compile_files(d: dict, root: Path, end, E: list[str], W: list[str]) -> dict:
             ents = sorted(x for x in p.iterdir() if not x.name.startswith('.'))[:60]
             f['entries'] = [{'name': mask(x.name, extra) + ('/' if x.is_dir() else ''), 'size': '' if x.is_dir() or not x.exists() else f'{x.stat().st_size / 1024:.1f} KB'} for x in ents]
         elif p.suffix.lower() in IMAGE:
-            f['kind'], f['src'], f['lines'] = 'image', p.as_uri(), 0
+            f['kind'], f['src'], f['lines'] = 'image', image_src(p), 0
         else:
             ext = p.suffix.lower()
             f['lang'] = LANG.get(ext, 'text')
@@ -860,14 +868,21 @@ _IMG = re.compile(r'(!\[[^\]]*\]\()(<[^>]+>|[^)\s]+)((?:\s+"[^"]*")?\))')
 
 
 def _old_md(text: str, pdir: Path) -> str:
-    """旧复盘的 md：去掉头部元数据、打码，相对图片路径换成 file:// 绝对路径"""
+    """旧复盘的 md：去掉头部元数据、打码，工作区内图片改成相对复盘根的地址。"""
     text = re.sub(r'\A---\n.*?\n---\n', '', text, flags=re.S)
 
     def fix(m):
         url = m.group(2).strip('<>')
-        if re.match(r'^[a-z]+:|^#|^/', url):
+        parsed = urlsplit(url)
+        if (url.startswith(('#', '//')) or parsed.scheme not in ('', 'file') or
+                parsed.netloc not in ('', 'localhost')):
             return m.group(0)
-        return m.group(1) + 'file://' + quote(str((pdir / unquote(url)).resolve())) + m.group(3)
+        src = image_src(pdir / unquote(parsed.path))
+        if parsed.query:
+            src += '?' + parsed.query
+        if parsed.fragment:
+            src += '#' + parsed.fragment
+        return m.group(1) + src + m.group(3)
     return mask(_IMG.sub(fix, text), [])
 
 
