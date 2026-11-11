@@ -20,7 +20,7 @@ function DomainNav({ items, cur, pick }: { items: [string, number][]; cur: strin
   useLayoutEffect(() => { if (hover) setGhost(at(hover)) }, [hover])
   const slide = 'pointer-events-none absolute inset-x-0 top-0 transition-[transform,height,opacity] duration-[380ms] ease-[cubic-bezier(.3,.8,.25,1)]'
   return (
-    <nav className="sticky top-8 flex max-h-[calc(100vh-4rem)] flex-col self-start overflow-y-auto text-sm [scrollbar-width:none]">
+    <nav className="sticky top-[calc(var(--bar)+2rem)] flex max-h-[calc(100vh-var(--bar)-4rem)] flex-col self-start overflow-y-auto text-sm [scrollbar-width:none]">
       <ol ref={list} className="relative grid gap-0.5" onMouseLeave={() => setHover(null)}>
         <i aria-hidden className={cn(slide, 'rounded-md bg-muted/70', hover && ghost ? 'opacity-100' : 'opacity-0')} style={ghost ? { transform: `translateY(${ghost.y}px)`, height: ghost.h } : undefined} />
         <i aria-hidden className={cn(slide, 'rounded-r-md bg-brand-soft shadow-[inset_2px_0_0_var(--brand)]', ind ? 'opacity-100' : 'opacity-0')} style={ind ? { transform: `translateY(${ind.y}px)`, height: ind.h } : undefined} />
