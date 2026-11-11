@@ -9,6 +9,13 @@ export type Note = NewNote & {
   pushes: { n: number; at: string; msg_id: string }[]
 }
 
+export class ApiError extends Error {
+  constructor(readonly status: number) {
+    super(`未保存 (${status})`)
+    this.name = 'ApiError'
+  }
+}
+
 async function request<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
   const controller = new AbortController()
   const timer = window.setTimeout(() => controller.abort(), 8000)
@@ -18,7 +25,7 @@ async function request<T>(path: string, method = 'GET', body?: unknown): Promise
       headers: method === 'GET' ? undefined : { 'X-Fupan': '1', 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
     })
-    if (!response.ok) throw new Error(`未保存 (${response.status})`)
+    if (!response.ok) throw new ApiError(response.status)
     return await response.json() as T
   } finally { clearTimeout(timer) }
 }

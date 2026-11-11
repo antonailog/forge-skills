@@ -64,6 +64,7 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
   const [showPopover, setShowPopover] = useState(false)
   const [editing, setEditing] = useState<string | null>(null)
   const [bar, setBar] = useState<Bar | null>(null)
+  const consumedSelection = useRef<Bar | null>(null)
   const [heights, setHeights] = useState<Record<string, number>>({})
   const [tick, setTick] = useState(0)
 
@@ -149,7 +150,8 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
         const sel = getSelection()
         if (!sel || sel.isCollapsed || !sel.rangeCount) { setBar(null); hit(e); return }
         const r = sel.getRangeAt(0)
-        if (!root.contains(r.startContainer) || !root.contains(r.endContainer) || (e.target as Element).closest?.('[data-annot-ui],button,input,textarea') || r.toString().trim().length < 2) return setBar(null)
+        const text = r.toString()
+        if (!root.contains(r.startContainer) || !root.contains(r.endContainer) || (e.target as Element).closest?.('[data-annot-ui],button,input,textarea') || Array.from(text.trim()).length < 2 || Array.from(text).length > 1000) return setBar(null)
         const rr = r.getBoundingClientRect(), br = b.getBoundingClientRect()
         setBar({ x: rr.left + rr.width / 2 - br.left, y: rr.top - br.top, range: r.cloneRange() })
       })
@@ -171,15 +173,17 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
 
   const add = async (kind: Kind) => {
     const root = scope.current
-    if (!bar || !root) return
+    if (!bar || !root || consumedSelection.current === bar) return
+    consumedSelection.current = bar
     const range = bar.range
+    setBar(null)
+    getSelection()?.removeAllRanges()
     const context = selectionContext(range, root, doc.title)
     const q = await describeTextQuote(range, root)
     const id = store.add({ kind, page, doc, ...context, quote: { exact: q.exact, prefix: q.prefix, suffix: q.suffix }, note: '' })
     // 直接使用刚选的 Range，提交是否成功都马上显示；随后定位器负责刷新后的还原。
     setRanges((old) => new Map(old).set(id, range))
-    setEditing(compact ? null : id); setActive(id); setBar(null); setShowPopover(false)
-    getSelection()?.removeAllRanges()
+    setEditing(compact ? null : id); setActive(id); setShowPopover(false)
   }
   const remove = (id: string) => { store.remove(id); setEditing(null) }
   const write = (id: string, note: string) => store.write(id, note)
