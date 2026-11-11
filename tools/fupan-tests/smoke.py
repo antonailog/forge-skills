@@ -11,7 +11,8 @@ from pathlib import Path
 from urllib.parse import quote
 
 REPO = Path(__file__).resolve().parents[2]
-ROOT = Path('/Users/dbwu/claudecode_workspace/记录/复盘')
+# 和 build.py、serve.py 同一个取法：FUPAN_ROOT，没设就是 ~/claudecode_workspace/记录/复盘
+ROOT = Path(os.environ.get('FUPAN_ROOT', Path.home() / 'claudecode_workspace' / '记录' / '复盘')).expanduser().resolve()
 WORKSPACE = ROOT.parent.parent
 KB = WORKSPACE / '知识' / '知识图谱' / '2-结果区'
 BASE = 'http://127.0.0.1:4331'

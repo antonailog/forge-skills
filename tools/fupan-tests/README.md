@@ -24,7 +24,7 @@ cd tools/fupan-tests
 /usr/bin/python3 tools/fupan-tests/smoke.py
 ```
 
-脚本会以 `FUPAN_ROOT=/Users/dbwu/claudecode_workspace/记录/复盘 /usr/bin/python3 skills/forge-fupan/scripts/serve.py --port 4331` 启动服务，用 curl 验以下结果，最后停掉本次进程。不会用 4330，不创建划线，也不写真实目录。
+脚本会以 `FUPAN_ROOT=<复盘根> /usr/bin/python3 skills/forge-fupan/scripts/serve.py --port 4331`（复盘根取 `FUPAN_ROOT`，没设就是 `~/claudecode_workspace/记录/复盘`） 启动服务，用 curl 验以下结果，最后停掉本次进程。不会用 4330，不创建划线，也不写真实目录。
 
 | 请求 | 应有结果 |
 | --- | --- |
@@ -44,7 +44,7 @@ cd tools/fupan-tests
 ```bash
 /usr/bin/python3 skills/forge-fupan/scripts/build.py --check
 /usr/bin/python3 skills/forge-fupan/scripts/build.py \
-  /Users/dbwu/claudecode_workspace/记录/复盘/forge-skills/复盘工具/2026-11-11-经验与工作台上线 --check
+  <复盘根>/<项目>/<模块>/<某一篇> --check
 ```
 
 第一条记录任务书原命令的结果；第二条校验原有数据，不编页面、不回写库。
