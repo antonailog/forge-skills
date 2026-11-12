@@ -69,14 +69,14 @@ Bash 每次调用不保留变量：下面的 `D`、`R`、作业 id 每条命令�
 
 ```bash
 D=~/.claude/skills/codex-delegate/scripts/delegate.sh; R=<复盘根>
-$D submit --repo "$R" --prompt-file "$R/.forge/jobs/fupan-<id8>.prompt.md" --label fupan-<id8>   # 打印作业 id
+$D submit --repo "$R" --prompt-file "$R/.forge/jobs/fupan-<id8>.prompt.md" --label fupan-<id8> [--model <模型> --effort <档位>]   # 打印作业 id
 $D status <作业 id> --repo "$R" --wait --timeout 1800    # 放后台，结束会通知
 $D result <作业 id> --repo "$R"                          # 最后一条消息 = 启动消息
 ```
 
 - `status` 的退出码：0 完成；1 失败或取消；3 启动卡死（取消后原样重派一次）；2 到了超时还在跑，再等一轮，别急着 `result`
 - 运行中久没动静的判断，照 codex-delegate 的 `references/acceptance.md` 判活表；重派、返工、换人以本文件为准
-- 模型和档位跟 `~/.codex/config.toml`，不传 `--effort`
+- 模型和档位：用户定过的（这次对话里说的，或记忆里写的长期设置）用 `--model`、`--effort` 传；没定过就跟 `~/.codex/config.toml`，都不传。`resume` 沿用第一段的设置，不用再传（codex-delegate 2026-11-11 之前的版本续写时会退回 config.toml 的模型）
 
 **Claude 子 agent**：用 Agent 工具（general-purpose），prompt 就是任务书全文，放后台跑；它交回启动消息后，用 SendMessage 把回复发给同一个 agent，让它接着写。
 
@@ -84,7 +84,7 @@ $D result <作业 id> --repo "$R"                          # 最后一条消息 
 
 ## D4 转启动提问
 
-- 执行方交回的启动消息**原样**发给用户，不改写、不删减，等用户回
+- 执行方交回的启动消息**原样**发给用户，不改写、不删减，等用户回；消息前加一行写明执行方和模型档位，例：「执行方：Codex · gpt-5.6-sol · xhigh」；没传 `--model` 的照 config.toml 写实际值，Claude 子 agent 写「执行方：Claude 子 agent」
 - 用户回复后，把下面这段写进 `R/.forge/jobs/fupan-<id8>.reply.md`，原文转给同一个执行方：
 
 ```markdown
@@ -121,4 +121,4 @@ $D result <作业 id> --repo "$R"                          # 最后一条消息 
 
 ## D6 收尾
 
-做第 9 步：复盘页地址给 D5 重编时 build.py 打印的「浏览器地址」，放进代码块请用户粘进浏览器（不给「打开复盘.html」的相对链接，理由见 SKILL.md 第 9 步）；回复用户的三行直接用执行方收尾消息里的，按默认写的照它说的写一句；再加一句是谁写的、用了多久（例：「Codex 写，18 分钟，返工 0 轮」）。
+做第 9 步：复盘页地址给 D5 重编时 build.py 打印的「浏览器地址」，放进代码块请用户粘进浏览器（不给「打开复盘.html」的相对链接，理由见 SKILL.md 第 9 步）；回复用户的三行直接用执行方收尾消息里的，按默认写的照它说的写一句；再加一句是谁写的、用的模型档位、用了多久（例：「Codex（gpt-5.6-sol · xhigh）写，18 分钟，返工 0 轮」）。
