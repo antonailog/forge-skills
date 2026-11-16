@@ -316,6 +316,19 @@ def validate(d: dict, icons: dict) -> tuple[list[str], list[str]]:
             E.append(f'结果「{x.get("title")}」的 shot 要写 "capture" 或一张图片的路径')
         if x.get('id') and not re.fullmatch(r'[A-Za-z0-9_-]+', str(x['id'])):
             E.append(f'结果 id「{x["id"]}」只用英文、数字、- 和 _（截图按它命名）')
+    # 同一份东西只放一处（11-16 用户定）：结果卡用到的文件，不再列进关键文件、其余产出。
+    # 关键代码除外：单文件网页本身就是成品，结果看页面、关键代码讲代码，两边看的不是一回事
+    norm = lambda f: os.path.normpath(f.strip())
+    elsewhere = {}
+    for x in d['keyFiles'] if isinstance(d['keyFiles'], list) else []:
+        if isinstance(x, dict) and isinstance(x.get('file'), str): elsewhere.setdefault(norm(x['file']), '关键文件')
+    for g in d['others']['groups'] if isinstance(d['others'].get('groups'), list) else []:
+        for row in (g.get('rows') or []) if isinstance(g, dict) and isinstance(g.get('rows'), list) else []:
+            if isinstance(row, dict) and isinstance(row.get('file'), str): elsewhere.setdefault(norm(row['file']), '其余产出')
+    for x in d['results'] if isinstance(d['results'], list) else []:
+        if isinstance(x, dict) and isinstance(x.get('file'), str) and norm(x['file']) in elsewhere:
+            where = elsewhere[norm(x['file'])]
+            E.append(f'结果「{x.get("title")}」的文件 {x["file"]} 也列在{where}里：同一份东西只放一处——它是最终成品就留在结果，从{where}删掉；是规则、文档这类过程产出就从结果删掉')
     for x in items(d['keyFiles'], '关键文件 keyFiles'):
         need(x, ('file', 'type', 'title', 'what'), f'关键文件「{x.get("title", "?")}」')
         if x.get('type') and _key(x['type']) not in KFTYPE:
@@ -369,10 +382,25 @@ def validate(d: dict, icons: dict) -> tuple[list[str], list[str]]:
     bench_ids = {_key(b.get('id')) for b in benches}
     for b in benches:
         w = f'对标项 {b.get("id", "?")}'
-        need(b, ('id', 'step', 'eval', 'gapLine', 'why', 'cost', 'say'), w)
-        need(b, ('mineKw', 'baseKw', 'dims', 'keywords', 'evidence', 'sources'), w, list)
+        # 11-16 起新写法 def/short/rows；之前写的复盘（有 dims、没有 rows）照旧字段校验，只提醒，重编旧复盘不至于全红
+        legacy = 'rows' not in b and 'dims' in b
+        if legacy:
+            need(b, ('id', 'step', 'eval', 'gapLine', 'why', 'cost', 'say'), w)
+            need(b, ('mineKw', 'baseKw', 'dims', 'keywords', 'evidence', 'sources'), w, list)
+            W.append(f'{w} 是旧写法（gapLine/dims/why/cost）；新写的复盘请用 def/short/rows（write-review.md）')
+        else:
+            need(b, ('id', 'step', 'eval', 'def', 'short', 'say'), w)
+            need(b, ('mineKw', 'baseKw', 'rows', 'keywords', 'evidence', 'sources'), w, list)
+            if isinstance(b.get('rows'), list) and not b['rows']:
+                E.append(f'{w} 的 rows 是空的：至少写一行关键项对照')
         if b.get('eval') and _key(b['eval']) not in EVAL:
             E.append(f'{w} 的判断「{b.get("eval")}」不在 {sorted(EVAL)}')
+        if isinstance(b.get('short'), str) and len(b['short']) > 12:
+            W.append(f'{w} 的 short「{b["short"]}」超过 12 字，路线节点下会折行')
+        for row in items(b['rows'] if isinstance(b.get('rows'), list) else [], f'{w} 的 rows'):
+            need(row, ('kind', 'item', 'mine', 'base', 'gap'), f'{w} 的对照行「{row.get("item", "?")}」')
+            if row.get('kind') and _key(row['kind']) not in ('技术', '概念', '做法'):
+                E.append(f'{w} 的对照行「{row.get("item")}」kind「{row.get("kind")}」不在 技术/概念/做法')
         for dm in items(b.get('dims') or [], f'{w} 的 dims'):
             if not (isinstance(dm.get('mine'), list) and isinstance(dm.get('base'), list) and 'same' in dm and dm.get('dim')):
                 E.append(f'{w} 的 dims 每项要有 dim、mine[]、base[]、same')
@@ -425,8 +453,9 @@ def validate(d: dict, icons: dict) -> tuple[list[str], list[str]]:
                 E.append(f'{w} 挂的层「{n}」不在 knowledge.layers')
         if e['step'] and _key(e['step']) not in bench_ids:
             E.append(f'{w} 的 step {e["step"]} 不是对标项 id')
-    if entries and not layers:
-        E.append('有知识条目但没有 knowledge.layers（地图骨架）')
+    # 地图只放盲区（11-16）：有盲区才要骨架；只有专题、延伸的不用写
+    if any(isinstance(e, dict) and _key(e.get('group')) == '盲区' for e in entries) and not layers:
+        E.append('有知识盲区但没有 knowledge.layers（地图骨架）')
     lucide, brands = set(icons.get('lucide', [])), set(icons.get('brands', []))
     for m in items(r['glossary']['modules'], '关键术语 glossary.modules'):
         need(m, ('id', 'area', 'name', 'say'), f'关键术语模块「{m.get("name", "?")}」')

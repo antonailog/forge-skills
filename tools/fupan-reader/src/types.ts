@@ -62,12 +62,17 @@ export type Bench = {
   id: string
   step: string
   eval: Eval
-  gapLine: string
+  /** 这一步是什么（一句话）；short 是路线节点下的小字（≤12 字）。11-16 起新写法用 def/short/rows，旧复盘仍是 gapLine/dims/why/cost */
+  def?: string
+  short?: string
+  /** 对照表：这一步里关键的技术、概念、做法，本次 ⇄ 最佳做法，差在哪 */
+  rows?: { kind: '技术' | '概念' | '做法'; item: string; mine: string; base: string; gap: string }[]
+  gapLine?: string
   mineKw: string[]
   baseKw: string[]
-  dims: { dim: string; mine: string[]; base: string[]; same: boolean }[]
-  why: string
-  cost: string
+  dims?: { dim: string; mine: string[]; base: string[]; same: boolean }[]
+  why?: string
+  cost?: string
   say: string
   keywords: { term: string; what: string; side: 'mine' | 'base'; src: string | null }[]
   evidence: string[]

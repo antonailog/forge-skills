@@ -134,13 +134,14 @@ function Cards({ data }: P) {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="flex flex-col">
+    // 左列按最长的模块名定宽、不折行（subgrid 让各模块共用这一列），每个模块只占词条那几行的高度（11-16）
+    <div className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-6">
       {mods(data).map((m) => {
         const h = hue(data, m)
         const words = ordered(m)
         return (
-          <section key={m.id} data-annot-block data-annot-heading={m.area + ' · ' + m.name} data-annot-level="4" className="grid grid-cols-[13rem_minmax(0,1fr)] gap-x-6 border-t py-4 first:border-t-0 first:pt-0">
-            <span className="flex items-center gap-2 self-start py-1.5"><span className={cn('size-2.5 rounded-full', h.solid)} /><span className={cn('font-semibold', h.text)}>{m.area}</span><span className={T.name}>{m.name}</span></span>
+          <section key={m.id} data-annot-block data-annot-heading={m.area + ' · ' + m.name} data-annot-level="4" className="col-span-2 grid grid-cols-subgrid border-t py-4 first:border-t-0 first:pt-0">
+            <span className="flex items-center gap-2 self-start py-1.5 whitespace-nowrap"><span className={cn('size-2.5 rounded-full', h.solid)} /><span className={cn('font-semibold', h.text)}>{m.area}</span><span className={T.name}>{m.name}</span></span>
             <ul className="grid grid-flow-col grid-cols-3 gap-x-6 gap-y-1" style={{ gridTemplateRows: `repeat(${Math.ceil(words.length / 3)}, auto)` }}>
               {words.map((w) => {
                 const s = w.src ? data.review.sources[w.src] : null
@@ -177,10 +178,10 @@ function Cards({ data }: P) {
 /** 各领域的「下次这样说」：集中放在词条下面，一行一句 */
 function SayList({ data }: P) {
   return (
-    <div className="flex flex-col gap-2 rounded-xl bg-brand-soft p-5">
-      <span className="text-muted-foreground">下次这样说</span>
+    <div className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-6 gap-y-2 rounded-xl bg-brand-soft p-5">
+      <span className="col-span-2 text-muted-foreground">下次这样说</span>
       {mods(data).map((m) => (
-        <div key={m.id} data-annot-block data-annot-heading={m.area + ' · ' + m.name} data-annot-level="4" className="grid items-start gap-x-6 gap-y-1 border-t border-brand/10 pt-2 first-of-type:border-t-0 sm:grid-cols-[13rem_minmax(0,1fr)]">
+        <div key={m.id} data-annot-block data-annot-heading={m.area + ' · ' + m.name} data-annot-level="4" className="col-span-2 grid grid-cols-subgrid items-start border-t border-brand/10 pt-2 first-of-type:border-t-0">
           <Domain m={m} h={hue(data, m)} />
           <p>{m.say}</p>
         </div>

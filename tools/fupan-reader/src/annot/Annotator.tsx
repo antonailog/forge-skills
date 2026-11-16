@@ -67,7 +67,7 @@ function visibleRects(range: Range, scope: HTMLElement, rects: DOMRect[]) {
   }).filter((r) => r.width > 1 && r.height > 1)
 }
 
-type Pos = { top: number; endX: number; visible: { bottom: number; startX: number; endX: number } | null }
+type Pos = { top: number; bottom: number; endX: number; visible: { bottom: number; startX: number; endX: number } | null }
 type Bar = { id: number; x: number; y: number; range: Range }
 
 export function Annotator({ page, doc, scope, box, col, compact = false }: {
@@ -125,7 +125,7 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
       const f = rects[0], l = rects[rects.length - 1]
       const visible = visibleRects(r, root, rects), vf = visible[0], vl = visible[visible.length - 1]
       // 卡片对齐和排序仍取原句排版位置，完全裁掉也保留卡片。
-      m.set(id, { top: f.top - br.top, endX: l.right - br.left,
+      m.set(id, { top: f.top - br.top, bottom: l.bottom - br.top, endX: l.right - br.left,
         visible: vf && vl ? { bottom: vl.bottom - br.top, startX: vf.left - br.left, endX: vl.right - br.left } : null })
     })
     setPos(m)
@@ -232,13 +232,14 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
     return () => ro.disconnect()
   }, [key, pos, compact])
 
-  // 从上往下排：和原句同高，挤了就往下顺延
-  const order = notes.filter((n) => pos.has(n.key)).sort((a, b) => pos.get(a.key)!.top - pos.get(b.key)!.top || pos.get(a.key)!.endX - pos.get(b.key)!.endX)
+  // 从上往下排：卡片的连线点（顶下 19px）对齐划线下沿，连线是一条直线；挤了才往下顺延、连线拐弯（11-16）
+  // 排序和摆放用同一个依据（划线下沿），跨几行的长划线不会把下面一行的短划线挤走
+  const order = notes.filter((n) => pos.has(n.key)).sort((a, b) => pos.get(a.key)!.bottom - pos.get(b.key)!.bottom || pos.get(a.key)!.endX - pos.get(b.key)!.endX)
   const ys: Record<string, number> = {}
   let cur = -Infinity
   for (const n of order) {
     const p = pos.get(n.key)!
-    const want = p.top - 3
+    const want = p.bottom + 2 - 19
     ys[n.key] = Math.max(want, cur)
     cur = ys[n.key] + (heights[n.key] ?? 40) + 10
   }
@@ -246,6 +247,8 @@ export function Annotator({ page, doc, scope, box, col, compact = false }: {
 
   const path = (n: Draft) => {
     const p = pos.get(n.key)!.visible!, y = ys[n.key]
+    // 卡片没被挤下去（差不到 3px，取整误差）就画一条直线，不留小台阶
+    if (Math.abs(p.bottom + 2 - (y + 19)) < 3) return `M${p.endX + 2} ${y + 19} H${colX}`
     return `M${p.endX + 2} ${p.bottom + 2} H${colX - 16} V${y + 19} H${colX}`
   }
 
