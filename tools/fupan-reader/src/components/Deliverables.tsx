@@ -42,7 +42,7 @@ export function Deliverables({ data, v, dark, open }: { data: SessionData; v: Va
       <h3 className={T.h3}>交付物</h3>
 
       {on.results && <Step n={num('results')} id="d-results" title="结果" v={v}>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {data.results.map((r) => r.stale ? (
             <Card key={r.id} className={cn('gap-2 bg-muted/50 text-sm shadow-none', pad)}>
               <a href={r.url} target="_blank" rel="noopener" className={cn('flex items-center gap-1 text-muted-foreground hover:underline', T.name)}>
@@ -102,12 +102,13 @@ export function Deliverables({ data, v, dark, open }: { data: SessionData; v: Va
       {on.others && <Collapsible className="group/others">
         <Step n={num('others')} id="d-others" v={v} title="其余产出" extra={
           <CollapsibleTrigger className="flex items-center gap-2 text-sm font-normal text-muted-foreground hover:text-foreground">
-            {otherCount} 个文件 · 服务器 {data.others.server.length} 项改动
+            {[otherCount > 0 && `${otherCount} 个文件`, data.others.server.length > 0 && `服务器 ${data.others.server.length} 项改动`].filter(Boolean).join(' · ')}
             <ChevronDown className="size-4 transition group-data-[state=open]/others:rotate-180" />
           </CollapsibleTrigger>
         }>
           <CollapsibleContent className="flex flex-col gap-4">
-            <Card className="gap-0 py-0 shadow-none">
+            {/* 哪类是 0 就不出那张表（连表头一起），11-16 */}
+            {otherCount > 0 && <Card className="gap-0 py-0 shadow-none">
               <Table className="table-fixed text-sm">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -133,8 +134,8 @@ export function Deliverables({ data, v, dark, open }: { data: SessionData; v: Va
                   ])}
                 </TableBody>
               </Table>
-            </Card>
-            <Card className="gap-0 py-0 shadow-none">
+            </Card>}
+            {data.others.server.length > 0 && <Card className="gap-0 py-0 shadow-none">
               <Table className="table-fixed text-sm">
                 <TableHeader>
                   <TableRow className="hover:bg-transparent"><TableHead className="w-[14em]">服务器</TableHead><TableHead>改了什么</TableHead></TableRow>
@@ -145,7 +146,7 @@ export function Deliverables({ data, v, dark, open }: { data: SessionData; v: Va
                   ))}
                 </TableBody>
               </Table>
-            </Card>
+            </Card>}
           </CollapsibleContent>
         </Step>
       </Collapsible>}

@@ -29,8 +29,7 @@
    "title": "合并请求 #2：发布后文档同步",
    "url": "https://github.com/antonailog/forge-demo-pomodoro/pull/2",
    "host": "github.com/…/pull/2",
-   "meta": "已合并 · README 和版本记录",
-   "file": "docs/CHANGELOG.md"
+   "meta": "已合并 · README 和版本记录"
   },
   {
    "id": "pr3",
@@ -38,8 +37,7 @@
    "url": "https://github.com/antonailog/forge-demo-pomodoro/pull/3",
    "host": "github.com/…/pull/3",
    "meta": "已合并 · 图为修前修后同一时刻对照",
-   "shot": "docs/archive/raw/bugfix-reviews/assets/BF-1023-1/qa-compare-focus-ended.png",
-   "file": "docs/archive/raw/bugfix-reviews/BF-1023-1.md"
+   "shot": "docs/archive/raw/bugfix-reviews/assets/BF-1023-1/qa-compare-focus-ended.png"
   }
  ],
  "keyFiles": [

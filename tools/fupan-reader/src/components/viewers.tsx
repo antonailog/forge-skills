@@ -1,8 +1,11 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import mermaid from 'mermaid'
+import { Dialog } from 'radix-ui'
+import { Maximize2, XIcon } from 'lucide-react'
 import { highlight } from '@/lib/highlight'
+import { fitTables } from '@/lib/fitTable'
 import { cn } from '@/lib/utils'
 
 /** 语法高亮的代码块：marks 里的行加底色，range 只显示这几行 */
@@ -62,8 +65,11 @@ const annotSections = () => (tree: MarkdownNode) => {
 }
 
 export function Markdown({ text, localFiles, annotBlocks }: { text: string; localFiles?: boolean; annotBlocks?: boolean }) {
+  const box = useRef<HTMLDivElement>(null)
+  // 画之前定列宽（不闪一帧旧宽度）；包成批注分块时表格会重新挂载，也要重算
+  useLayoutEffect(() => box.current ? fitTables(box.current) : undefined, [text, annotBlocks, localFiles])
   return (
-    <div className="prose prose-sm max-w-none [&_table]:text-sm dark:prose-invert prose-headings:text-sm prose-headings:font-semibold prose-a:text-brand prose-strong:font-semibold prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:font-sans prose-code:font-normal prose-code:text-[1em] prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-lg prose-pre:border prose-pre:bg-muted/40 prose-pre:text-foreground [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:font-mono">
+    <div ref={box} className="prose prose-sm max-w-none [&_table]:text-sm dark:prose-invert prose-headings:text-sm prose-headings:font-semibold prose-a:text-brand prose-strong:font-semibold prose-code:rounded prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:font-sans prose-code:font-normal prose-code:text-[1em] prose-code:before:content-none prose-code:after:content-none prose-pre:rounded-lg prose-pre:border prose-pre:bg-muted/40 prose-pre:text-foreground [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:font-mono">
       <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={annotBlocks ? [annotSections] : undefined} urlTransform={localFiles ? (u) => u : undefined} components={{ a: (p) => <a {...p} target="_blank" rel="noopener" /> }}>{fenceUrls(text)}</ReactMarkdown>
     </div>
   )
@@ -84,5 +90,25 @@ export function Flow({ chart, dark }: { chart: string; dark: boolean }) {
     mermaid.render(`flow${id}`, chart).then(({ svg }) => live && setSvg(svg)).catch(() => live && setSvg(''))
     return () => { live = false }
   }, [chart, dark, id])
-  return <div className="flex justify-center text-sm [&_svg]:max-w-full [&_svg]:h-auto" dangerouslySetInnerHTML={{ __html: svg }} />
+  // 图按卡片宽度缩小，横向长的流程字会很小：点图全屏看大图（11-16）。大图换一个 id，内嵌样式不和原图串
+  const big = svg.replaceAll(`flow${id}`, `flow${id}big`)
+  if (!svg) return null   // 没画出来就不给放大入口
+  return (
+    <Dialog.Root>
+      <Dialog.Trigger asChild>
+        <button type="button" title="点击放大" className="group/flow relative flex w-full !cursor-zoom-in justify-center text-sm [&_svg]:h-auto [&_svg]:max-w-full">
+          <span className="w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+          <span className="absolute top-0 right-0 inline-flex items-center gap-1 rounded-md bg-background/90 px-2 py-1 text-muted-foreground opacity-0 transition-opacity group-hover/flow:opacity-100"><Maximize2 className="size-3.5" />放大</span>
+        </button>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Content aria-describedby={undefined} className="fixed inset-4 z-50 flex flex-col overflow-auto rounded-xl border bg-background p-8 shadow-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95">
+          <Dialog.Title className="sr-only">流程图大图</Dialog.Title>
+          <div className="m-auto w-full text-sm [&_svg]:mx-auto [&_svg]:!max-w-none [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: big }} />
+          <Dialog.Close className="absolute top-4 right-4 rounded-md p-1 text-muted-foreground hover:text-foreground"><XIcon className="size-5" /><span className="sr-only">关闭</span></Dialog.Close>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  )
 }

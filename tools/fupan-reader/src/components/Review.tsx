@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowLeftRight, ArrowUpRight } from 'lucide-react'
 import { QuoteLine, SayBlock } from '@/components/kit'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { fitTables } from '@/lib/fitTable'
 import { T } from '@/typo'
 import type { Bench, Eval, SessionData } from '@/types'
 
@@ -115,7 +116,8 @@ function HScroll({ sel, children }: { sel: number; children: ReactNode }) {
 
 function Route({ data }: { data: SessionData }) {
   const steps = pathOf(data)
-  const [sel, setSel] = useState(Math.max(0, steps.findIndex((b) => b.eval === '待改进')))
+  // 默认停在第一步（11-16 用户定：不跳到第一个待改进）
+  const [sel, setSel] = useState(0)
   const routeRef = useRef<HTMLDivElement>(null)
   // 关键术语里点「第 N 步」：选中那一步并滚到路线图
   useEffect(() => {
@@ -129,7 +131,6 @@ function Route({ data }: { data: SessionData }) {
     return () => window.removeEventListener('route-go', go)
   }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
   const b = steps[sel]
-  const diffs = b.dims.filter((d) => !d.same)
   return (
     <div className="flex flex-col gap-6 text-sm typo-body">
       <div id="bench" className="flex scroll-mt-8 flex-col gap-2">
@@ -148,7 +149,7 @@ function Route({ data }: { data: SessionData }) {
                   <span className={cn('grid size-10 shrink-0 place-items-center rounded-full text-base font-semibold text-white', DOT[s.eval])}>{i + 1}</span>
                   <span className="flex flex-col gap-0.5 break-words">
                     <span className="font-semibold">{s.step}</span>
-                    <span className="text-muted-foreground">本次：{s.mineKw[0]}</span>
+                    <span className="text-muted-foreground">{s.short ?? `本次：${s.mineKw[0]}`}</span>
                   </span>
                 </button>
               </li>
@@ -160,9 +161,57 @@ function Route({ data }: { data: SessionData }) {
       <Card data-annot-block data-annot-heading={b.step} data-annot-level="4" className="gap-5 p-6 shadow-none">
         <div className="flex flex-col gap-2">
           <span className="flex flex-wrap items-center gap-3"><span className="text-muted-foreground">第 {sel + 1} 步</span><span className={T.h4}>{b.step}</span><span className="text-muted-foreground"><EvalText e={b.eval} /></span></span>
-          <p className="text-base">{b.gapLine}</p>
+          {b.rows?.length ? b.def && <p className="text-base"><span className="text-muted-foreground">这一步是什么：</span>{b.def}</p> : <p className="text-base">{b.gapLine}</p>}
         </div>
-        {/* 本次｜最佳做法对照：左栏只放这次怎么做的，右栏只放该怎么做；同一维度左右对齐 */}
+        {b.rows?.length ? <RowsView b={b} data={data} /> : <LegacyPairs b={b} data={data} />}
+        {b.landscape && <Landscape b={b} data={data} />}
+        <details className="text-muted-foreground"><summary className="w-fit transition-colors hover:text-foreground">这次的证据</summary>
+          <ul className="mt-2 flex list-disc flex-col gap-1 pl-5">{b.evidence.map((e, i) => <li key={i}>{e}</li>)}</ul>
+        </details>
+      </Card>
+
+    </div>
+  )
+}
+
+/** 新写法（11-16 用户定方案 A）：只诊断这一次——一张表对照这一步里关键的技术、概念、做法：本次 ⇄ 最佳做法，差在哪；下面是话术和关键词 */
+function RowsView({ b, data }: { b: Bench; data: SessionData }) {
+  const box = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => box.current ? fitTables(box.current) : undefined, [b])
+  return (
+    <>
+      <div ref={box} className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-left">
+          <thead className="bg-muted/40 font-medium">
+            <tr className="[&>th]:px-4 [&>th]:py-2.5 [&>th]:whitespace-nowrap">
+              <th>类型</th><th>关键项</th><th>本次</th><th className="text-brand">最佳做法</th><th>差在哪</th>
+            </tr>
+          </thead>
+          <tbody>
+            {b.rows!.map((r, i) => (
+              <tr key={i} className="border-t align-top [&>td]:px-4 [&>td]:py-3">
+                <td className="whitespace-nowrap text-muted-foreground">{r.kind}</td>
+                <td className="font-medium">{r.item}</td>
+                <td>{r.mine}</td>
+                <td>{r.base}</td>
+                <td>{r.gap}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <SayBlock text={b.say} className="self-start"><Highlight text={b.say} b={b} data={data} /></SayBlock>
+        <Block title="关键词"><TermList b={b} data={data} /></Block>
+      </div>
+    </>
+  )
+}
+
+/** 旧写法（11-16 之前的复盘）：本次｜最佳做法两栏，同一维度左右对齐 */
+function LegacyPairs({ b, data }: { b: Bench; data: SessionData }) {
+  const diffs = (b.dims ?? []).filter((d) => !d.same)
+  return (
         <div className="overflow-hidden rounded-lg border">
           <div className="grid grid-cols-2 border-b bg-muted/40 font-medium">
             <span className="border-r px-4 py-2.5">本次</span><span className="px-4 py-2.5 text-brand">最佳做法</span>
@@ -177,13 +226,6 @@ function Route({ data }: { data: SessionData }) {
             l={<><span className="text-muted-foreground">为什么这样做</span><p>{b.why}</p><span className="pt-2 text-muted-foreground">代价</span><p>{b.cost}</p></>}
             r={<><SayBlock text={b.say}><Highlight text={b.say} b={b} data={data} /></SayBlock><span className="pt-2 text-muted-foreground">关键词</span><TermList b={b} data={data} /></>} />
         </div>
-        {b.landscape && <Landscape b={b} data={data} />}
-        <details className="text-muted-foreground"><summary className="w-fit transition-colors hover:text-foreground">这次的证据</summary>
-          <ul className="mt-2 flex list-disc flex-col gap-1 pl-5">{b.evidence.map((e, i) => <li key={i}>{e}</li>)}</ul>
-        </details>
-      </Card>
-
-    </div>
   )
 }
 

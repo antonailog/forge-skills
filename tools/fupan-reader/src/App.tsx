@@ -6,7 +6,7 @@ import { Deliverables } from '@/components/Deliverables'
 import { Leftovers } from '@/components/Leftovers'
 import { FileSheet } from '@/components/FileSheet'
 import { Review } from '@/components/Review'
-import { Knowledge } from '@/components/Knowledge'
+import { Knowledge, Topics } from '@/components/Knowledge'
 import { Terms } from '@/components/Terms'
 import { Summary, Process, Decisions, Results } from '@/components/Overview'
 import { V as v } from '@/variants'
@@ -36,7 +36,9 @@ function tocOf(d: ReviewPage): TocItem[] {
     { id: 'bench', label: '对标分析', level: 2, on: r.bench.length > 0 },
     { id: 'expression', label: '需求表达', level: 2, on: r.expression.length > 0 },
     { id: 'ch3', n: '三', label: '知识拓展', level: 1, on: r.knowledge.entries.length + r.glossary.modules.length > 0 },
-    { id: 'kmap', label: '知识地图', level: 2, on: r.knowledge.entries.length > 0 },
+    { id: 'kmap', label: '知识地图', level: 2, on: r.knowledge.entries.some((e) => e.group === '盲区') },
+    { id: 'ktopic', label: '专题学习', level: 2, on: r.knowledge.entries.some((e) => e.group === '专题') },
+    { id: 'kext', label: '延伸学习', level: 2, on: r.knowledge.entries.some((e) => e.group === '延伸') },
     { id: 'terms', label: '关键术语', level: 2, on: r.glossary.modules.length > 0 },
   ]
   return all.filter((t) => t.on !== false)
@@ -75,7 +77,7 @@ export default function App({ data, dark, pageKey }: { data: ReviewPage; dark: b
           {has('leftovers') && <section id="leftovers" className="scroll-mt-8"><Leftovers data={data} v={v} open={setOpened} /></section>}
         </Chapter>
         {has('ch2') && <Chapter id="ch2" title="二、工作复盘"><Review data={data} /></Chapter>}
-        {has('ch3') && <Chapter id="ch3" title="三、知识拓展">{has('kmap') && <Knowledge data={data} />}<Terms data={data} /></Chapter>}
+        {has('ch3') && <Chapter id="ch3" title="三、知识拓展">{has('kmap') && <Knowledge data={data} />}<Topics data={data} group="专题" /><Topics data={data} group="延伸" /><Terms data={data} /></Chapter>}
         <ReadButton k={pageKey} />
       </main>
       {available && <><div ref={col} data-annot-col aria-hidden /><Annotator key={pageKey} page={pageKey} doc={{ type: '复盘', project: s.projects[0] ?? '', module: s.module, title: s.title, one: [s.why, s.did].filter(Boolean).join(' → ') }} scope={scope} box={box} col={col} /></>}

@@ -89,10 +89,10 @@
 ```json
 {"review": {"task": "网站访问统计", "path": ["b2", "b1", "b3"],
  "bench": [{"id": "b1", "step": "统计方案选型", "eval": "合理偏离",
-   "gapLine": "没用现成统计工具，自建「日志分析 + 自托管上报」",
+   "def": "按数据量、隐私和维护成本，在现成统计工具和自建之间选一条路", "short": "选统计工具",
    "mineKw": ["自建", "服务端日志分析", "自托管上报"], "baseKw": ["GA4", "Plausible", "Umami", "GoAccess"],
-   "dims": [{"dim": "要不要数据库", "mine": ["不要"], "base": ["Umami 自部署要 PostgreSQL"], "same": false}],
-   "why": "服务器内存小，跑不动 Umami 要的 PostgreSQL", "cost": "访客怎么算、爬虫怎么去，都要自己定、自己维护",
+   "rows": [{"kind": "技术", "item": "统计方案", "mine": "自建：服务端日志分析 + 自托管上报", "base": "先比 Plausible、Umami、GoAccess 和自建四条路再选",
+             "gap": "服务器内存小跑不动 Umami 要的 PostgreSQL，自建说得通；代价是访客口径、爬虫过滤都要自己定、自己维护"}],
    "say": "个人博客要加访问统计：先比较 Plausible、Umami、GoAccess 和自建四条路，按服务器内存……给我一张对比再动手",
    "keywords": [{"term": "Plausible", "what": "不用 cookie 的轻量统计，可托管也可自部署", "side": "base", "src": "plausible"}],
    "evidence": ["讨论方案时的备选：Umami 要多跑一个数据库……", "你的回复：「装同一套」"],
@@ -107,7 +107,7 @@
 
 - `path`：对标项 id 按最佳路径的顺序排，每个对标项都要出现一次
 - `bench[].eval`：一致 · 合理偏离 · 待改进 · 缺失
-- `dims`：只列本次和行业不同的维度（`same: false`），相同的最多留一两条做对照
+- `rows[].kind`：技术 · 概念 · 做法。11-16 前的旧复盘用 `gapLine` / `dims` / `why` / `cost`，阅读页照旧显示；新写的一律用 `def` / `short` / `rows`
 - `landscape`：可选，选型类才写。两个维度上的位置（0–100），本次的选择 `chosen: true`；配一个 `"axes": {"x": ["托管服务", "自己部署"], "y": ["可定制 低", "可定制 高"]}` 写轴名
 - `keywords[].side`：mine（本次用的）· base（行业做法）；`src` 指向 sources 的键
 - `bench[].sources`：这一步引用的来源键，必填（没有引用写 `[]`）
@@ -133,12 +133,12 @@
      "src": "umami", "new": false, "icon": "si:umami"}]}]}}}
 ```
 
-- `layers`：知识地图的骨架，这次工作对象的结构，自上而下 4–7 层；每层 `decide` 要定什么、`chosen` 这次选了什么
+- `layers`：知识地图的骨架，这次工作对象的结构，自上而下 4–7 层；每层 `decide` 要定什么、`chosen` 这次选了什么。有盲区才要写
 - `entries[].kb`：知识库编号（K0014），库里没有写 `null`；`words[].kb` 对得上才写；没有知识库就都不写
 - `entries[].group`：盲区 · 专题 · 延伸；`kind`：架构 · 选型 · 工具 · 知识点（延伸、专题可以写 null）
 - `sourceLabel`：盲区写「盲区来源」，专题写「你说想学」，延伸写「为什么推荐给你」
-- `layers`：落在哪几层（名字要在 knowledge.layers 里）；空列表 = 挂不上这条结构，放进「结构之外」；kind 为架构或覆盖全部层的放在地图顶上
-- `basis`：延伸学习按长期方向推荐时写「长期方向：<方向名>」，进「往你的长期方向」一组；其余 null
+- `layers`：盲区落在哪几层（名字要在 knowledge.layers 里）；空列表 = 挂不上这条结构，放进「结构之外」；kind 为架构或覆盖全部层的放在地图顶上。专题、延伸不上地图，写 `[]`
+- `basis`：延伸学习按长期方向推荐时写「长期方向：<方向名>」，显示在延伸学习那节的条目标题下；其余 null
 - `step`：和对标分析哪一步有关（对标项 id），可空
 - `what` / `judge` / `verify` / `reading` 是 markdown，可以有表格和列表；`say` 是一句纯文字
 - `glossary.modules[].id`：英文短 id；颜色按模块顺序自动分

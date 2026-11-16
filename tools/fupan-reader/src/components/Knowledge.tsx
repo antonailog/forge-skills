@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils'
 import { T } from '@/typo'
 import type { KEntry, KLayer, SessionData } from '@/types'
 
-// 三、知识拓展：三块共用一张知识地图（竖向管道 + 侧栏）
-// 知识盲区：会话证据，往回补；专题学习：你说想学的，往深走；延伸学习：AI 推荐的，往外走（这类工作的下一步 / 你的长期方向）
-// 左边是这类工作的结构竖排（每层写这次的选择），盲区、专题、延伸挂在各自落在的层上；右边固定显示选中的那条
+// 三、知识拓展：知识地图只放知识盲区（会话证据，往回补）；专题学习（你说想学的，往深走）、延伸学习（AI 推荐的，往外走）
+// 各自单独成一节（11-16 用户定），和知识地图、关键术语并列。
+// 知识地图：左边是这类工作的结构竖排（每层写这次的选择），盲区挂在落在的层上；右边固定显示选中的那条
 
 type P = { data: SessionData }
 type Group = KEntry['group']
@@ -34,10 +34,10 @@ const firstLayer = (e: KEntry, L: KLayer[]) => Math.min(...e.layers.map((n) => L
 /** 横跨整条结构：架构类盲区、跨全部层的专题，放在管道顶上 */
 const spansAll = (e: KEntry, L: KLayer[]) => e.kind === '架构' || e.layers.length === L.length
 
-function Tags({ e }: { e: KEntry }) {
+function Tags({ e, own }: { e: KEntry; own?: boolean }) {
   return (
     <>
-      <Badge className={cn('text-sm font-normal', TAG[e.group])}>{LABEL[e.group]}</Badge>
+      {!own && <Badge className={cn('text-sm font-normal', TAG[e.group])}>{LABEL[e.group]}</Badge>}
       {e.kind && <Badge variant="secondary" className="text-sm font-normal">{e.kind}</Badge>}
     </>
   )
@@ -86,11 +86,12 @@ function Links({ text }: { text: string }) {
 const Say = ({ e }: { e: KEntry }) => <SayBlock text={e.say} />
 
 /** 标题区：只有「三块」的标签带颜色；来源那句不加竖线，直接跟在标题下 */
-function Head({ e }: { e: KEntry }) {
+function Head({ e, own }: { e: KEntry; own?: boolean }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="flex flex-wrap items-center gap-2"><Tags e={e} /></span>
+      {(!own || e.kind) && <span className="flex flex-wrap items-center gap-2"><Tags e={e} own={own} /></span>}
       <span className={T.h4}>{e.title}</span>
+      {e.basis && <span className="text-muted-foreground">{e.basis}</span>}
       <p className="text-muted-foreground"><span className="text-foreground">{e.sourceLabel}：</span>{e.source}</p>
     </div>
   )
@@ -99,10 +100,11 @@ function Head({ e }: { e: KEntry }) {
 const Heading = ({ children }: { children: ReactNode }) => <h4 className={T.name}>{children}</h4>
 
 /** 右侧详情：「先读后用」的顺序，「结论先行」的元素——每节一个标题、节间分隔线；读的在前（是什么、怎么判断），用的在后（下次这样说、怎么验收），最后是链接 */
-function Detail({ e, data }: { e: KEntry; data: SessionData }) {
+/** own：放在专题、延伸自己那一节里，不再标「专题学习」这类分组标签 */
+function Detail({ e, data, own }: { e: KEntry; data: SessionData; own?: boolean }) {
   return (
     <div data-annot-block data-annot-heading={e.title} data-annot-level="4" className="flex flex-col gap-6">
-      <Head e={e} />
+      <Head e={e} own={own} />
       <section className="flex flex-col gap-2 border-t pt-5"><Heading>是什么</Heading><Md text={e.what} /></section>
       <section className="flex flex-col gap-2 border-t pt-5"><Heading>怎么判断</Heading><Md text={e.judge} /></section>
       <section className="flex flex-col gap-3 border-t pt-5">
@@ -125,11 +127,14 @@ function Chip({ e, sel, setSel }: { e: KEntry; sel: KEntry; setSel: (e: KEntry) 
 /* ---------- 竖向管道 + 侧栏 ---------- */
 function Rail({ data }: P) {
   const L = layersOf(data)
-  const all = data.review.knowledge.entries
+  const all = data.review.knowledge.entries.filter((e) => e.group === '盲区')
   const top = all.filter((e) => spansAll(e, L))
   const onLayer = all.filter((e) => !spansAll(e, L) && e.layers.length)
   const outside = all.filter((e) => !e.layers.length && e.kind !== '架构')
-  const [sel, setSel] = useState(onLayer.find((e) => e.group === '盲区') ?? all[0])
+  const groupsBy = (es: KEntry[]) => GROUPS.flatMap((g) => es.filter((e) => e.group === g))
+  // 默认选左栏从上往下的第一条（11-16 用户定：不跳到第一条盲区）
+  const firstShown = groupsBy(top)[0] ?? L.flatMap((_, i) => groupsBy(onLayer.filter((e) => firstLayer(e, L) === i)))[0] ?? outside[0] ?? all[0]
+  const [sel, setSel] = useState(firstShown)
   // 换一条就从头读：右栏滚回顶部
   const panel = useRef<HTMLDivElement>(null)
   useEffect(() => { panel.current?.scrollTo({ top: 0 }) }, [sel])
@@ -137,7 +142,6 @@ function Rail({ data }: P) {
   const hit = (i: number) => blind.some((e) => e.layers.includes(L[i].name))
   // 一条盲区跨两层（指标口径跨清洗、指标计算），两层之间的轨道也标黄
   const bridge = (i: number) => blind.some((e) => e.layers.includes(L[i].name) && e.layers.includes(L[i + 1]?.name))
-  const groupsBy = (es: KEntry[]) => GROUPS.flatMap((g) => es.filter((e) => e.group === g))
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
       <Card className="gap-4 p-5 shadow-none lg:self-start">
@@ -160,13 +164,8 @@ function Rail({ data }: P) {
         </ol>
         {outside.length > 0 && (
           <div className="flex flex-col gap-2 border-t pt-4">
-            <span className="font-medium">往你的长期方向</span>
-            {outside.map((e) => (
-              <button key={e.id} type="button" onClick={() => setSel(e)} className={cn('flex flex-col rounded-md px-3 py-1.5 text-left transition', chipCls(sel === e))}>
-                <ChipText e={e} />
-                {e.basis && <span className="text-muted-foreground">{e.basis.replace('长期方向：', '')}</span>}
-              </button>
-            ))}
+            <span className="font-medium">结构之外</span>
+            {outside.map((e) => <Chip key={e.id} e={e} sel={sel} setSel={setSel} />)}
           </div>
         )}
       </Card>
@@ -178,17 +177,32 @@ function Rail({ data }: P) {
 }
 
 export function Knowledge({ data }: P) {
-  const all = data.review.knowledge.entries
-  const n = (g: Group) => all.filter((e) => e.group === g).length
+  const n = data.review.knowledge.entries.filter((e) => e.group === '盲区').length
   return (
     <div className="flex flex-col gap-6 text-sm typo-body">
       <div id="kmap" className="flex scroll-mt-8 flex-wrap items-center gap-3">
         <h3 className={T.h3}>知识地图</h3>
-        <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          {GROUPS.map((g) => <span key={g} className="flex items-center gap-1.5 text-muted-foreground"><Dot g={g} />{LABEL[g]} {n(g)}</span>)}
-        </p>
+        <span className="flex items-center gap-1.5 text-muted-foreground"><Dot g="盲区" />{LABEL['盲区']} {n}</span>
       </div>
       <Rail data={data} />
+    </div>
+  )
+}
+
+/* ---------- 专题学习、延伸学习：各自一节 ---------- */
+// 11-16 用户定：逐条展开，每条一张卡片
+const SUB: Record<'专题' | '延伸', string> = { 专题: '你说想学的，往深里讲', 延伸: 'AI 推荐的下一步：这类工作往下会遇到的、接得上你长期方向的' }
+
+export function Topics({ data, group }: P & { group: '专题' | '延伸' }) {
+  const es = data.review.knowledge.entries.filter((e) => e.group === group)
+  if (!es.length) return null
+  return (
+    <div className="flex flex-col gap-6 text-sm typo-body">
+      <div id={group === '专题' ? 'ktopic' : 'kext'} className="flex scroll-mt-8 flex-col gap-2">
+        <h3 className={T.h3}>{LABEL[group]}</h3>
+        <p className="text-muted-foreground">{SUB[group]}</p>
+      </div>
+      <div className="flex flex-col gap-4">{es.map((e) => <Card key={e.id} className="gap-5 p-6 shadow-none"><Detail e={e} data={data} own /></Card>)}</div>
     </div>
   )
 }
