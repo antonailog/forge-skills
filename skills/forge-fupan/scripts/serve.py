@@ -471,7 +471,10 @@ class App:
 def check_headers(headers, port, method, path):
     if headers.get_all('Host', []) not in ([f'127.0.0.1:{port}'], [f'localhost:{port}']):
         raise APIError(403, '只允许本机地址访问')
-    if any(v.strip().lower() not in ('same-origin', 'none') for v in headers.get_all('Sec-Fetch-Site', [])):
+    # 顶层打开页面（从本地 html、别的本机端口点过来）放行：跨站方读不到内容，也带不了 X-Fupan；接口、脚本、iframe 仍只认同源
+    top_nav = (method == 'GET' and not path.startswith('/api/')
+               and headers.get_all('Sec-Fetch-Mode', []) == ['navigate'] and headers.get_all('Sec-Fetch-Dest', []) == ['document'])
+    if not top_nav and any(v.strip().lower() not in ('same-origin', 'none') for v in headers.get_all('Sec-Fetch-Site', [])):
         raise APIError(403, '只允许同源页面访问')
     if path.startswith('/api/') and method != 'GET' and headers.get_all('X-Fupan', []) != ['1']:
         raise APIError(403, '写接口需要 X-Fupan: 1')

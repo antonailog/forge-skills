@@ -2,13 +2,16 @@ import { useLayoutEffect } from 'react'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 
-// 工作台顶栏：左上角名字「Learn With AI」（Caveat 手写字），中间复盘 / 经验 / 知识分段按钮（11-10 定），点了在同一页里切换（改地址里的 #）。
+// 工作台顶栏：左上角名字「Learn With AI」（Caveat 手写字），中间项目 / 复盘 / 经验 / 知识分段按钮（11-10 定；项目 11-17 加在最前），点了在同一页里切换（改地址里的 #）。
+// 「项目」读本机的项目页服务（4300，工作区 docs/文件规则/项目页/服务.py），服务通才显示
 // 没有经验库、知识库的环境（build.py 写进 index.data.js 的 workbench 标记）只显示有数据的页签；一个都没有就不显示顶栏
 // 一直吸在顶上（11-11），半透明白底 + 模糊，底下的内容滚过去看得出层次；显示时把 --bar 设成顶栏高度，别的吸顶元素据此让开
-export type Tab = 'fupan' | 'sop' | 'kb'
-const TABS: [Tab, string, string][] = [['fupan', '复盘', '#'], ['sop', '经验', '#sop'], ['kb', '知识', '#kb']]
-let avail: Partial<Record<Tab, boolean>> = { sop: true, kb: true }
-export const setAvail = (w?: { sop?: boolean; kb?: boolean }) => { avail = { sop: !!w?.sop, kb: !!w?.kb } }
+export type Tab = 'ws' | 'fupan' | 'sop' | 'kb'
+const TABS: [Tab, string, string][] = [['ws', '项目', '#w'], ['fupan', '复盘', '#'], ['sop', '经验', '#sop'], ['kb', '知识', '#kb']]
+let avail: Partial<Record<Tab, boolean>> = { sop: true, kb: true, ws: false }
+export const setAvail = (w?: { sop?: boolean; kb?: boolean }) => { avail = { ...avail, sop: !!w?.sop, kb: !!w?.kb } }
+/** 项目页服务通不通：通了才放「项目」页签 */
+export const setWs = (ok: boolean) => { avail = { ...avail, ws: ok } }
 
 /** 点页签先回到顶部再换地址：顶栏吸顶后可能在页面深处点，不先回顶，滑块会从下方飞上来；同一页签（经验详情点「经验」）也回顶 */
 const toTop = () => window.scrollTo({ top: 0, behavior: 'instant' })
