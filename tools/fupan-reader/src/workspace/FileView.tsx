@@ -51,7 +51,7 @@ export function Body({ f, onOpen }: { f: FileData; onOpen: (path: string) => voi
         <TabsContent value="page" className="mt-3">
           {dev
             ? <p className="text-muted-foreground">这是开发用的入口，脚本按网站根路径引用（{'<script src="/src/…">'}），单独打开是空白。要看页面，打开它跑起来的地址，或者构建后的 dist/index.html。</p>
-            : <iframe src={raw(f.path)} sandbox="allow-scripts" title={`${f.name} 页面`} className="h-[calc(100vh-16rem)] min-h-[24rem] w-full rounded-lg border bg-white" />}
+            : <iframe src={raw(f.path)} sandbox="allow-scripts allow-same-origin" title={`${f.name} 页面`} className="h-[calc(100vh-16rem)] min-h-[24rem] w-full rounded-lg border bg-white" />}
         </TabsContent>
         <TabsContent value="src" className="mt-3">{f.content != null && <Code code={f.content} lang="html" />}</TabsContent>
       </Tabs>
