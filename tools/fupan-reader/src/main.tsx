@@ -6,7 +6,7 @@ import { ReviewIndex, rootDir, takeBack } from '@/components/ReviewIndex'
 import { Boundary } from '@/components/Boundary'
 import { OldReview } from '@/components/OldReview'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { TopBar, setAvail, type Tab } from '@/shell/TopBar'
+import { TopBar, setAvail, setWs, type Tab } from '@/shell/TopBar'
 import { Backdrop, Reveal } from '@/shell/fx'
 import { SopPage } from '@/sops/Page'
 import type { SopData } from '@/sops/shared'
@@ -15,6 +15,8 @@ import type { KData } from '@/kb/types'
 import { RADIUS, V } from '@/variants'
 import type { PageData } from '@/types'
 import { AnnotationService } from '@/annot/service'
+import { WorkspacePage } from '@/workspace/Page'
+import { ping } from '@/workspace/api'
 
 // 一份阅读页管整个 记录/复盘/：放在 记录/复盘/index.html，按地址里的 # 切页面
 //   #r=<项目>/<模块>/<日期-标题>  → 单篇，读那个文件夹里的 data.js
@@ -22,6 +24,7 @@ import { AnnotationService } from '@/annot/service'
 //   其余（#p=项目&m=模块 或空）     → 复盘汇总，读 index.data.js
 //   #sop、#d=领域、#s=编号          → 经验，读 经验.data.js（build.py 从经验库生成）
 //   #kb、#k=知识点编号              → 知识，读 知识.data.js（build.py 从知识库生成）
+//   #w、#w&p=项目&f=文件            → 工作区（src/workspace/），数据来自本机项目页服务 4300，不读 data.js
 // 复盘汇总、经验、知识三页顶上有一排切换（工作台）；单篇和旧复盘页不放
 // 数据文件是 window.__FUPAN__ = {...} 的脚本：file:// 下 fetch 读不了本地文件，<script src> 可以
 const cache = new Map<string, PageData>()
@@ -49,10 +52,11 @@ const safe = (r: string | null) => r && !r.includes(':') && !r.startsWith('/') &
 const route = () => safe(new URLSearchParams(location.hash.slice(1)).get('r'))
 const oldRoute = () => safe(new URLSearchParams(location.hash.slice(1)).get('o'))
 /** #ch1 这类页内锚点：不算换页，只滚过去 */
-const isAnchor = (hash: string) => hash.length > 1 && !/(^#|&)(r|p|m|o|s|d|k)=/.test(hash) && hash !== '#sop' && hash !== '#kb'
+const isAnchor = (hash: string) => hash.length > 1 && !/(^#|&)(r|p|m|o|s|d|k)=/.test(hash) && hash !== '#sop' && hash !== '#kb' && !/^#w(&|$)/.test(hash)
 /** 地址指向工作台的哪一页 */
 const tabOf = (): Tab => {
   const h = location.hash, q = new URLSearchParams(h.slice(1))
+  if (q.has('w')) return 'ws'
   if (h === '#kb' || q.has('k')) return 'kb'
   if (h === '#sop' || q.has('s') || q.has('d')) return 'sop'
   return 'fupan'
@@ -72,6 +76,8 @@ function Root() {
   // 数据和读它时的地址存在一起：换页时新数据读到之前，接着显示上一页，不拿旧数据配新地址
   const [state, setState] = useState<{ data?: PageData; error?: string; key?: string; view?: View }>({})
   const back = useRef<number | null>(null)
+  const [, setWsOk] = useState(false)   // 只用来在服务探测完后重画顶栏
+  useEffect(() => { ping().then((ok) => { setWs(ok); setWsOk(ok) }) }, [])
   useEffect(() => { const on = (e: MediaQueryListEvent) => setDark(e.matches); dark.addEventListener('change', on); return () => dark.removeEventListener('change', on) }, [])
   useEffect(() => {
     const on = () => { if (!isAnchor(location.hash)) { setR(route()); setO(oldRoute()); setTab(tabOf()); setHashQ(new URLSearchParams(location.hash.slice(1))) } }
@@ -88,6 +94,7 @@ function Root() {
     return () => { window.removeEventListener('hashchange', on); document.removeEventListener('click', click) }
   }, [])
   useEffect(() => {
+    if (tab === 'ws') return   // 工作区自己去 4300 取数据
     const src = srcOf(tab, r), key = src + (o ?? '')
     let live = true
     loadScript(src).then((data) => {
@@ -106,6 +113,7 @@ function Root() {
     el.style.setProperty('--radius', RADIUS[V.radius])
   }, [isDark])
   // 工作台页（复盘汇总、经验、知识）顶栏放在出错边界外面：一份经验或知识点出错，还能切走
+  if (tab === 'ws') return <><Backdrop /><TopBar cur="ws" /><WorkspacePage /></>
   const want = srcOf(tab, r) + (o ?? '')
   const barOf = (v: View) => (v.tab !== 'fupan' || (!v.r && !v.o) ? <><Backdrop /><TopBar cur={v.tab} /></> : null)
   if (state.error && state.key === want) return <>{barOf({ tab, r, o, q: hashQ })}<p className="p-8 text-sm text-muted-foreground">{state.error}</p></>
