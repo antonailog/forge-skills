@@ -955,17 +955,25 @@ def regroup(projects: dict) -> tuple[dict, dict]:
     ws = ROOT.parent.parent
     try:
         manual = json.loads((ROOT / HOMES).read_text(encoding='utf-8')) if (ROOT / HOMES).exists() else {}
-    except json.JSONDecodeError as e:
-        print(f'提醒：{HOMES} 不是合法 JSON（第 {e.lineno} 行），这次只按同名自动对应')
+    except (json.JSONDecodeError, UnicodeDecodeError, OSError) as e:
+        print(f'提醒：{HOMES} 读不出来（{e.__class__.__name__}），这次只按同名自动对应')
         manual = {}
     manual = manual if isinstance(manual, dict) else {}
+    for k, v in list(manual.items()):   # 值要是工作区里的文件夹（相对工作区写）；写错的当 null，并提醒
+        if v is None:
+            continue
+        rel = os.path.normpath(v.strip()) if isinstance(v, str) and v.strip() else ''
+        if rel and not os.path.isabs(rel) and rel != '.' and not rel.startswith('..') and (ws / rel).is_dir():   # 按字面判断，不跟软链
+            manual[k] = Path(rel).as_posix()
+        else:
+            print(f'提醒：{HOMES} 里「{k}」的路径「{v}」不是工作区里的文件夹，先不挂')
+            manual[k] = None
     auto: dict[str, str | None] = {}
 
     def home(pn: str, mn: str | None) -> str | None:
         for k in ((f'{pn}/{mn}', pn) if mn is not None else (pn,)):
             if k in manual:
-                v = manual[k]
-                return v.strip('/') if isinstance(v, str) and (ws / v).is_dir() else None
+                return manual[k]
         if pn not in auto:
             hits = [d for d in ws.glob(f'*/{pn}') if not d.parent.name.startswith('.') and not d.is_symlink() and _has_card(d)]   # 软链跳过，和项目页服务一致
             auto[pn] = hits[0].relative_to(ws).as_posix() if len(hits) == 1 else None
@@ -975,12 +983,14 @@ def regroup(projects: dict) -> tuple[dict, dict]:
     alias: dict[str, str] = {}
 
     def group(pn: str, mn: str) -> dict:
-        path = home(pn, mn)
-        key = path or pn
-        alias[pn] = home(pn, None) or pn
+        path, base = home(pn, mn), home(pn, None)
+        alone = not path and f'{pn}/{mn}' in manual and bool(base)   # 项目挂了、这个模块单独写 null：自成一组
+        key = path or (f'{pn}/{mn}' if alone else pn)
+        alias[pn] = base or pn
         if alias[pn] != key:
             alias[f'{pn}/{mn}'] = key
-        return groups.setdefault(key, {'name': Path(path).name if path else pn, 'key': key, 'path': path, 'modules': [], 'old': []})
+        name = Path(path).name if path else (f'{pn} · {mn}' if alone else pn)
+        return groups.setdefault(key, {'name': name, 'key': key, 'path': path, 'modules': [], 'old': []})
 
     for p in projects.values():
         for m in p['modules']:

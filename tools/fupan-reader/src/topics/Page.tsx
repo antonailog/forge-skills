@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { SideNav, useScrollSpy, type NavItem } from '@/components/SideNav'
 import { Code, Flow } from '@/components/viewers'
@@ -21,9 +21,15 @@ const useDark = () => {
   return d
 }
 
-/** 专题文件夹里的相对地址（图/x.png）→ 相对工作台页面的地址；base 已经逐段转义过 */
-const local = (base: string, u: string) =>
-  /^[a-z][a-z0-9+.-]*:|^[/#]/i.test(u) ? u : base + u.replace(/^\.\//, '').split('/').map((x) => encodeURIComponent(decodeURIComponent(x))).join('/')
+/** 专题文件夹里的相对地址（图/x.png）→ 相对工作台页面的地址；base 已经逐段转义过。带协议的交给默认过滤（挡掉 javascript: 这类），? 和 # 后面原样留着 */
+const local = (base: string, u: string) => {
+  if (/^[a-z][a-z0-9+.-]*:|^[/#]/i.test(u)) return defaultUrlTransform(u)
+  const i = u.search(/[?#]/), path = i < 0 ? u : u.slice(0, i), rest = i < 0 ? '' : u.slice(i)
+  return base + path.replace(/^\.\//, '').split('/').map((x) => encodeURIComponent(decodeURIComponent(x))).join('/') + rest
+}
+
+type HNode = { type: string; tagName?: string; value?: string; properties?: { className?: unknown }; children?: HNode[] }
+const textOf = (n?: HNode): string => n ? (n.value ?? (n.children ?? []).map(textOf).join('')) : ''
 
 function Body({ t }: { t: Topic }) {
   const isDark = useDark()
@@ -34,13 +40,14 @@ function Body({ t }: { t: Topic }) {
       <ReactMarkdown remarkPlugins={[remarkGfm]} urlTransform={(u) => local(t.base, u)}
         components={{
           a: ({ node: _n, href, ...p }) => <a {...p} href={href} target={href?.startsWith('#') ? undefined : '_blank'} rel="noopener" />,
-          pre: ({ children }) => <>{children}</>,
-          code: ({ node: _n, className, children, ...p }) => {
-            const lang = /language-(\S+)/.exec(className ?? '')?.[1]
-            const text = String(children ?? '').replace(/\n$/, '')
-            if (lang === 'mermaid') return <span className="not-prose my-6 block"><Flow chart={text} dark={isDark} /></span>
-            if (lang || text.includes('\n')) return <span className="not-prose my-5 block"><Code code={text} lang={lang ?? 'text'} className="px-4" /></span>
-            return <code className={className} {...p}>{children}</code>
+          // 代码块在 pre 这一层认（不带语言的单行块也是块）；行内代码走默认的 code
+          pre: ({ node }) => {
+            const code = (node as HNode | undefined)?.children?.find((c) => c.tagName === 'code')
+            const cls = ([] as unknown[]).concat(code?.properties?.className ?? []).join(' ')
+            const lang = /language-(\S+)/.exec(cls)?.[1]
+            const text = textOf(code).replace(/\n$/, '')
+            if (lang === 'mermaid') return <div className="not-prose my-6"><Flow chart={text} dark={isDark} /></div>
+            return <div className="not-prose my-5"><Code code={text} lang={lang ?? 'text'} className="px-4" /></div>
           },
         }}>
         {t.md}

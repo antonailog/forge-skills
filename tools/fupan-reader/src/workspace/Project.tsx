@@ -230,7 +230,7 @@ function ReviewsOnly({ path, group, m }: { path: string; group?: IndexProject; m
 export function ProjectPage({ path, group, m }: { path: string; group?: IndexProject; m?: string | null }) {
   const [p, setP] = useState<Project | null>(null)
   const [err, setErr] = useState('')
-  const ws = path.includes('/')   // 工作区路径才去项目页服务取；没有项目页的复盘项目 key 是名字
+  const ws = group ? !!group.path : path.includes('/')   // 工作区项目才去项目页服务取；没挂上的复盘组 key 是名字或「项目/模块」
   useEffect(() => {
     if (!ws) return
     let live = true

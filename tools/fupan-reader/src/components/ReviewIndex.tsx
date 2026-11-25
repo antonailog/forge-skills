@@ -16,7 +16,8 @@ export const oldHref = (o: IndexOld) => '#' + new URLSearchParams({ o: o.rel ?? 
 
 /** 从汇总页点进单篇时记下位置；单篇页的「返回」回到这里，滚动位置也还原 */
 const KEY = 'fupan-back'
-type Back = { hash: string; y: number }
+/** href、top：点的那一行和它当时离视口顶的距离；项目页签的内容异步撑开，按这一行还原才准 */
+type Back = { hash: string; y: number; href?: string | null; top?: number }
 const readBack = (): Back | null => { try { return JSON.parse(sessionStorage.getItem(KEY) ?? 'null') } catch { return null } }
 export const backHref = (fallback: string) => readBack()?.hash ?? fallback
 /** 返回按钮的字：从经验、知识点点进来的回那里 */
@@ -29,8 +30,28 @@ export const takeBack = (): number | null => {
   return b.y
 }
 /** 项目页签的数据要等 4300 现取，换页时还原不了：页面内容齐了再还原；没有记下的位置就回 false */
-export const restore = () => { const y = takeBack(); if (y === null) return false; requestAnimationFrame(() => window.scrollTo({ top: y, behavior: 'instant' })); return true }
-export const remember = () => { try { sessionStorage.setItem(KEY, JSON.stringify({ hash: location.hash || '#', y: window.scrollY })) } catch { /* 存不了就回默认位置 */ } }
+/** 项目页签的数据要等 4300 现取、文件夹列表还会陆续撑开页面：按点的那一行对齐，页面长高时跟着再对齐，直到用户自己滚（最多 3 秒）；
+ *  没记下位置就回 false */
+export const restore = () => {
+  const b = readBack()
+  if (takeBack() === null || !b) return false
+  const row = b.href ? document.querySelector<HTMLElement>(`a[href="${CSS.escape(b.href)}"]`) : null
+  if (!row || b.top === undefined) { requestAnimationFrame(() => window.scrollTo({ top: b.y, behavior: 'instant' })); return true }
+  const align = () => window.scrollBy({ top: row.getBoundingClientRect().top - b.top!, behavior: 'instant' })
+  const ro = new ResizeObserver(align)
+  const stop = () => { ro.disconnect(); evs.forEach((ev) => window.removeEventListener(ev, stop)) }
+  const evs = ['wheel', 'touchmove', 'keydown', 'pointerdown'] as const
+  evs.forEach((ev) => window.addEventListener(ev, stop, { passive: true }))
+  ro.observe(document.body)
+  requestAnimationFrame(align)
+  setTimeout(stop, 3000)
+  return true
+}
+export const remember = (e?: { currentTarget: Element }) => {
+  const a = e?.currentTarget
+  const back: Back = { hash: location.hash || '#', y: window.scrollY, href: a?.getAttribute('href'), top: a?.getBoundingClientRect().top }
+  try { sessionStorage.setItem(KEY, JSON.stringify(back)) } catch { /* 存不了就回默认位置 */ }
+}
 
 type Row = { key: string; href: string; date: string; title: string; status?: string; project: string; module: string; why?: string; did?: string; got?: string; line?: string | null }
 const rowsOf = (p: IndexProject): Row[] => [
@@ -92,7 +113,14 @@ function ByMonth({ rows, cross }: { rows: Row[]; cross: boolean }) {
 export function Timeline({ p, m }: { p: IndexProject; m?: string | null }) {
   const rows = useMemo(() => rowsOf(p), [p])
   const mods = useMemo(() => modulesOf(rows), [rows])
-  const [mod, setMod] = useState<string | null>(() => (m && mods.some((x) => x.name === m) ? m : null))
+  const [mod, setModState] = useState<string | null>(() => (m && mods.some((x) => x.name === m) ? m : null))
+  /** 筛选写进地址（&m=），点进单篇再返回还是这个模块 */
+  const setMod = (next: string | null) => {
+    setModState(next)
+    const q = new URLSearchParams(location.hash.slice(1))
+    if (next) q.set('m', next); else q.delete('m')
+    history.replaceState(null, '', '#' + q.toString().replace(/^w=(&|$)/, 'w$1'))
+  }
   const shown = mod ? rows.filter((r) => r.module === mod) : rows
   return (
     <div className="flex flex-col gap-8">

@@ -129,8 +129,9 @@ function Root() {
   if (d.kind !== 'index') page = <App data={d} dark={isDark} pageKey={'r:' + (v.r ?? '')} />
   else if (v.o) {
     const vo = v.o
-    const hit = d.projects.flatMap((p) => p.old.map((x) => ({ x, p: p.name }))).find(({ x }) => x.rel === vo || x.path === rootDir() + vo || x.path.endsWith('/' + vo))
-    page = hit ? <OldReview o={hit.x} project={hit.p} pageKey={'o:' + vo} /> : <p className="p-8 text-sm text-muted-foreground">找不到这篇旧复盘：{vo}</p>
+    // k 是组的 key：返回兜底地址靠它找回这一组
+    const hit = d.projects.flatMap((p) => p.old.map((x) => ({ x, p: p.name, k: p.key }))).find(({ x }) => x.rel === vo || x.path === rootDir() + vo || x.path.endsWith('/' + vo))
+    page = hit ? <OldReview o={hit.x} project={hit.p} home={hit.k} pageKey={'o:' + vo} /> : <p className="p-8 text-sm text-muted-foreground">找不到这篇旧复盘：{vo}</p>
   } else return <>{bar}<WorkspacePage index={d} /></>
   return <Boundary key={state.key}>{page}</Boundary>
 }

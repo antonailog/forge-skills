@@ -183,6 +183,7 @@ TOPIC_KEYS = ('id', 'title', 'asked', 'why', 'did', 'from', 'date')
 
 def front_matter(text: str) -> tuple[dict, str]:
     """专题.md 开头的 YAML：只认 key: 值、带引号的值、key: | 多行块；返回（字段，正文）"""
+    text = text.lstrip('\ufeff').replace('\r\n', '\n')
     m = re.match(r'\A---\n(.*?)\n---\n?', text, re.S)
     if not m:
         return {}, text
@@ -213,7 +214,7 @@ def front_matter(text: str) -> tuple[dict, str]:
 
 
 def load_topics(kb: Path) -> tuple[dict[str, dict], list[str]]:
-    """读专题库：返回（编号 → 专题，读不出来的文件夹）。编号以 YAML 的 id 为准，没写就用文件夹名开头的 T001"""
+    """读专题库：返回（编号 → 专题，读不出来的文件夹）。编号以文件夹名开头的 T001 为准；YAML 的 id 和它对不上的算读不出来"""
     out, bad = {}, []
     folder = kb / '专题库'
     for d in sorted(folder.iterdir()) if folder.is_dir() else []:
@@ -226,7 +227,10 @@ def load_topics(kb: Path) -> tuple[dict[str, dict], list[str]]:
         except Exception:
             bad.append(d.name)
             continue
-        tid = str(meta.get('id') or m.group(1))
+        tid = m.group(1)
+        if str(meta.get('id') or tid) != tid or tid in out:
+            bad.append(f'{d.name}（id 和文件夹编号对不上或重复）')
+            continue
         out[tid] = {'id': tid, 'no': int(re.sub(r'\D', '', tid) or 0), 'short': m.group(2), 'dir': d,
                     **{k: str(meta.get(k) or '') for k in TOPIC_KEYS if k != 'id'}, 'md': body}
     return out, bad
@@ -245,17 +249,24 @@ def build_topics(root: Path, write_js) -> str | None:
     meta_f = root / '旧复盘描述.json'
     projects = (json.loads(meta_f.read_text()) if meta_f.exists() else {}).get('projects', {})
     ws = root.parent.parent
-    topics = []
+    topics, nofrom = [], []
     for t in sorted(got.values(), key=lambda t: (t['date'], t['no']), reverse=True):
         x = {k: v for k, v in t.items() if k != 'dir'}
         x['base'] = '/'.join(quote(p) for p in Path(os.path.relpath(t['dir'], root)).parts) + '/'
-        src = (ws / t['from']).resolve() if t['from'] else None
-        if src and src.is_relative_to(root):
-            rel = src.relative_to(root).as_posix()
-            x['source'] = _retro_info(rel + '/' if src.is_dir() else rel, projects)
+        try:   # from 只认单篇复盘：新版 <项目>/<模块>/<文件夹>，旧版 <项目>/<文件>.md；别的不显示出处
+            src = (ws / t['from']).resolve() if t['from'] else None
+            rel = src.relative_to(root) if src and src.is_relative_to(root) else None
+            if rel and src.is_dir() and len(rel.parts) == 3:
+                x['source'] = _retro_info(rel.as_posix() + '/', projects)
+            elif rel and src.is_file() and src.suffix == '.md' and len(rel.parts) == 2:
+                x['source'] = _retro_info(rel.as_posix(), projects)
+            elif t['from']:
+                nofrom.append(t['id'])
+        except Exception:
+            nofrom.append(t['id'])
         topics.append(x)
     write_js(root / '专题.data.js', {'kind': 'topics', 'topics': topics, 'workbench': available(root)})
-    return f'专题 {len(topics)} 篇' + _bad_note(bad)
+    return f'专题 {len(topics)} 篇' + _bad_note(bad) + (f'（{"、".join(nofrom)} 的 from 不是一篇复盘，不显示出处）' if nofrom else '')
 
 
 def available(root: Path) -> dict:
@@ -363,7 +374,7 @@ def validate_links(d: dict, root: Path) -> tuple[list[str], list[str]]:
     if no_kb:
         W.append(f'没有知识库（{kb / "知识库"}），kb 编号不写入')
     if pts:
-        miss = [str(e.get('title')) for e in entries if 'kb' not in e]
+        miss = [str(e.get('title')) for e in entries if 'kb' not in e and not e.get('topic')]   # 专题索引不挂知识点
         if miss:
             W.append('知识条目没写 kb（库里没有写 null）：' + '、'.join(miss[:5]))
     if sops and claims is None and cands is None:

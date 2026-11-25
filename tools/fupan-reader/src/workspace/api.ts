@@ -23,7 +23,7 @@ export type Project = Omit<Summary, 'doing'> & {
 export type FileData = { path: string; abs: string; name: string; ext: string; size: number; mtime: string; content?: string | null; note?: string }
 
 async function get<T>(url: string): Promise<T> {
-  const r = await fetch(BASE + url)
+  const r = await fetch(BASE + url, { signal: AbortSignal.timeout(5000) })   // 服务卡住时别让页面一直空白
   const j = await r.json()
   if (j && typeof j === 'object' && 'error' in j) throw new Error(j.error)
   return j as T

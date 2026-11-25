@@ -30,7 +30,7 @@ function prep(md: string) {
   return { h1, body: out.join('\n').replace(/<a id="[^"]*">\s*<\/a>/g, '') }
 }
 
-export function OldReview({ o, project, pageKey }: { o: IndexOld; project: string; pageKey: string }) {
+export function OldReview({ o, project, home, pageKey }: { o: IndexOld; project: string; home: string; pageKey: string }) {
   const { available } = useAnnotationService()
   const frame = useRef<HTMLDivElement>(null), scope = useRef<HTMLElement>(null), col = useRef<HTMLDivElement>(null)
   const { h1, body } = useMemo(() => prep(o.md ?? ''), [o])
@@ -55,7 +55,7 @@ export function OldReview({ o, project, pageKey }: { o: IndexOld; project: strin
   const [active, pick] = useScrollSpy(ids)
   const title = h1 ?? o.title
   useEffect(() => { document.title = title }, [title])
-  const back = backHref('#' + new URLSearchParams({ p: project, m: o.module ?? '未分模块' }).toString())
+  const back = backHref('#' + new URLSearchParams({ w: '', p: home, m: o.module ?? '未分模块' }).toString().replace(/^w=&/, 'w&'))
   return (
     <div ref={frame} className={cn('relative mx-auto grid gap-12 px-8 text-sm typo-body', available ? FRAME : 'max-w-[1400px] grid-cols-[13rem_minmax(0,1fr)]')}>
       <SideNav items={toc} active={active} pick={pick} back={{ href: back, label: backLabel(back) }} hrefOf={(id) => `#${id}`} />
