@@ -2,30 +2,30 @@ import { StrictMode, useEffect, useLayoutEffect, useRef, useState, type ReactNod
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App'
-import { ReviewIndex, rootDir, takeBack } from '@/components/ReviewIndex'
+import { rootDir, takeBack } from '@/components/ReviewIndex'
 import { Boundary } from '@/components/Boundary'
 import { OldReview } from '@/components/OldReview'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { TopBar, setAvail, setWs, type Tab } from '@/shell/TopBar'
+import { TopBar, setAvail, type Tab } from '@/shell/TopBar'
 import { Backdrop, Reveal } from '@/shell/fx'
 import { SopPage } from '@/sops/Page'
 import type { SopData } from '@/sops/shared'
 import { KnowledgePage } from '@/kb/Page'
 import type { KData } from '@/kb/types'
 import { RADIUS, V } from '@/variants'
-import type { PageData } from '@/types'
+import type { PageData, TopicsPage as TopicsData, Workbench } from '@/types'
 import { AnnotationService } from '@/annot/service'
 import { WorkspacePage } from '@/workspace/Page'
-import { ping } from '@/workspace/api'
+import { TopicsPage } from '@/topics/Page'
 
 // 一份阅读页管整个 记录/复盘/：放在 记录/复盘/index.html，按地址里的 # 切页面
 //   #r=<项目>/<模块>/<日期-标题>  → 单篇，读那个文件夹里的 data.js
 //   #o=<旧复盘相对复盘根的路径>      → 旧复盘的二级页面，原文在 index.data.js 里
-//   其余（#p=项目&m=模块 或空）     → 复盘汇总，读 index.data.js
+//   #topic、#t=专题编号             → 专题，读 专题.data.js（build.py 从专题库生成）
 //   #sop、#d=领域、#s=编号          → 经验，读 经验.data.js（build.py 从经验库生成）
 //   #kb、#k=知识点编号              → 知识，读 知识.data.js（build.py 从知识库生成）
-//   #w、#w&p=项目&f=文件            → 工作区（src/workspace/），数据来自本机项目页服务 4300，不读 data.js
-// 复盘汇总、经验、知识三页顶上有一排切换（工作台）；单篇和旧复盘页不放
+//   其余（#w、#w&p=项目&f=文件、空，旧地址 #p=项目&m=模块）→ 项目（src/workspace/）：复盘时间线读 index.data.js，项目信息来自本机项目页服务 4300
+// 项目、专题、经验、知识四页顶上有一排切换（工作台）；单篇和旧复盘页不放
 // 数据文件是 window.__FUPAN__ = {...} 的脚本：file:// 下 fetch 读不了本地文件，<script src> 可以
 const cache = new Map<string, PageData>()
 function loadScript(src: string): Promise<PageData> {
@@ -52,19 +52,20 @@ const safe = (r: string | null) => r && !r.includes(':') && !r.startsWith('/') &
 const route = () => safe(new URLSearchParams(location.hash.slice(1)).get('r'))
 const oldRoute = () => safe(new URLSearchParams(location.hash.slice(1)).get('o'))
 /** #ch1 这类页内锚点：不算换页，只滚过去 */
-const isAnchor = (hash: string) => hash.length > 1 && !/(^#|&)(r|p|m|o|s|d|k)=/.test(hash) && hash !== '#sop' && hash !== '#kb' && !/^#w(&|$)/.test(hash)
+const isAnchor = (hash: string) => hash.length > 1 && !/(^#|&)(r|p|m|o|s|d|k|t|f)=/.test(hash) && !['#sop', '#kb', '#topic'].includes(hash) && !/^#w(&|$)/.test(hash)
 /** 地址指向工作台的哪一页 */
 const tabOf = (): Tab => {
   const h = location.hash, q = new URLSearchParams(h.slice(1))
-  if (q.has('w')) return 'ws'
+  if (q.has('r') || q.has('o')) return 'fupan'
+  if (h === '#topic' || q.has('t')) return 'topic'
   if (h === '#kb' || q.has('k')) return 'kb'
   if (h === '#sop' || q.has('s') || q.has('d')) return 'sop'
-  return 'fupan'
+  return 'ws'
 }
 const dark = window.matchMedia('(prefers-color-scheme: dark)')
 
 /** 这个地址要读哪个数据文件 */
-const srcOf = (tab: Tab, r: string | null) => (tab === 'sop' ? '经验.data.js' : tab === 'kb' ? '知识.data.js' : r ? `${r}/data.js` : 'index.data.js')
+const srcOf = (tab: Tab, r: string | null) => (tab === 'topic' ? '专题.data.js' : tab === 'sop' ? '经验.data.js' : tab === 'kb' ? '知识.data.js' : tab === 'fupan' && r ? `${r}/data.js` : 'index.data.js')
 type View = { tab: Tab; r: string | null; o: string | null; q: URLSearchParams }
 
 function Root() {
@@ -76,8 +77,6 @@ function Root() {
   // 数据和读它时的地址存在一起：换页时新数据读到之前，接着显示上一页，不拿旧数据配新地址
   const [state, setState] = useState<{ data?: PageData; error?: string; key?: string; view?: View }>({})
   const back = useRef<number | null>(null)
-  const [, setWsOk] = useState(false)   // 只用来在服务探测完后重画顶栏
-  useEffect(() => { ping().then((ok) => { setWs(ok); setWsOk(ok) }) }, [])
   useEffect(() => { const on = (e: MediaQueryListEvent) => setDark(e.matches); dark.addEventListener('change', on); return () => dark.removeEventListener('change', on) }, [])
   useEffect(() => {
     const on = () => { if (!isAnchor(location.hash)) { setR(route()); setO(oldRoute()); setTab(tabOf()); setHashQ(new URLSearchParams(location.hash.slice(1))) } }
@@ -94,12 +93,11 @@ function Root() {
     return () => { window.removeEventListener('hashchange', on); document.removeEventListener('click', click) }
   }, [])
   useEffect(() => {
-    if (tab === 'ws') return   // 工作区自己去 4300 取数据
     const src = srcOf(tab, r), key = src + (o ?? '')
     let live = true
     loadScript(src).then((data) => {
       if (!live) return
-      back.current = takeBack()
+      back.current = tab === 'ws' ? null : takeBack()   // 项目页签的内容要等 4300，自己在内容齐了以后还原（workspace/Project.tsx）
       setState({ data, key, view: { tab, r, o, q: new URLSearchParams(location.hash.slice(1)) } })
     }, (e: Error) => live && setState({ error: e.message, key }))
     return () => { live = false }
@@ -112,28 +110,29 @@ function Root() {
     el.className = [isDark && 'dark', `theme-${V.base}`, `brand-${V.brand}`].filter(Boolean).join(' ')
     el.style.setProperty('--radius', RADIUS[V.radius])
   }, [isDark])
-  // 工作台页（复盘汇总、经验、知识）顶栏放在出错边界外面：一份经验或知识点出错，还能切走
-  if (tab === 'ws') return <><Backdrop /><TopBar cur="ws" /><WorkspacePage /></>
+  // 工作台页（项目、专题、经验、知识）顶栏放在出错边界外面：一份经验或知识点出错，还能切走
   const want = srcOf(tab, r) + (o ?? '')
-  const barOf = (v: View) => (v.tab !== 'fupan' || (!v.r && !v.o) ? <><Backdrop /><TopBar cur={v.tab} /></> : null)
+  const barOf = (v: View) => (v.tab !== 'fupan' ? <><Backdrop /><TopBar cur={v.tab} /></> : null)
   if (state.error && state.key === want) return <>{barOf({ tab, r, o, q: hashQ })}<p className="p-8 text-sm text-muted-foreground">{state.error}</p></>
   const d = state.data
   const v: View | undefined = state.key === want ? { tab, r, o, q: hashQ } : state.view
   if (!d || !v) return null
-  const wb = (d as { workbench?: { sop?: boolean; kb?: boolean } }).workbench
-  if (wb) setAvail(wb)   // 三份数据都带「有没有经验库、知识库」，顶栏才知道放哪几个页签
+  const wb = (d as { workbench?: Workbench }).workbench
+  if (wb) setAvail(wb)   // 四份数据都带「有没有专题库、经验库、知识库」，顶栏才知道放哪几个页签
   const bar = barOf(v)
   let page: ReactNode
   const kind = (d as { kind: string }).kind
   const key = `${state.key}#${v.q.toString()}`
   if (kind === 'sops') return <>{bar}<Boundary key={key} hint="这份没有显示出来，让 AI 重建一次复盘汇总页再刷新。"><Reveal><SopPage data={d as unknown as SopData} hash={v.q} /></Reveal></Boundary></>
+  if (kind === 'topics') return <>{bar}<Boundary key={key} hint="专题页没有显示出来，让 AI 重建一次复盘汇总页再刷新。"><TopicsPage data={d as unknown as TopicsData} hash={v.q} /></Boundary></>
   if (kind === 'knowledge') return <>{bar}<Boundary key={key} hint="知识页没有显示出来，让 AI 重建一次复盘汇总页再刷新。"><KnowledgePage key={v.q.get('k') ?? ''} data={d as unknown as KData} hash={v.q} /></Boundary></>
   if (d.kind !== 'index') page = <App data={d} dark={isDark} pageKey={'r:' + (v.r ?? '')} />
   else if (v.o) {
     const vo = v.o
-    const hit = d.projects.flatMap((p) => p.old.map((x) => ({ x, p: p.name }))).find(({ x }) => x.rel === vo || x.path === rootDir() + vo || x.path.endsWith('/' + vo))
-    page = hit ? <OldReview o={hit.x} project={hit.p} pageKey={'o:' + vo} /> : <p className="p-8 text-sm text-muted-foreground">找不到这篇旧复盘：{vo}</p>
-  } else return <>{bar}<Boundary key={state.key}><Reveal><ReviewIndex data={d} /></Reveal></Boundary></>
+    // k 是组的 key：返回兜底地址靠它找回这一组
+    const hit = d.projects.flatMap((p) => p.old.map((x) => ({ x, p: p.name, k: p.key }))).find(({ x }) => x.rel === vo || x.path === rootDir() + vo || x.path.endsWith('/' + vo))
+    page = hit ? <OldReview o={hit.x} project={hit.p} home={hit.k} pageKey={'o:' + vo} /> : <p className="p-8 text-sm text-muted-foreground">找不到这篇旧复盘：{vo}</p>
+  } else return <>{bar}<WorkspacePage index={d} /></>
   return <Boundary key={state.key}>{page}</Boundary>
 }
 

@@ -13,10 +13,13 @@ import { api, hrefOf, join, type Bullet, type Item, type Project } from '@/works
 import { Md } from '@/workspace/Md'
 import { FileBrowser } from '@/workspace/FileBrowser'
 import { Icon, Inline, Section, openFile } from '@/workspace/parts'
+import { Timeline, restore } from '@/components/ReviewIndex'
+import type { IndexProject } from '@/types'
 
 // 项目页：和复盘单篇同一个版式。左栏目录，右边从上到下：
 // 概览（高亮容器：背景、进行中、待办、结果，右上角写的时间）→ 等你定（有才出）→ 已完成 → 进行中
-// → 文件（工作区 / 成果 / 调研 / 数据 / 归档 一个视图）→ 决策（每类：现行做法 | 变更记录两栏、约束、原始记录收起）→ 待办
+// → 文件（工作区 / 成果 / 调研 / 数据 / 归档 一个视图）→ 决策（每类：现行做法 | 变更记录两栏、约束、原始记录收起）→ 待办 → 复盘（时间线，11-25 定放最后）
+// 没有项目页（只有复盘）或项目页服务不通：只有标题和复盘时间线
 // 表格一行一件事、日期和标签不折行（最低高度优先）。11-17 定：标题下不放计数之类的小字
 
 const BG: [string, string][] = [['why', '为什么做'], ['what', '做成什么'], ['not', '不做']]
@@ -209,10 +212,31 @@ const prefer = (p: Project) => {
   return [...t.matchAll(/\]\(<?([^)<>\s]+)>?\)/g)].map((m) => join(p.path, decodeURI(m[1])))
 }
 
-export function ProjectPage({ path }: { path: string }) {
+/** 只有复盘时间线的项目页 */
+function ReviewsOnly({ path, group, m }: { path: string; group?: IndexProject; m?: string | null }) {
+  const name = group?.name ?? path.split('/').pop()!
+  useEffect(() => { document.title = name }, [name])
+  return (
+    <div className="relative mx-auto grid max-w-[1400px] grid-cols-[9rem_minmax(0,1fr)] gap-12 px-8 text-sm typo-body">
+      <SideNav items={[{ id: 'reviews', label: '复盘' }]} active="reviews" back={{ href: hrefOf(null), label: '返回项目总览' }} pick={() => {}} />
+      <main className="flex min-w-0 flex-col gap-8 py-8">
+        <h1 className={T.title}>{name}</h1>
+        {group ? <Timeline p={group} m={m} /> : <p className="text-muted-foreground">还没有复盘</p>}
+      </main>
+    </div>
+  )
+}
+
+export function ProjectPage({ path, group, m }: { path: string; group?: IndexProject; m?: string | null }) {
   const [p, setP] = useState<Project | null>(null)
   const [err, setErr] = useState('')
-  useEffect(() => { let live = true; api.project(path).then((d) => { if (live) { setP(d); document.title = d.name } }, (e: Error) => live && setErr(e.message)); return () => { live = false } }, [path])
+  const ws = group ? !!group.path : path.includes('/')   // 工作区项目才去项目页服务取；没挂上的复盘组 key 是名字或「项目/模块」
+  useEffect(() => {
+    if (!ws) return
+    let live = true
+    api.project(path).then((d) => { if (live) { setP(d); document.title = d.name } }, (e: Error) => live && setErr(e.message))
+    return () => { live = false }
+  }, [path, ws])
   const toc = useMemo(() => {
     if (!p) return []
     const all: { id: string; label: string; on: boolean }[] = [
@@ -224,11 +248,18 @@ export function ProjectPage({ path }: { path: string }) {
       { id: 'decisions', label: '决策', on: true },
       { id: 'rules', label: '规矩', on: p.rules.length > 0 },
       { id: 'todo', label: '待办', on: true },
+      { id: 'reviews', label: '复盘', on: !!group },
     ]
     return all.filter((t) => t.on).map(({ id, label }) => ({ id, label }))   // 11-17 定：左栏不放数量
-  }, [p])
+  }, [p, group])
   const [active, pick] = useScrollSpy(useMemo(() => toc.map((t) => t.id), [toc]))
-  if (err) return <p className="p-8 text-muted-foreground">{err}</p>
+  // 从单篇复盘返回：内容齐了再回到点进去的位置；没记下位置但地址带模块（旧地址、新开的页）就落到复盘一节
+  const ready = !!p || !ws || !!err
+  useEffect(() => {
+    if (!ready || restore() || !m || !group) return
+    requestAnimationFrame(() => document.getElementById('reviews')?.scrollIntoView({ behavior: 'instant', block: 'start' }))
+  }, [ready]) // eslint-disable-line react-hooks/exhaustive-deps
+  if (!ws || err) return <ReviewsOnly path={path} group={group} m={m} />
   if (!p) return null
   return (
     <div className="relative mx-auto grid max-w-[1400px] grid-cols-[9rem_minmax(0,1fr)] gap-12 px-8 text-sm typo-body">
@@ -255,6 +286,7 @@ export function ProjectPage({ path }: { path: string }) {
         <Section id="todo" title="待办">
           {p.todo.length ? <TaskTable xs={p.todo} base={p.path} /> : <p className="text-muted-foreground">无</p>}
         </Section>
+        {group && <Section id="reviews" title="复盘"><Timeline p={group} m={m} /></Section>}
       </main>
     </div>
   )

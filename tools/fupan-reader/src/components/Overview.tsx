@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
-import { ChevronDown, LibraryBig } from 'lucide-react'
+import { ChevronDown, LayoutGrid } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbSeparator } from '@/components/ui/breadcrumb'
 import { Card } from '@/components/ui/card'
@@ -42,15 +42,15 @@ export function Summary({ data }: P) {
   const crumb = 'rounded-md px-1.5 py-0.5 hover:bg-muted'
   return (
     <header id="summary" data-annot-block className="flex scroll-mt-8 flex-col gap-3 text-sm typo-body">
-      {/* 回汇总页：汇总 → 项目 → 模块；本篇标题就在下面，不再重复 */}
+      {/* 回项目页签：项目总览 → 项目 → 模块（11-25 复盘汇总并进项目页签）；本篇标题就在下面，不再重复 */}
       <Breadcrumb className="-ml-1.5">
         <BreadcrumbList>
-          <BreadcrumbItem><BreadcrumbLink href="#" className={cn(crumb, 'inline-flex items-center gap-1.5')}><LibraryBig className="size-4" />复盘汇总</BreadcrumbLink></BreadcrumbItem>
+          <BreadcrumbItem><BreadcrumbLink href="#w" className={cn(crumb, 'inline-flex items-center gap-1.5')}><LayoutGrid className="size-4" />项目</BreadcrumbLink></BreadcrumbItem>
           <BreadcrumbSeparator className="text-muted-foreground/50" />
           {s.projects.map((p, i) => (
             <Fragment key={p}>
               {i > 0 && <li aria-hidden className="text-muted-foreground/50">·</li>}
-              <BreadcrumbItem><BreadcrumbLink href={to({ p })} className={crumb}>{p}</BreadcrumbLink></BreadcrumbItem>
+              <BreadcrumbItem><BreadcrumbLink href={to({ p, m: s.module })} className={crumb}>{p}</BreadcrumbLink></BreadcrumbItem>
             </Fragment>
           ))}
           <BreadcrumbSeparator className="text-muted-foreground/50" />
