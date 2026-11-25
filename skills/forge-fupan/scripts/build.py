@@ -441,6 +441,12 @@ def validate(d: dict, icons: dict) -> tuple[list[str], list[str]]:
         E.append('知识条目的 id 有重复')
     for e in entries:
         w = f'知识条目 {e.get("id", "?")}'
+        if e.get('topic') is not None:   # 专题只放索引：正文在专题库，编页时从那里带标题和背景（build_review）
+            need(e, ('id', 'topic'), w)
+            if _key(e.get('group')) != '专题':
+                E.append(f'{w} 带了 topic，group 要写「专题」')
+            e.update({'group': '专题', 'kind': None, 'layers': [], 'basis': None, 'step': None})
+            continue
         need(e, ('id', 'title', 'sourceLabel', 'source', 'what', 'judge', 'say', 'verify', 'reading'), w)
         if _key(e.get('group')) not in GROUP:
             E.append(f'{w} 的 group「{e.get("group")}」不在 {sorted(GROUP)}')
@@ -828,6 +834,24 @@ def browser_address(rel: str) -> str:
     return f'file://{esc(str(ROOT / "index.html"))}#r={esc(rel)}'
 
 
+def attach_topics(d: dict) -> list[str]:
+    """专题索引（entries[].topic）对到专题库：带上编号、短名、标题、背景、做了啥，阅读页不用另读专题库"""
+    refs = [e for e in d['review']['knowledge']['entries'] if isinstance(e, dict) and e.get('topic')]
+    if not refs:
+        return []
+    kb = workbench.kb_root(ROOT)
+    topics = workbench.load_topics(kb)[0]
+    E = []
+    for e in refs:
+        t = topics.get(str(e['topic']))
+        if not t:
+            E.append(f'知识条目 {e.get("id")} 的 topic「{e["topic"]}」在专题库（{kb / "专题库"}）里找不到')
+            continue
+        e['topicInfo'] = workbench.topic_brief(t)
+        e['title'] = t['title']
+    return E
+
+
 def build_review(folder: Path, check_only=False, emit=None):
     folder = folder.resolve()
     try:
@@ -847,6 +871,7 @@ def build_review(folder: Path, check_only=False, emit=None):
     E, W = validate(d, icons)
     E2, W2 = workbench.validate_links(d, ROOT)   # 认领经验、标知识编号
     E += E2; W += W2
+    E += attach_topics(d)
 
     def stop():
         for w in W:
@@ -915,6 +940,64 @@ def _old_md(text: str, pdir: Path) -> str:
     return mask(_IMG.sub(fix, text), [])
 
 
+HOMES = '项目对应.json'
+
+
+def _has_card(d: Path) -> bool:
+    return d.is_dir() and any(f.name.lower() in ('项目.md', 'project.md') for f in d.iterdir() if f.is_file())
+
+
+def regroup(projects: dict) -> tuple[dict, dict]:
+    """复盘按工作区项目归组：「项目」页签一个工作区项目一组，没有项目页的复盘项目自己成一组。
+    对应关系：复盘根下 项目对应.json（{"复盘项目": "工作区路径", "复盘项目/模块": "工作区路径"}，值写 null 表示不挂）优先；
+    没写的找工作区一级目录下同名、有 项目.md / project.md 的文件夹，正好一个才算。
+    返回（组键 → 组，别名）：组键是工作区路径，没有就是复盘项目名；别名把「复盘项目」「复盘项目/模块」指到组键，旧地址 #p=&m= 靠它跳到对的组"""
+    ws = ROOT.parent.parent
+    try:
+        manual = json.loads((ROOT / HOMES).read_text(encoding='utf-8')) if (ROOT / HOMES).exists() else {}
+    except json.JSONDecodeError as e:
+        print(f'提醒：{HOMES} 不是合法 JSON（第 {e.lineno} 行），这次只按同名自动对应')
+        manual = {}
+    manual = manual if isinstance(manual, dict) else {}
+    auto: dict[str, str | None] = {}
+
+    def home(pn: str, mn: str | None) -> str | None:
+        for k in ((f'{pn}/{mn}', pn) if mn is not None else (pn,)):
+            if k in manual:
+                v = manual[k]
+                return v.strip('/') if isinstance(v, str) and (ws / v).is_dir() else None
+        if pn not in auto:
+            hits = [d for d in ws.glob(f'*/{pn}') if not d.parent.name.startswith('.') and not d.is_symlink() and _has_card(d)]   # 软链跳过，和项目页服务一致
+            auto[pn] = hits[0].relative_to(ws).as_posix() if len(hits) == 1 else None
+        return auto[pn]
+
+    groups: dict[str, dict] = {}
+    alias: dict[str, str] = {}
+
+    def group(pn: str, mn: str) -> dict:
+        path = home(pn, mn)
+        key = path or pn
+        alias[pn] = home(pn, None) or pn
+        if alias[pn] != key:
+            alias[f'{pn}/{mn}'] = key
+        return groups.setdefault(key, {'name': Path(path).name if path else pn, 'key': key, 'path': path, 'modules': [], 'old': []})
+
+    for p in projects.values():
+        for m in p['modules']:
+            g = group(p['name'], m['name'])
+            mod = next((x for x in g['modules'] if x['name'] == m['name']), None)
+            if not mod:
+                g['modules'].append({'name': m['name'], 'reviews': list(m['reviews'])})
+            else:
+                seen = {r['href'] for r in mod['reviews']}
+                mod['reviews'] += [r for r in m['reviews'] if r['href'] not in seen]
+        for o in p['old']:
+            group(p['name'], o.get('module') or '未分模块')['old'].append(o)
+    for g in groups.values():
+        g['old'].sort(key=lambda x: (x['date'], x['time'] or ''), reverse=True)
+    return groups, alias
+
+
 def build_index():
     ROOT.mkdir(parents=True, exist_ok=True)
     # 旧复盘描述表：v2 是 {"projects": {文件夹: 显示名}, "reviews": {"<项目文件夹>/<文件名>.md": {module, why, did, got}}}；v1 是 {md 绝对路径: 一句话}
@@ -977,6 +1060,7 @@ def build_index():
                 mod = {'name': mname, 'reviews': []}
                 proj['modules'].append(mod)
             mod['reviews'].append(item)
+    projects, alias = regroup(projects)
     out = []
     for p in projects.values():
         for m in p['modules']:
@@ -993,7 +1077,8 @@ def build_index():
         print('工作台：' + line)
     avail = workbench.available(ROOT)   # 有库、页也生成出来了，顶栏才放这个页签
     flags = {'sop': avail['sop'] and (ROOT / '经验.data.js').exists(), 'kb': avail['kb'] and (ROOT / '知识.data.js').exists()}
-    write_js(ROOT / 'index.data.js', {'kind': 'index', 'projects': out, 'workbench': flags})
+    flags['topic'] = avail['topic'] and (ROOT / '专题.data.js').exists()
+    write_js(ROOT / 'index.data.js', {'kind': 'index', 'projects': out, 'alias': alias, 'workbench': flags})
     install_reader()
     n = len({r['href'] for p in out for m in p['modules'] for r in m['reviews']}) + sum(len(p['old']) for p in out)   # 跨项目的一篇只算一次
     print(f'汇总页：{ROOT / "index.html"}（{len(out)} 个项目，{n} 篇）')

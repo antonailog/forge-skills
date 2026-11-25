@@ -1,6 +1,6 @@
-"""工作台的经验、知识两页数据：build.py 重建汇总页时调用，写到复盘根下的 经验.data.js、知识.data.js。
+"""工作台的专题、经验、知识三页数据：build.py 重建汇总页时调用，写到复盘根下的 专题.data.js、经验.data.js、知识.data.js。
 
-经验库、知识库默认在 <工作区>/知识/知识图谱/2-结果区/（经验库/、知识库/），可用环境变量 FUPAN_KB 改。
+专题库、经验库、知识库默认在 <工作区>/知识/知识图谱/2-结果区/（专题库/、经验库/、知识库/），可用环境变量 FUPAN_KB 改。
 没有经验库或知识库就不写那一份，工作台对应的页签打开时提示读不到。
 链接都是工作台内跳转：复盘 #r= / #o=，知识点 #k=。
 """
@@ -176,15 +176,104 @@ LEDGER = '复盘写入记录.json'
 BASE = '_原值'   # 记录里的保留键；复盘的键都以 / 结尾，不会撞
 
 
+# ---------- 专题库：一个专题一个文件夹 T001-<短名>/专题.md，开头 YAML，正文只守标题层级 ----------
+TOPIC_DIR = re.compile(r'^(T\d{3,})-(.+)$')
+TOPIC_KEYS = ('id', 'title', 'asked', 'why', 'did', 'from', 'date')
+
+
+def front_matter(text: str) -> tuple[dict, str]:
+    """专题.md 开头的 YAML：只认 key: 值、带引号的值、key: | 多行块；返回（字段，正文）"""
+    m = re.match(r'\A---\n(.*?)\n---\n?', text, re.S)
+    if not m:
+        return {}, text
+    meta, lines, i = {}, m.group(1).split('\n'), 0
+    while i < len(lines):
+        km = re.match(r'^([A-Za-z_]\w*):\s*(.*)$', lines[i])
+        i += 1
+        if not km:
+            continue
+        k, v = km.group(1), km.group(2).strip()
+        if v in ('|', '|-', '>', '>-'):
+            block = []
+            while i < len(lines) and (not lines[i].strip() or lines[i].startswith((' ', '\t'))):
+                block.append(lines[i])
+                i += 1
+            pad = min((len(x) - len(x.lstrip()) for x in block if x.strip()), default=0)
+            body = '\n'.join(x[pad:] for x in block).strip('\n')
+            v = body if v.startswith('|') else re.sub(r'(?<!\n)\n(?!\n)', ' ', body)
+        elif len(v) >= 2 and v[0] == v[-1] == '"':
+            try:
+                v = json.loads(v)
+            except json.JSONDecodeError:
+                v = v[1:-1]
+        elif len(v) >= 2 and v[0] == v[-1] == "'":
+            v = v[1:-1].replace("''", "'")
+        meta[k] = v
+    return meta, text[m.end():]
+
+
+def load_topics(kb: Path) -> tuple[dict[str, dict], list[str]]:
+    """读专题库：返回（编号 → 专题，读不出来的文件夹）。编号以 YAML 的 id 为准，没写就用文件夹名开头的 T001"""
+    out, bad = {}, []
+    folder = kb / '专题库'
+    for d in sorted(folder.iterdir()) if folder.is_dir() else []:
+        m = TOPIC_DIR.match(d.name)
+        f = d / '专题.md'
+        if not (d.is_dir() and m and f.is_file()):
+            continue
+        try:
+            meta, body = front_matter(f.read_text(encoding='utf-8'))
+        except Exception:
+            bad.append(d.name)
+            continue
+        tid = str(meta.get('id') or m.group(1))
+        out[tid] = {'id': tid, 'no': int(re.sub(r'\D', '', tid) or 0), 'short': m.group(2), 'dir': d,
+                    **{k: str(meta.get(k) or '') for k in TOPIC_KEYS if k != 'id'}, 'md': body}
+    return out, bad
+
+
+def topic_brief(t: dict) -> dict:
+    """复盘里的专题索引要带的：编号、短名、标题、背景、做了啥"""
+    return {k: t[k] for k in ('id', 'no', 'short', 'title', 'why', 'did')}
+
+
+def build_topics(root: Path, write_js) -> str | None:
+    kb = kb_root(root)
+    if not (kb / '专题库').is_dir():
+        return None
+    got, bad = load_topics(kb)
+    meta_f = root / '旧复盘描述.json'
+    projects = (json.loads(meta_f.read_text()) if meta_f.exists() else {}).get('projects', {})
+    ws = root.parent.parent
+    topics = []
+    for t in sorted(got.values(), key=lambda t: (t['date'], t['no']), reverse=True):
+        x = {k: v for k, v in t.items() if k != 'dir'}
+        x['base'] = '/'.join(quote(p) for p in Path(os.path.relpath(t['dir'], root)).parts) + '/'
+        src = (ws / t['from']).resolve() if t['from'] else None
+        if src and src.is_relative_to(root):
+            rel = src.relative_to(root).as_posix()
+            x['source'] = _retro_info(rel + '/' if src.is_dir() else rel, projects)
+        topics.append(x)
+    write_js(root / '专题.data.js', {'kind': 'topics', 'topics': topics, 'workbench': available(root)})
+    return f'专题 {len(topics)} 篇' + _bad_note(bad)
+
+
 def available(root: Path) -> dict:
     """工作台哪几页有库：顶栏只显示有的"""
     kb = kb_root(root)
-    return {'sop': (kb / '经验库' / '经验').is_dir(), 'kb': (kb / '知识库' / '骨架.json').exists()}
+    return {'topic': (kb / '专题库').is_dir(), 'sop': (kb / '经验库' / '经验').is_dir(), 'kb': (kb / '知识库' / '骨架.json').exists()}
 
 
 def catalog(root: Path):
     """给写复盘的人看：全部经验（编号、名字、步骤）和知识点（编号、名字、别名），认领和标编号时对照"""
     kb = kb_root(root)
+    if (kb / '专题库').is_dir():
+        topics, bad_t = load_topics(kb)
+        nxt = max((t['no'] for t in topics.values()), default=0) + 1
+        print(f'# 专题库 {len(topics)} 篇（entries[].topic 用；新开一篇用 T{nxt:03d}，文件夹 {kb / "专题库"}/T{nxt:03d}-<短名>/专题.md）' + _bad_note(bad_t))
+        for t in sorted(topics.values(), key=lambda t: t['no']):
+            print(f"{t['id']} {t['short']}：{t['title']}（{t['date']}）")
+        print()
     (sops, bad_s), (pts, bad_k) = _load_sops(kb), _load_points(kb)
     if not sops and not pts:
         print(f'没有经验库和知识库（{kb}），复盘里不用写 sops 和 kb')
@@ -502,7 +591,7 @@ def _apply_links(d: dict, folder: Path, root: Path, kb: Path) -> list[str]:
 
 def build_all(root: Path, write_js) -> list[str]:
     out = []
-    for f in (build_sops, build_knowledge):
+    for f in (build_topics, build_sops, build_knowledge):
         try:
             x = f(root, write_js)
         except Exception as e:   # 库里某份文件坏了、另一个会话正在写：提醒，汇总页照常出

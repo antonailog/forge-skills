@@ -87,7 +87,9 @@ export type GWord = { term: string; kind: GKind; side: 'mine' | 'talked' | 'base
 export type GModule = { id: string; area: string; name: string; words: GWord[]; say: string }
 
 /** 三、知识拓展：一条盲区对应的知识条目；what / judge / verify / reading 是 md */
-export type KEntry = { id: string; title: string; group: '盲区' | '专题' | '延伸'; kind: '架构' | '选型' | '工具' | '知识点' | null; sourceLabel: string; basis: string | null; source: string; what: string; judge: string; say: string; verify: string; reading: string; layers: string[]; step: string | null }
+/** 专题索引带的：正文在专题库，复盘里只放这些（build.py 编页时从专题库读） */
+export type TopicBrief = { id: string; no: number; short: string; title: string; why: string; did: string }
+export type KEntry = { topic?: string; topicInfo?: TopicBrief; id: string; title: string; group: '盲区' | '专题' | '延伸'; kind: '架构' | '选型' | '工具' | '知识点' | null; sourceLabel: string; basis: string | null; source: string; what: string; judge: string; say: string; verify: string; reading: string; layers: string[]; step: string | null }
 
 export type KLayer = { name: string; decide: string; chosen: string }
 
@@ -123,6 +125,12 @@ export type ReviewPage = SessionData & { kind: 'review' }
 export type IndexNew = { title: string; date: string; status: string; why: string; did: string; got: string; href: string }
 /** 旧复盘：module、why/did/got 来自 旧复盘描述.json（v2）；只有 line 的是 v1 的一句话描述 */
 export type IndexOld = { date: string; time: string | null; topic: string | null; title: string; path: string; rel?: string; ext: string; module?: string; why?: string; did?: string; got?: string; line?: string | null; md?: string; href?: string }
-export type IndexProject = { name: string; latest: string; count: number; modules: { name: string; reviews: IndexNew[] }[]; old: IndexOld[] }
-export type IndexPage = { kind: 'index'; projects: IndexProject[]; workbench?: { sop: boolean; kb: boolean } }
+/** 一组复盘：key 是工作区项目路径（path），没有项目页的就是复盘项目名 */
+export type IndexProject = { name: string; key: string; path: string | null; latest: string; count: number; modules: { name: string; reviews: IndexNew[] }[]; old: IndexOld[] }
+export type Workbench = { topic?: boolean; sop?: boolean; kb?: boolean }
+/** alias：旧地址里的「复盘项目」「复盘项目/模块」→ 组的 key */
+export type IndexPage = { kind: 'index'; projects: IndexProject[]; alias?: Record<string, string>; workbench?: Workbench }
+export type TopicSource = { date: string; project: string; retro: string; href: string }
+export type Topic = TopicBrief & { asked: string; from: string; date: string; md: string; base: string; source?: TopicSource }
+export type TopicsPage = { kind: 'topics'; topics: Topic[]; workbench?: Workbench }
 export type PageData = ReviewPage | IndexPage

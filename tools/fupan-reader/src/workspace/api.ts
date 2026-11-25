@@ -1,5 +1,5 @@
-// 项目页签的数据：来自工作区的项目页服务（docs/文件规则/项目页/服务.py，launchd 常驻 4300），每次都现读，不缓存
-// 页面在复盘工作台里（4330）。服务只给本机 http 页面回 CORS 头，从 file:// 打开或服务没开时，顶栏不显示「项目」页签
+// 项目页签的项目信息：来自工作区的项目页服务（docs/文件规则/项目页/服务.py，launchd 常驻 4300），每次都现读，不缓存
+// 页面在复盘工作台里（4330）。服务只给本机 http 页面回 CORS 头；从 file:// 打开或服务没开时，项目页签只显示复盘时间线（index.data.js）
 export const BASE = 'http://127.0.0.1:4300'
 
 export type Bullet = { name: string; text: string; date: string; done: boolean; sub: string[] }
@@ -38,13 +38,10 @@ export const api = {
 /** 原样给文件：路径式地址，html 里的相对资源（./assets/…）也能加载 */
 export const raw = (path: string) => BASE + '/raw/' + path.split('/').map(encodeURIComponent).join('/')
 
-/** 服务在不在：顶栏据此决定放不放「项目」页签 */
-export const ping = () => fetch(BASE + '/api/ping', { signal: AbortSignal.timeout(1500) }).then((r) => r.ok, () => false)
-
 /** 地址：#w 是项目总览；#w&p=<项目> 是项目页；再带 &f=<路径> 就在右侧抽屉打开这个文件或文件夹 */
 export const readHash = () => {
   const s = new URLSearchParams(location.hash.slice(1))
-  return { p: s.get('p'), f: s.get('f') }
+  return { p: s.get('p'), f: s.get('f'), m: s.get('m') }
 }
 export const hrefOf = (p: string | null, f?: string | null) =>
   '#w' + (p ? '&p=' + encodeURIComponent(p) : '') + (f ? '&f=' + encodeURIComponent(f) : '')

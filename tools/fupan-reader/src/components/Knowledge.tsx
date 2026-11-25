@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowRight, ArrowUpRight } from 'lucide-react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Markdown } from '@/components/viewers'
 import { SayBlock } from '@/components/kit'
+import { Star } from '@/components/Star'
+import { remember } from '@/components/ReviewIndex'
 import { cn } from '@/lib/utils'
 import { T } from '@/typo'
 import type { KEntry, KLayer, SessionData } from '@/types'
@@ -193,16 +195,41 @@ export function Knowledge({ data }: P) {
 // 11-16 用户定：逐条展开，每条一张卡片
 const SUB: Record<'专题' | '延伸', string> = { 专题: '你说想学的，往深里讲', 延伸: 'AI 推荐的下一步：这类工作往下会遇到的、接得上你长期方向的' }
 
+/** 专题索引（11-25 定）：正文在专题库，这里一行一条，小字写背景和做了啥，点了去「专题」页签那一篇 */
+function TopicRows({ es }: { es: KEntry[] }) {
+  return (
+    <ol className="flex flex-col border-t">
+      {es.map((e) => {
+        const t = e.topicInfo!
+        return (
+          <li key={e.id}>
+            <a href={'#' + new URLSearchParams({ t: t.id }).toString()} onClick={remember} className="group flex flex-col gap-1 border-b py-4 transition-colors hover:bg-muted/40">
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0 text-muted-foreground">专题 {t.no}</span>
+                <span className={cn(T.name, 'truncate transition-colors group-hover:text-brand')}>{t.short}</span>
+                <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-brand" />
+              </span>
+              <Star why={t.why} did={t.did} clip />
+            </a>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
 export function Topics({ data, group }: P & { group: '专题' | '延伸' }) {
   const es = data.review.knowledge.entries.filter((e) => e.group === group)
   if (!es.length) return null
+  const idx = es.filter((e) => e.topicInfo), cards = es.filter((e) => !e.topicInfo)   // 以前的复盘：专题正文还写在复盘里
   return (
     <div className="flex flex-col gap-6 text-sm typo-body">
       <div id={group === '专题' ? 'ktopic' : 'kext'} className="flex scroll-mt-8 flex-col gap-2">
         <h3 className={T.h3}>{LABEL[group]}</h3>
         <p className="text-muted-foreground">{SUB[group]}</p>
       </div>
-      <div className="flex flex-col gap-4">{es.map((e) => <Card key={e.id} className="gap-5 p-6 shadow-none"><Detail e={e} data={data} own /></Card>)}</div>
+      {idx.length > 0 && <TopicRows es={idx} />}
+      {cards.length > 0 && <div className="flex flex-col gap-4">{cards.map((e) => <Card key={e.id} className="gap-5 p-6 shadow-none"><Detail e={e} data={data} own /></Card>)}</div>}
     </div>
   )
 }
